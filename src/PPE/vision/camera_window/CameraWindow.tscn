@@ -1,0 +1,25 @@
+[gd_scene load_steps=3 format=3 uid="uid://dcxcqmbu4q0kw"]
+
+[ext_resource type="Script" uid="uid://c1fnf4erypxg1" path="res://vision/camera_window/CameraWindow.gd" id="1_oflu6"]
+
+[sub_resource type="ImageTexture" id="ImageTexture_1p5e3"]
+
+[node name="CameraWindow" type="Control"]
+custom_minimum_size = Vector2(400, 400)
+layout_mode = 3
+anchors_preset = 0
+script = ExtResource("1_oflu6")
+
+[node name="SubViewportContainer" type="SubViewportContainer" parent="."]
+layout_mode = 0
+offset_right = 40.0
+offset_bottom = 40.0
+
+[node name="CameraViewport" type="SubViewport" parent="SubViewportContainer"]
+transparent_bg = true
+handle_input_locally = false
+render_target_update_mode = 4
+
+[node name="Image" type="TextureRect" parent="SubViewportContainer/CameraViewport"]
+offset_right = 40.0
+texture = SubResource("ImageTexture_1p5e3")
