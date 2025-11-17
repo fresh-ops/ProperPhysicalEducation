@@ -23,8 +23,6 @@ Global="*res://Global.gd"
 
 [display]
 
-window/size/viewport_width=2000
-window/size/viewport_height=1000
 window/stretch/mode="canvas_items"
 
 [dotnet]

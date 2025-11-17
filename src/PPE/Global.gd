@@ -2,7 +2,6 @@ extends Node
 
 var main_scene := preload("res://Main.tscn")
 var enable_download_files: bool = true
-var model_dir := "user://GDMP"
 
 func _get_external_file(
 	result: int,
@@ -25,18 +24,3 @@ func _get_external_file(
 	file.store_buffer(body)
 	file.close()
 	callback.call()
-
-func get_external_model(path: String, callback: Callable) -> HTTPRequest:
-	var request = MediaPipeExternalFiles.get_model(path)
-	if request != null:
-		var save_path := model_dir.path_join(path)
-		var request_callback = _get_external_file.bind(save_path, callback)
-		request.request_completed.connect(request_callback)
-		return request
-	return null
-
-func get_model(path: String) -> FileAccess:
-	var model_path := model_dir.path_join(path)
-	if FileAccess.file_exists(model_path):
-		return FileAccess.open(model_path, FileAccess.READ)
-	return null
