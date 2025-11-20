@@ -5,7 +5,7 @@ extends Control
 const CAMERA_VIEW_SCENE = preload("res://vision/camera_view/CameraView.tscn")
 
 
-var camera_manager: CameraManager
+var _camera_manager: CameraManager
 
 
 ## Кнопка открытия [member select_camera_dialog]
@@ -22,14 +22,14 @@ var camera_manager: CameraManager
 
 
 func _ready():
-	camera_manager = CameraManager.new()
-	camera_manager.init()
+	_camera_manager = CameraManager.new()
+	_camera_manager.init()
 	btn_open_camera.pressed.connect(self.__on_open_camera_button_pressed)
-	camera_manager.camera_permission_result.connect(self.__camera_permission_result)
-	camera_manager.select_camera.connect(self.__show_camera_selection_dialog)
-	camera_manager.camera_added.connect(self.__on_camera_added)
-	camera_manager.camera_removed.connect(self.__on_camera_removed)
-	camera_manager.update_camera_feeds.connect(self.__update_camera_feeds)
+	_camera_manager.camera_permission_result_asked.connect(self.__on_camera_permission_result_asked)
+	_camera_manager.monitoring_feeds_set.connect(self.__show_camera_selection_dialog)
+	_camera_manager.camera_added.connect(self.__on_camera_added)
+	_camera_manager.camera_removed.connect(self.__on_camera_removed)
+	_camera_manager.camera_feeds_updated.connect(self.__on_camera_feeds_updated)
 	opt_camera_feed.item_selected.connect(self.__on_camera_feed_selected)
 	opt_camera_format.item_selected.connect(self.__on_format_selected)
 	select_camera_dialog.confirmed.connect(self.__start_camera)
@@ -39,13 +39,13 @@ func _ready():
 
 ## Обработчик нажатия на кнопку OpenCamera
 func __on_open_camera_button_pressed()-> void:
-	if camera_manager.is_monitoring():
-		camera_manager._initialize_camera_extension()
+	if _camera_manager.is_monitoring():
+		_camera_manager._initialize_camera_extension()
 		__show_camera_selection_dialog()
 	
 
 ## Реакция на наличие разрешения на камеру
-func __camera_permission_result(granted: bool) -> void:
+func __on_camera_permission_result_asked(granted: bool) -> void:
 	if granted:
 		__show_camera_selection_dialog()
 	else:
@@ -53,8 +53,8 @@ func __camera_permission_result(granted: bool) -> void:
 
 
 ## Заносит все фиды в список для выбора
-func __update_camera_feeds() -> void:
-	var feeds = camera_manager._get_feeds()
+func __on_camera_feeds_updated() -> void:
+	var feeds = _camera_manager.get_feeds()
 	opt_camera_feed.clear()
 	for feed in feeds:
 		opt_camera_feed.add_item(feed.get_name(), feed.get_id())
@@ -71,7 +71,7 @@ func __on_camera_feed_selected(_index: int) -> void:
 	opt_camera_format.clear()
 	select_camera_dialog.get_ok_button().disabled = false
 	var id := opt_camera_feed.get_selected_id()
-	var formats = camera_manager.get_formats(id)
+	var formats = _camera_manager.get_formats(id)
 	for format in formats:
 		opt_camera_format.add_item(String("{width}x{height}@{fps}({format})").format(format))
 		opt_camera_format.selected = -1
@@ -79,7 +79,7 @@ func __on_camera_feed_selected(_index: int) -> void:
 
 ## Выставляет формат выбранный пользователем
 func __on_format_selected(index: int) -> void:
-	if camera_manager.format_setted(index):
+	if _camera_manager.is_format_set(index):
 		select_camera_dialog.get_ok_button().disabled = false
 	else:
 		select_camera_dialog.get_ok_button().disabled = true
@@ -92,7 +92,7 @@ func __start_camera() -> void:
 	if cameras_container.get_child_count() >= cameras_container.columns ** 2:
 		cameras_container.columns += 1
 	cameras_container.queue_sort()
-	camera_view.initialize.call_deferred(camera_manager.camera_feed)
+	camera_view.initialize.call_deferred(_camera_manager._camera_feed)
 	camera_view.start_camera.call_deferred()
 
 
@@ -103,7 +103,7 @@ func __on_camera_added(id: int):
 		if opt_camera_feed.get_item_id(i) == id:
 			return # Если да, то ничего не делаем
 	# Иначе выбираем добавленный CameraFeed
-	var feeds = camera_manager._get_feeds()
+	var feeds = _camera_manager.get_feeds()
 	for feed in feeds:
 		if feed.get_id() == id:
 			# И добавляем его в список, при этом не изменяя последний выбранный элемент
