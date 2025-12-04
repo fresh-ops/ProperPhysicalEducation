@@ -1,8 +1,6 @@
-[gd_scene load_steps=5 format=3 uid="uid://cu2jsegm1nbtf"]
+[gd_scene load_steps=4 format=3 uid="uid://cu2jsegm1nbtf"]
 
 [ext_resource type="Script" uid="uid://cd8j4q768wuxu" path="res://vision/VisionTask.gd" id="1_xmyhf"]
-
-[sub_resource type="ImageTexture" id="ImageTexture_fdc01"]
 
 [sub_resource type="Theme" id="Theme_pmbf8"]
 default_font_size = 48
@@ -33,17 +31,9 @@ text = "Vision Task"
 horizontal_alignment = 1
 vertical_alignment = 1
 
-[node name="Image" type="TextureRect" parent="VBoxContainer"]
+[node name="CamerasContainer" type="GridContainer" parent="VBoxContainer"]
 layout_mode = 2
 size_flags_vertical = 3
-texture = SubResource("ImageTexture_fdc01")
-expand_mode = 1
-stretch_mode = 5
-
-[node name="ProgressBar" type="ProgressBar" parent="VBoxContainer"]
-visible = false
-layout_mode = 2
-size_flags_vertical = 6
 
 [node name="Buttons" type="HBoxContainer" parent="VBoxContainer"]
 layout_mode = 2
@@ -86,14 +76,6 @@ text = "Select Format:"
 
 [node name="SelectFormat" type="OptionButton" parent="SelectCamera/VBoxContainer"]
 layout_mode = 2
-
-[node name="CameraViewport" type="SubViewport" parent="."]
-disable_3d = true
-render_target_update_mode = 4
-
-[node name="TextureRect" type="TextureRect" parent="CameraViewport"]
-offset_right = 40.0
-offset_bottom = 40.0
 
 [node name="PermissionDialog" type="AcceptDialog" parent="."]
 oversampling_override = 1.0
