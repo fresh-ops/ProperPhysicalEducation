@@ -60,13 +60,13 @@ func __drop_oldest_frame() -> void:
 
 
 func __prepare_and_send_data() -> void:
-	var data = {}
+	var data: Dictionary[int, Array] = {}
 	for camera_id in __queues.keys():
 		var queue = __queues[camera_id]
 		if not queue.is_empty():
 			var element = queue.pop_front()
-			element.landmarks = __format_landmarks(element.landmarks)
-			data[camera_id] = element
+			var landmarks = __format_landmarks(element.landmarks)
+			data[camera_id] = landmarks
 	__send_data(data)
 
 
