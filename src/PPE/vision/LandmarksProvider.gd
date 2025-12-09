@@ -3,6 +3,7 @@ extends Node
 
 
 signal landmarks_detected(result: MediaPipePoseLandmarkerResult, image: MediaPipeImage, timestamp_ms: int)
+signal landmarks_sended(camera_feed: CameraFeed, result: MediaPipePoseLandmarkerResult, timestamp_ms: int)
 
 const TASK_FILEPATH := "pose_landmarker/pose_landmarker_full/float16/latest/pose_landmarker_full.task"
 
@@ -151,4 +152,5 @@ func __mark_image(base_image: Image) -> void:
 
 ## Callback когда landmarks определены
 func __on_landmarks_detected(result: MediaPipePoseLandmarkerResult, image: MediaPipeImage, timestamp_ms: int) -> void:
+	landmarks_sended.emit.call_deferred(__camera_feed.get_id(), result, timestamp_ms)
 	landmarks_detected.emit.call_deferred(result, image, timestamp_ms)
