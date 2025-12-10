@@ -44,6 +44,9 @@ func _initialize_task():
 	__landmarker.result_callback.connect(self.__on_landmarks_detected)
 
 
+func get_camera_feed_id() -> int:
+	return __camera_feed.get_id()
+
 ## Активирует камеру и настраивает формат
 func activate() -> void:
 	if __camera_feed == null:

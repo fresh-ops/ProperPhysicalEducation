@@ -8,13 +8,18 @@ var restorer
 
 
 var __queues: Dictionary = {}
+var __base_feed_set: bool
 
 
 func init() -> void:
-	restorer = ScriptedNodeFactory.create(RESTORER)
+	restorer = ScriptedNodeFactory.create(RESTORER).init()
+	__base_feed_set = false
 
 
 func add_provider(provider: LandmarksProvider) -> void:
+	if not __base_feed_set:
+		restorer.set_base_feed_id(provider.get_camera_feed_id())
+		__base_feed_set = true
 	provider.landmarks_sended.connect(__add_signal_to_queue)
 
 
@@ -79,4 +84,5 @@ func __format_landmarks(landmarks: MediaPipePoseLandmarkerResult) -> Array:
 
 
 func __send_data(data: Dictionary) -> void:
-	restorer.test(data)
+	var result = restorer.restore(data)
+	print(result)

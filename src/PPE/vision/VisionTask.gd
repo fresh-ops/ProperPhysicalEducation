@@ -92,13 +92,13 @@ func __on_format_selected(index: int) -> void:
 func __start_camera() -> void:
 	var camera_view = CAMERA_VIEW_SCENE.instantiate()
 	var provider = LandmarksProvider.new()
-	_landmarks_receiver.add_provider(provider);
 	cameras_container.add_child.call_deferred(camera_view)
 	if cameras_container.get_child_count() >= cameras_container.columns ** 2:
 		cameras_container.columns += 1
 	cameras_container.queue_sort()
 	camera_view.initialize.call_deferred(_camera_manager._camera_feed, provider)
 	camera_view.start_camera.call_deferred()
+	_landmarks_receiver.add_provider.call_deferred(provider);
 
 
 ## Обрабатывает добавление камеры
