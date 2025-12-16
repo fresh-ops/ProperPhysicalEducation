@@ -4,13 +4,17 @@
 const int ESPin = 0; // scanning port for emg signal     
 const int MQTT_PORT = 1883; // port for mqtt broker
 const int POLLING_RATE = 50; // refresh speed      
+const unsigned long interval = 1000 / POLLING_RATE; // in milliseconds (20 ms for 50 Hz)
 const char* ssid = "AndroidAP965d"; // wifi hub
 const char* password = "88888888"; // password of wifi hub
 const char* MQTT_MAIN_TOPIC = "emg/raw"; // topic for sending data
-const char* mqtt_server = "10.120.94.71"; // IP of main device
+const char* mqtt_server = "10.120.3.71"; // IP of main device
+
 
 WiFiClient espClient;
 PubSubClient client(espClient);
+
+unsigned long lastSend = 0;
 
 // wifi connect
 void setup_wifi() {
