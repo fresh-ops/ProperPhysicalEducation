@@ -77,7 +77,6 @@ class EMGCalibrator:
         
         self.running = True
         self.last_update_time = 0
-        self.use_test_data = False
         
         self.fig, self.ax = plt.subplots(figsize=(12, 8))
         plt.subplots_adjust(bottom=0.3)
@@ -264,15 +263,6 @@ class EMGCalibrator:
             print(f"Ошибка подключения к MQTT: {e}")
             return False
     
-    def generate_test_data(self):
-        """
-        Генерирует тестовые данные, если MQTT недоступен.
-        """
-        base = 200 + 50 * np.sin(time.time() * 0.5)
-        noise = np.random.normal(0, 10)
-        self.current_value = max(0, base + noise)
-        self.data_buffer.append(self.current_value)
-    
     def determine_zone(self, value):
         """
         Определяет цветовую зону для текущего значения сигнала.
@@ -368,15 +358,12 @@ class EMGCalibrator:
         """Обновляет границы цветовых зон на основе калибровочных значений."""
         total_range = self.max_value - self.min_value
         
-
         self.yellow_lower = self.min_value + total_range * self.GREEN_ZONE_RATIO
         self.yellow_upper = self.yellow_lower + total_range * self.YELLOW_ZONE_RATIO
         
-
         self.yellow_lower_line.set_ydata([self.yellow_lower, self.yellow_lower])
         self.yellow_upper_line.set_ydata([self.yellow_upper, self.yellow_upper])
         
-
         if self.green_fill:
             self.green_fill.remove()
         if self.yellow_fill:
@@ -384,29 +371,24 @@ class EMGCalibrator:
         if self.red_fill:
             self.red_fill.remove()
         
-
         x_limits = self.ax.get_xlim()
-        
-  
         y_min, y_max = self.ax.get_ylim()
         
-
         self.green_fill = self.ax.fill_between(x_limits, 
                                               y_min, 
                                               self.yellow_lower, 
                                               color='lightgreen', alpha=0.3)
         
-
         self.yellow_fill = self.ax.fill_between(x_limits, 
                                                self.yellow_lower, 
                                                self.yellow_upper, 
                                                color='lightyellow', alpha=0.3)
         
-
         self.red_fill = self.ax.fill_between(x_limits, 
                                             self.yellow_upper, 
                                             y_max,  
                                             color='lightcoral', alpha=0.3)
+    
     def start_calibration(self, event):
         """
         Начинает процесс калибровки.
@@ -646,8 +628,7 @@ class EMGCalibrator:
             self.status_text.set_text('Статус: Требуется калибровка')
         
         if not self.connect_mqtt():
-            print("Не удалось подключиться к MQTT брокеру. Используются тестовые данные.")
-            self.use_test_data = True
+            print("Не удалось подключиться к MQTT брокеру. Приложение будет работать только с калибровкой.")
         
         print("Приложение запущено. Нажмите Ctrl+C для выхода.")
         
@@ -655,9 +636,6 @@ class EMGCalibrator:
         try:
             while self.running:
                 current_time = time.time()
-                
-                if self.use_test_data:
-                    self.generate_test_data()
                 
                 zone = self.determine_zone(self.current_value)
                 feedback = self.get_feedback_message(zone)
