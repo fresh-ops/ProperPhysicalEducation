@@ -246,7 +246,7 @@ class EMGCalibrator:
         """
         
         try:
-            self.mqtt_client = mqtt.Client()
+            self.mqtt_client = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2)
             
             self.mqtt_client.on_connect = self.on_mqtt_connect
             self.mqtt_client.on_message = self.on_mqtt_message
