@@ -60,7 +60,7 @@ class AngleAnalyzer:
         self.angles = {} 
         self.angle_history = {} 
         
-        self.mqtt_client = mqtt.Client()
+        self.mqtt_client = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2)
         self.mqtt_connected = False
         self.mqtt_subscribed = False
         self.mqtt_data_received = False
