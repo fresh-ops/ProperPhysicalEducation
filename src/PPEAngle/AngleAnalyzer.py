@@ -49,9 +49,7 @@ CONNECTIONS = {
 }
 
 # Тестовые данные точек скелета
-TEST_POINTS = [[0.43315500020981, -0.0152943963185, -0.2632532119751], [0.43837544322014, -0.0288357399404, -0.25472643971443], [0.44018724560738, -0.02777613699436, -0.25478649139404], [0.44174206256866, -0.02730458788574, -0.25488764047623], [0.43188095092773, -0.03020882792771, -0.24896182119846], [0.43000492453575, -0.02994019910693, -0.24898125231266], [0.425462692976, -0.03097759559751, -0.24906097352505], [0.44287496805191, -0.01171371527016, -0.17180027067661], [0.42263209819794, -0.01448221504688, -0.14335076510906], [0.4367758333683, 0.00794063229114, -0.22997109591961], [0.42992147803307, 0.0079760523513, -0.22199015319347], [0.49010851979256, 0.0824698060751, -0.12679269909859], [0.37098488211632, 0.08911731094122, -0.07078934460878], [0.58488857746124, 0.11992567777634, -0.11454445868731], [0.27745190262794, 0.14025191962719, -0.05331132933497], [0.60016947984695, 0.25467967987061, -0.19929271936417], [0.25376811623573, 0.27326548099518, -0.13382296264172], [0.60785180330276, 0.29535952210426, -0.22483088076115], [0.2478002011776, 0.3095595240593, -0.15743997693062], [0.5952211022377, 0.30095985531807, -0.25525739789009], [0.26456850767136, 0.31512799859047, -0.19594965875149], [0.59026581048965, 0.2884524166584, -0.21343928575516], [0.26832139492035, 0.3051677942276, -0.1530637294054], [0.47006577253342, 0.42289063334465, -0.02400427311659], [0.40914127230644, 0.42737093567848, 0.02383933775127], [0.47279506921768, 0.66256564855576, 0.0072748917155], [0.40681234002113, 0.66285884380341, 0.08179214596748], [0.47891816496849, 0.85358828306198, 0.28282409906387], [0.41997185349464, 0.84716606140137, 0.3296976685524], [0.47248408198357, 0.87171429395676, 0.30219614505768], [0.43049076199532, 0.87150430679321, 0.34742420911789], [0.48401069641113, 0.93488013744354, 0.15799953043461], [0.40908414125443, 0.9309133887291, 0.21493278443813]]
-
-
+TEST_POINTS = [[0.4446859061718, -0.04089827090502, -0.44245237112045], [0.44895234704018, -0.05287080258131, -0.42343011498451], [0.45286720991135, -0.04858280345798, -0.42341873049736], [0.45652481913567, -0.04467226937413, -0.42339262366295], [0.43799468874931, -0.05429099500179, -0.42543178796768], [0.43459764122963, -0.05047422274947, -0.42550572752953], [0.43027293682098, -0.04694251716137, -0.42560616135597], [0.45855671167374, -0.02398985438049, -0.29509773850441], [0.42317628860474, -0.0263491794467, -0.30551347136498], [0.45119950175285, -0.01137582678348, -0.39356061816216], [0.43920543789864, -0.01351650711149, -0.3967404961586], [0.50945430994034, 0.11091732978821, -0.20124647021294], [0.37641870975494, 0.12159193307161, -0.21547228097916], [0.52255845069885, 0.30523544549942, -0.11495853215456], [0.36885243654251, 0.317164093256, -0.15683460235596], [0.52618843317032, 0.46372359991074, -0.21735945343971], [0.36895373463631, 0.47633373737335, -0.24750179052353], [0.5292489528656, 0.51293474435806, -0.25318092107773], [0.36989036202431, 0.53001272678375, -0.28484842181206], [0.52042019367218, 0.51136338710785, -0.29271927475929], [0.37857621908188, 0.52475053071976, -0.32586166262627], [0.51675200462341, 0.49404391646385, -0.23399844765663], [0.38096863031387, 0.50578999519348, -0.26491197943687], [0.48194754123688, 0.44181826710701, 0.00101361738052], [0.41507160663605, 0.44614186882973, -0.00123540998902], [0.48315688967705, 0.68577617406845, 0.02980415895581], [0.41244888305664, 0.67263519763947, 0.03922303020954], [0.48580583930016, 0.88577944040299, 0.33803796768189], [0.43139961361885, 0.87547266483307, 0.32738128304482], [0.48183062672615, 0.90296614170075, 0.35970637202263], [0.43526276946068, 0.89633923768997, 0.34871357679367], [0.486258238554, 0.96423983573914, 0.21105517446995], [0.42765524983406, 0.96236550807953, 0.19612842798233]]
 
 class AngleAnalyzer:
     def __init__(self, broker=MQTT_BROKER, port=MQTT_PORT, topic=MQTT_TOPIC):
@@ -70,9 +68,88 @@ class AngleAnalyzer:
         
         self.setup_mqtt_callbacks()
 
+    def check_arms_down_pose(self, shoulder_threshold=20, elbow_threshold=10):
+        """
+        Проверка позы "руки по швам"
+        
+        Критерии:
+        - Углы в плечах: 0-20° (руки опущены вдоль тела)
+        - Углы в локтях: около 180° (руки прямые)
+        
+        Args:
+            shoulder_threshold: допустимое отклонение от 0° для плеч
+            elbow_threshold: допустимое отклонение от 180° для локтей
+            
+        Returns:
+            dict: Результаты проверки с описанием и статусом
+        """
+        specific_angles = self.get_specific_angles()
+        
+        if not specific_angles:
+            return {
+                'is_arms_down': False,
+                'reason': 'Нет данных об углах',
+                'details': {}
+            }
+        
+        left_shoulder_angle = specific_angles['left_shoulder']['angle']
+        right_shoulder_angle = specific_angles['right_shoulder']['angle']
+        left_elbow_angle = specific_angles['left_elbow']['angle']
+        right_elbow_angle = specific_angles['right_elbow']['angle']
+        
+        is_left_shoulder_ok = left_shoulder_angle <= shoulder_threshold
+        is_right_shoulder_ok = right_shoulder_angle <= shoulder_threshold
+        is_left_elbow_ok = abs(left_elbow_angle - 180) <= elbow_threshold
+        is_right_elbow_ok = abs(right_elbow_angle - 180) <= elbow_threshold
+        
+        shoulder_symmetry_ok = abs(left_shoulder_angle - right_shoulder_angle) <= 15
+        elbow_symmetry_ok = abs(left_elbow_angle - right_elbow_angle) <= 15
+        
+        is_arms_down = (is_left_shoulder_ok and is_right_shoulder_ok and
+                       is_left_elbow_ok and is_right_elbow_ok and
+                       shoulder_symmetry_ok and elbow_symmetry_ok)
+        
+        result = {
+            'is_arms_down': is_arms_down,
+            'reason': '',
+            'angles': {
+                'left_shoulder': left_shoulder_angle,
+                'right_shoulder': right_shoulder_angle,
+                'left_elbow': left_elbow_angle,
+                'right_elbow': right_elbow_angle
+            },
+            'status': {
+                'left_shoulder': is_left_shoulder_ok,
+                'right_shoulder': is_right_shoulder_ok,
+                'left_elbow': is_left_elbow_ok,
+                'right_elbow': is_right_elbow_ok,
+                'shoulder_symmetry': shoulder_symmetry_ok,
+                'elbow_symmetry': elbow_symmetry_ok
+            }
+        }
+        
+        if not is_arms_down:
+            failed = []
+            if not is_left_shoulder_ok:
+                failed.append("левое плечо")
+            if not is_right_shoulder_ok:
+                failed.append("правое плечо")
+            if not is_left_elbow_ok:
+                failed.append("левый локоть")
+            if not is_right_elbow_ok:
+                failed.append("правый локоть")
+            if not shoulder_symmetry_ok:
+                failed.append("симметрия плеч")
+            if not elbow_symmetry_ok:
+                failed.append("симметрия локтей")
+                
+            result['reason'] = f"Не выполнено: {', '.join(failed)}"
+        
+        return result
+
     def check_t_pose(self, shoulder_threshold=5, elbow_threshold=15):
         """
-        Упрощенная проверка Т-позы (только по углам)
+        Проверка Т-позы 
         
         Args:
             shoulder_threshold: допустимое отклонение от 90° для плеч
@@ -250,7 +327,7 @@ class AngleAnalyzer:
         return angles
     
     def get_specific_angles(self):
-        """Получает конкретные важные углы тела"""
+        """Получает конкретные важные углы тела (только для рук)"""
         specific_angles = {}
         
         # Плечи (угол между рукой и туловищем)
@@ -260,11 +337,7 @@ class AngleAnalyzer:
         # Локти (угол в локтевом суставе)
         left_elbow = self.calculate_angle(11, 13, 15)
         right_elbow = self.calculate_angle(12, 14, 16)
-        
-        # Тазобедренные суставы (угол между бедром и туловищем)
-        left_hip = self.calculate_angle(25, 23, 11)
-        right_hip = self.calculate_angle(26, 24, 12)
-        
+
         # Колени (угол в коленном суставе)
         left_knee = self.calculate_angle(23, 25, 27)
         right_knee = self.calculate_angle(24, 26, 28)
@@ -293,30 +366,6 @@ class AngleAnalyzer:
             'name': 'Правое плечо'
         }
         
-        specific_angles['left_knee'] = {
-            'angle': left_knee,
-            'points': (23, 25, 27),
-            'name': 'Левое колено'
-        }
-        
-        specific_angles['right_knee'] = {
-            'angle': right_knee,
-            'points': (24, 26, 28),
-            'name': 'Правое колено'
-        }
-        
-        specific_angles['left_hip'] = {
-            'angle': left_hip,
-            'points': (25, 23, 11),
-            'name': 'Левый тазобедренный'
-        }
-        
-        specific_angles['right_hip'] = {
-            'angle': right_hip,
-            'points': (26, 24, 12),
-            'name': 'Правый тазобедренный'
-        }
-        
         return specific_angles
     
     def print_specific_angles(self):
@@ -326,6 +375,14 @@ class AngleAnalyzer:
         if not specific_angles:
             print("Нет данных об углах")
             return
+            
+        print("\n" + "="*60)
+        print("ТЕКУЩИЕ ЗНАЧЕНИЯ УГЛОВ:")
+        print("="*60)
+        for key in ['right_shoulder', 'left_shoulder', 'right_elbow', 'left_elbow']:
+            if key in specific_angles:
+                angle_data = specific_angles[key]
+                print(f"{angle_data['name']:25}: {angle_data['angle']:6.1f}°")
     
     def check_mqtt_connection(self):
         if not self.mqtt_client:
@@ -426,7 +483,7 @@ def test_analyzer_with_data():
     print("\n" + "="*60)
     print("ИНДИВИДУАЛЬНЫЕ ЗНАЧЕНИЯ:")
     print("="*60)
-    for key in ['right_elbow', 'left_elbow', 'right_shoulder', 'left_shoulder', 'right_knee', 'left_knee']:
+    for key in ['right_elbow', 'left_elbow', 'right_shoulder', 'left_shoulder']:
         if key in specific_angles:
             angle_data = specific_angles[key]
             print(f"{angle_data['name']:25}: {angle_data['angle']:6.1f}°")
@@ -448,7 +505,7 @@ if __name__ == "__main__":
         specific_angles = analyzer.get_specific_angles()
         print("\nИНДИВИДУАЛЬНЫЕ ЗНАЧЕНИЯ:")
         print("="*60)
-        for key in ['right_elbow', 'left_elbow', 'right_shoulder', 'left_shoulder', 'right_knee', 'left_knee']:
+        for key in ['right_elbow', 'left_elbow', 'right_shoulder', 'left_shoulder']:
             if key in specific_angles:
                 angle_data = specific_angles[key]
                 print(f"{angle_data['name']:25}: {angle_data['angle']:6.1f}°")
@@ -461,6 +518,15 @@ if __name__ == "__main__":
               f"П-плечо={t_pose_result['angles']['right_shoulder']:.1f}°, "
               f"Л-локоть={t_pose_result['angles']['left_elbow']:.1f}°, "
               f"П-локоть={t_pose_result['angles']['right_elbow']:.1f}°")
+        
+        arms_down_result = analyzer.check_arms_down_pose()
+        print("\n=== ПРОВЕРКА ПОЗЫ 'РУКИ ПО ШВАМ' ===")
+        print(f"Руки по швам: {'ВЕРНО' if arms_down_result['is_arms_down'] else 'НЕВЕРНО'}")
+        print(f"Причина: {arms_down_result['reason']}")
+        print(f"Углы: Л-плечо={arms_down_result['angles']['left_shoulder']:.1f}°, "
+              f"П-плечо={arms_down_result['angles']['right_shoulder']:.1f}°, "
+              f"Л-локоть={arms_down_result['angles']['left_elbow']:.1f}°, "
+              f"П-локоть={arms_down_result['angles']['right_elbow']:.1f}°")
         
         print("\nТЕСТИРОВАНИЕ ЗАВЕРШЕНО")
         print("="*60)
@@ -482,21 +548,26 @@ if __name__ == "__main__":
                     if update_counter % 10 == 0:
                         analyzer.print_specific_angles()
                         
-                        
                     specific_angles = analyzer.get_specific_angles()
                     t_pose_result = analyzer.check_t_pose()
-                    print(f"T-поза: {'ВЕРНО' if t_pose_result['is_t_pose'] else 'НЕВЕРНО'}")
-                    print(f"Причина: {t_pose_result['reason']}")
-                    print(f"Углы: Л-плечо={t_pose_result['angles']['left_shoulder']:.1f}°, "
-                          f"П-плечо={t_pose_result['angles']['right_shoulder']:.1f}°, "
-                          f"Л-локоть={t_pose_result['angles']['left_elbow']:.1f}°, "
-                          f"П-локоть={t_pose_result['angles']['right_elbow']:.1f}°")
-                    if update_counter % 5 == 0 and specific_angles:
-                        print(f"\nОбновление #{update_counter}")
-                        print(f"Правый локоть: {specific_angles['right_elbow']['angle']:.1f}°")
-                        print(f"Левый локоть: {specific_angles['left_elbow']['angle']:.1f}°")
-                        print(f"Правое плечо: {specific_angles['right_shoulder']['angle']:.1f}°")
-                        print(f"Левое плечо: {specific_angles['left_shoulder']['angle']:.1f}°")
+                    arms_down_result = analyzer.check_arms_down_pose()
+                    
+                    if update_counter % 5 == 0:
+                        print(f"\n=== T-ПОЗА ===")
+                        print(f"T-поза: {'ДА' if t_pose_result['is_t_pose'] else 'НЕТ'}")
+                        print(f"Причина: {t_pose_result['reason']}")
+                        print(f"Углы: Л-плечо={t_pose_result['angles']['left_shoulder']:.1f}°, "
+                              f"П-плечо={t_pose_result['angles']['right_shoulder']:.1f}°, "
+                              f"Л-локоть={t_pose_result['angles']['left_elbow']:.1f}°, "
+                              f"П-локоть={t_pose_result['angles']['right_elbow']:.1f}°")
+                        
+                        print(f"\n=== РУКИ ПО ШВАМ ===")
+                        print(f"Руки по швам: {'ДА' if arms_down_result['is_arms_down'] else 'НЕТ'}")
+                        print(f"Причина: {arms_down_result['reason']}")
+                        print(f"Углы: Л-плечо={arms_down_result['angles']['left_shoulder']:.1f}°, "
+                              f"П-плечо={arms_down_result['angles']['right_shoulder']:.1f}°, "
+                              f"Л-локоть={arms_down_result['angles']['left_elbow']:.1f}°, "
+                              f"П-локоть={arms_down_result['angles']['right_elbow']:.1f}°")
                     
                     update_counter += 1
                     time.sleep(0.1)
