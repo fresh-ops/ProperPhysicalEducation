@@ -729,7 +729,6 @@ class AngleAnalyzer:
             self.mqtt_client.connect(self.mqtt_broker, self.mqtt_port, 60)
         except Exception as conn_err:
             print(f"Ошибка подключения: {conn_err}")
-            return False
 
         self.mqtt_client.loop_start()
 
@@ -857,12 +856,7 @@ if __name__ == "__main__":
         print("=" * 60)
 
     else:
-        analyzer = AngleAnalyzer(
-            broker=MQTT_BROKER,
-            port=MQTT_PORT,
-            input_topic=MQTT_TOPIC,
-            output_topic=MQTT_OUTPUT_TOPIC
-        )
+        analyzer = AngleAnalyzer()
 
         if analyzer.connect(timeout=5):
             print("\n" + "=" * 60)
@@ -874,21 +868,14 @@ if __name__ == "__main__":
             print("=" * 60)
 
             try:
-                update_counter = 0
                 while True:
-                    if update_counter % 20 == 0:
-                        print(f"\n[{time.strftime('%H:%M:%S')}] Статус: Активен")
-                        print(f"Последняя поза: {analyzer.get_pose_name(analyzer.last_pose_id)}")
-
-                    if update_counter % 30 == 0:
-                        analyzer.print_specific_angles()
-
-                    update_counter += 1
-                    time.sleep(0.1)
-
+                    time.sleep(1)
+                    
             except KeyboardInterrupt:
-                print("\nЗавершение работы...")
+                print("\nЗавершение работы пользователем...")
+            finally:
                 analyzer.disconnect()
+                print("Работа завершена.")
         else:
             print("Не удалось подключиться к MQTT брокеру или получить данные")
             print("Завершение работы...")

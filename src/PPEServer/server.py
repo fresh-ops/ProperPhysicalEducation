@@ -1,5 +1,6 @@
 import os
 import paho.mqtt.client as mqtt
+import numpy as np
 import struct 
 import time
 import random
@@ -47,7 +48,7 @@ def on_message(client, userdata, msg):
     if msg.topic == "emg/raw":
         try:
             print(f"[RECV] topic={msg.topic} payload={msg.payload}")
-            
+
             if len(msg.payload) != 2:
                 return
 
