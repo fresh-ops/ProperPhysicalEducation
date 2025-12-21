@@ -717,7 +717,7 @@ class AngleAnalyzer:
             start_time = time.time()
             while not self.mqtt_data_received and (time.time() - start_time) < timeout:
                 time.sleep(0.1)
-
+            """
             connected, subscribed, data_received = self.check_mqtt_connection()
 
             if not connected:
@@ -734,7 +734,14 @@ class AngleAnalyzer:
                 return False
             else:
                 print("MQTT подключение активно, данные поступают")
-                return True
+                return True"""
+            
+            if not self.mqtt_connected:
+                print("Ошибка: Брокер не ответил на запрос подключения.")
+                return False
+            
+            print("MQTT подключение успешно установлено. Ожидание входящих сообщений...")
+            return True
 
         except Exception as e:
             print(f"Ошибка подключения к MQTT: {e}")
@@ -856,12 +863,7 @@ if __name__ == "__main__":
         print("=" * 60)
 
     else:
-        analyzer = AngleAnalyzer(
-            broker=MQTT_BROKER,
-            port=MQTT_PORT,
-            input_topic=MQTT_TOPIC,
-            output_topic=MQTT_OUTPUT_TOPIC
-        )
+        analyzer = AngleAnalyzer()
 
         if analyzer.connect(timeout=5):
             print("\n" + "=" * 60)
@@ -873,21 +875,14 @@ if __name__ == "__main__":
             print("=" * 60)
 
             try:
-                update_counter = 0
                 while True:
-                    if update_counter % 20 == 0:
-                        print(f"\n[{time.strftime('%H:%M:%S')}] Статус: Активен")
-                        print(f"Последняя поза: {analyzer.get_pose_name(analyzer.last_pose_id)}")
-
-                    if update_counter % 30 == 0:
-                        analyzer.print_specific_angles()
-
-                    update_counter += 1
-                    time.sleep(0.1)
-
+                    time.sleep(1)
+                    
             except KeyboardInterrupt:
-                print("\nЗавершение работы...")
+                print("\nЗавершение работы пользователем...")
+            finally:
                 analyzer.disconnect()
+                print("Работа завершена.")
         else:
             print("Не удалось подключиться к MQTT брокеру или получить данные")
             print("Завершение работы...")

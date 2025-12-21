@@ -1,7 +1,9 @@
 import os
 import paho.mqtt.client as mqtt
+import numpy as np
 import struct 
 import time
+import random
 
 # Чтение переменных окружения для конфигурации
 MQTT_BROKER = os.getenv('MQTT_BROKER', 'mqtt-broker')
@@ -51,7 +53,7 @@ def on_message(client, userdata, msg):
     if msg.topic == "emg/raw":
         try:
             print(f"[RECV] topic={msg.topic} payload={msg.payload}")
-            
+
             if len(msg.payload) != 2:
                 return
 
@@ -65,14 +67,6 @@ def on_message(client, userdata, msg):
         except Exception as e:
             print("EMG Error:", e)
 
-    #camera
-    elif msg.topic == "camera/points":
-        try:
-            # Просто пробрасываем данные в топик для AngleAnalyer.py
-            pass
-            
-        except Exception as e:
-            print(f"Camera Error: {e}")
 
 # Инициализация MQTT клиента
 client = mqtt.Client()
