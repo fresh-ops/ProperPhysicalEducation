@@ -15,7 +15,7 @@ services:
     build:
       context: ../PPEServer
       dockerfile: Dockerfile.server
-    container_name: emg_data_server
+    container_name: data_server
     depends_on:
       - mqtt-broker
     environment:
@@ -41,7 +41,7 @@ services:
     build:
       context: ../PPEWeb
       dockerfile: Dockerfile.web          
-    container_name: emg_web_interface
+    container_name: web_interface
     ports:
       - "8080:80"
     depends_on:

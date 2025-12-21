@@ -2,6 +2,8 @@ import os
 import paho.mqtt.client as mqtt
 import struct 
 import time
+import random
+import json
 
 # Чтение переменных окружения для конфигурации
 MQTT_BROKER = os.getenv('MQTT_BROKER', 'mqtt-broker')
@@ -13,18 +15,12 @@ Data = 0.0
 lastD = 0.0
 fk = 0.3
 
-# Пример функции для генерации данных позы
-def detect_pose():
-    pose = {
-        "pose_id": random.choice([-1,0,1]),
-        "angles": [random.uniform(60,120) for _ in range(6)],
-        "deviations": [random.uniform(0,15) for _ in range(6)],
-        "log": {
-            "is_correct": random.choice([True, False]),
-            "needed_correction": [random.uniform(-10,10) for _ in range(6)]
-        }
-    }
-    return pose
+# Функция для отправки тестовых точек
+def send_test_points():
+    # Генерируем 33 точки [x, y, z]
+    test_points = [[random.random(), random.random(), random.random()] for _ in range(33)]
+    # Отправляем как JSON
+    client.publish("camera/points", json.dumps(test_points))
 
 
 # Экспоненциальное скользящее среднее (фильтр)
@@ -41,7 +37,7 @@ def on_connect(client, userdata, flags, rc):
     if rc == 0:
         print("Connected with result code " + str(rc))
         client.subscribe("emg/raw")
-        client.subscribe("camera/points")
+        # client.subscribe("camera/points")
     else:
         print("Failed to connect, return code " + str(rc))
 
@@ -65,14 +61,6 @@ def on_message(client, userdata, msg):
         except Exception as e:
             print("EMG Error:", e)
 
-    #camera
-    elif msg.topic == "camera/points":
-        try:
-            # Просто пробрасываем данные в топик для AngleAnalyer.py
-            pass
-            
-        except Exception as e:
-            print(f"Camera Error: {e}")
 
 # Инициализация MQTT клиента
 client = mqtt.Client()
@@ -98,4 +86,10 @@ for attempt in range(max_retries):
             exit(1)
 
 print("Connected successfully! Starting loop...")
-client.loop_forever()
+client.loop_start() 
+try:
+    while True:
+        send_test_points() # Генерируем точки для AngleAnalyzer
+        time.sleep(0.5)  
+except KeyboardInterrupt:
+    client.loop_stop()

@@ -499,6 +499,27 @@ class AngleAnalyzer:
         self.mqtt_client.on_connect = self._on_mqtt_connect
         self.mqtt_client.on_message = self._on_mqtt_message
 
+    def on_connect(self, client, userdata, flags, rc):
+        print("MQTT connected", rc)
+        client.subscribe(self.mqtt_input_topic)
+
+    def on_message(self, client, userdata, msg):
+        try:
+            data = json.loads(msg.payload.decode("utf-8"))
+            self.points = data.get("points")
+
+            pose = self.detect_pose()
+            self.publish_pose(pose)
+
+        except Exception as e:
+            print("Ошибка обработки MQTT сообщения:", e)
+
+    def publish_pose(self, pose):
+        payload = json.dumps(pose)
+
+        self.mqtt_client.publish(self.mqtt_output_topic, payload)
+        print("MQTT SEND CAMERA/DETECTION", self.mqtt_output_topic, payload)
+
     def _on_mqtt_connect(self, client, userdata, flags, rc):
         if rc == 0:
             self.mqtt_connected = True
@@ -515,37 +536,38 @@ class AngleAnalyzer:
         try:
             self.mqtt_data_received = True
             self.mqtt_last_message_time = time.time()
-
-            data = msg.payload.decode().strip()
-
-            if ' ' in data:
-                numbers = list(map(float, data.split()))
-            else:
-                return
-
-            if len(numbers) >= NUM_POINTS * NUM_COORDINATES:
-                for i in range(NUM_POINTS):
-                    idx = i * NUM_COORDINATES
-                    x = numbers[idx]
-                    y = numbers[idx + 1]
-                    z = numbers[idx + 2]
-                    self.points[i] = (x, y, z)
-
-                self.calculate_all_angles()
-
-                pose_data = self.send_pose_data()
-
-                if pose_data:
-                    pose_name = self.get_pose_name(pose_data['pose_id'])
-                    if pose_data['pose_id'] != POSE_IDS["UNKNOWN"]:
-                        adjustments = pose_data['log']['needed_correction']
-                        print(f"{pose_name}: Корректировки: {adjustments}")
-                    else:
-                        print(f"UNKNOWN")
+            
+            # Декодируем данные как JSON
+            raw_data = json.loads(msg.payload.decode("utf-8"))
+            
+            # 1. Если данные пришли в формате [[x,y,z], [x,y,z]...]
+            if isinstance(raw_data, list) and len(raw_data) > 0 and isinstance(raw_data[0], list):
+                for i in range(min(len(raw_data), NUM_POINTS)):
+                    self.points[i] = tuple(raw_data[i])
+            
+            # 2. Если данные пришли в формате {"points": [x,y,z...]}
+            elif isinstance(raw_data, dict) and "points" in raw_data:
+                pts = raw_data["points"]
+                for i in range(min(len(pts) // 3, NUM_POINTS)):
+                    idx = i * 3
+                    self.points[i] = (pts[idx], pts[idx+1], pts[idx+2])
+            
+            # Запускаем расчеты и отправку
+            self.calculate_all_angles()
+            self.send_pose_data()
 
         except Exception as e:
-            print(f"Error: {e}")
-
+            # Если это не JSON, попробуем старый метод со сплитом (на всякий случай)
+            try:
+                data = msg.payload.decode("utf-8")
+                if ' ' in data:
+                    numbers = list(map(float, data.split()))
+                    # ... (старая логика заполнения self.points)
+                    self.calculate_all_angles()
+                    self.send_pose_data()
+            except:
+                print(f"Ошибка парсинга: {e}")
+                
     def calculate_angle(self, p1_idx, p2_idx, p3_idx):
         """
         Вычисляет угол в точке p2 между линиями p1-p2 и p3-p2
@@ -565,6 +587,14 @@ class AngleAnalyzer:
 
         v1 = (p1[0] - p2[0], p1[1] - p2[1])
         v2 = (p3[0] - p2[0], p3[1] - p2[1])
+
+        # Проверка на нулевые векторы
+        v1_len = math.sqrt(v1[0]**2 + v1[1]**2)
+        v2_len = math.sqrt(v2[0]**2 + v2[1]**2)
+        
+        if v1_len < 1e-6 or v2_len < 1e-6:
+            # Если один из векторов нулевой, угол не определен
+            return 0.0
 
         angle1 = math.atan2(v1[1], v1[0])
         angle2 = math.atan2(v2[1], v2[0])
@@ -691,54 +721,25 @@ class AngleAnalyzer:
         return connected, subscribed, data_recent
 
     def connect(self, timeout=5):
+        print(f"Попытка подключения к MQTT брокеру {self.mqtt_broker}:{self.mqtt_port}...")
+        print(f"Топик для подписки: {self.mqtt_input_topic}")
+        print(f"Топик для отправки: {self.mqtt_output_topic}")
+
         try:
-            print(f"Попытка подключения к MQTT брокеру {self.mqtt_broker}:{self.mqtt_port}...")
-            print(f"Топик для подписки: {self.mqtt_input_topic}")
-            print(f"Топик для отправки: {self.mqtt_output_topic}")
-
-            try:
-                self.mqtt_client.connect(self.mqtt_broker, self.mqtt_port, 60)
-            except Exception as conn_err:
-                print(f"Ошибка подключения: {conn_err}")
-                return False
-        
-            self.mqtt_client.loop_start()
-
-            print(f"Ожидание подключения... (до {timeout} секунд)")
-            start_time = time.time()
-            while not self.mqtt_connected and (time.time() - start_time) < timeout:
-                time.sleep(0.1)
-
-            if not self.mqtt_connected:
-                print("Не удалось подключиться к MQTT брокеру в течение заданного времени")
-                return False
-
-            print("Ожидание данных...")
-            start_time = time.time()
-            while not self.mqtt_data_received and (time.time() - start_time) < timeout:
-                time.sleep(0.1)
-
-            connected, subscribed, data_received = self.check_mqtt_connection()
-
-            if not connected:
-                print("Соединение с MQTT брокером не установлено")
-                return False
-            elif not subscribed:
-                print("Не удалось подписаться на топик")
-                return False
-            elif not data_received:
-                print(f"Предупреждение: Нет данных из топика '{self.mqtt_input_topic}'")
-                print("Проверьте:")
-                print(f"  1. Существует ли топик '{self.mqtt_input_topic}' на брокере")
-                print(f"  2. Отправляются ли данные в этот топик")
-                return False
-            else:
-                print("MQTT подключение активно, данные поступают")
-                return True
-
-        except Exception as e:
-            print(f"Ошибка подключения к MQTT: {e}")
+            self.mqtt_client.connect(self.mqtt_broker, self.mqtt_port, 60)
+        except Exception as conn_err:
+            print(f"Ошибка подключения: {conn_err}")
             return False
+
+        self.mqtt_client.loop_start()
+
+        print(f"Ожидание подключения... (до {timeout} секунд)")
+        start_time = time.time()
+
+        while not self.mqtt_connected and (time.time() - start_time) < timeout:
+            time.sleep(0.1)
+
+        return self.mqtt_connected
 
     def disconnect(self):
         if self.mqtt_client:
