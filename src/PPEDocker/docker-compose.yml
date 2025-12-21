@@ -13,8 +13,8 @@ services:
 
   emg-server:
     build:
-      context: ../PPEServer
-      dockerfile: Dockerfile.server
+      context: ./server
+      dockerfile: Dockerfile
     container_name: data_server
     depends_on:
       - mqtt-broker
@@ -26,8 +26,8 @@ services:
 
   pose-analyzer:
     build:
-      context: ../PPEAngle
-      dockerfile: Dockerfile.analyzer
+      context: ./analyzer
+      dockerfile: Dockerfile
     container_name: pose_analyzer
     depends_on:
       - mqtt-broker
@@ -39,8 +39,8 @@ services:
 
   web-interface:
     build:
-      context: ../PPEWeb
-      dockerfile: Dockerfile.web          
+      context: ./web
+      dockerfile: Dockerfile          
     container_name: web_interface
     ports:
       - "8080:80"

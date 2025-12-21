@@ -1,0 +1,387 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>EMG & Pose Monitor</title>
+    <style>
+        body { margin: 20px; font-family: Arial; background: #f5f5f5; }
+        .box { background: white; padding: 15px; margin: 10px 0; border: 1px solid #ddd; border-radius: 5px; }
+        button { padding: 10px 15px; margin: 5px; font-size: 14px; cursor: pointer; }
+        canvas { width: 100%; height: 250px; border: 1px solid #ccc; display: block; }
+        .green { background: #90EE90; }
+        .yellow { background: #FFFF99; }
+        .red { background: #FFB6C1; }
+        .gray { background: #E0E0E0; }
+        .blue { background: #B3D9FF; }
+        #status { font-size: 20px; font-weight: bold; padding: 15px; text-align: center; }
+        #poseStatus { font-size: 18px; font-weight: bold; padding: 15px; text-align: center; }
+        #progress { display: none; }
+        #bar { height: 25px; background: #4CAF50; width: 0%; }
+        .log-entry { padding: 8px; margin: 5px 0; background: #f9f9f9; border-left: 3px solid #2196F3; font-family: monospace; font-size: 12px; }
+        .log-container { max-height: 400px; overflow-y: auto; background: #fafafa; padding: 10px; border-radius: 4px; }
+        .pose-info { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 10px; }
+        .angle-item { background: #f5f5f5; padding: 10px; border-radius: 4px; text-align: center; }
+        .angle-label { font-size: 11px; color: #666; margin-bottom: 5px; }
+        .angle-value { font-size: 18px; font-weight: bold; color: #2196F3; }
+        .correction { font-size: 12px; color: #f44336; margin-top: 3px; }
+        h2 { margin-top: 0; color: #333; }
+        h3 { color: #555; margin-bottom: 10px; }
+    </style>
+</head>
+<body>
+    <h2>EMG & Pose Monitoring</h2>
+    
+    <div id="mqtt" class="box gray">MQTT: Отключен</div>
+    <div id="status" class="box gray">ТРЕБУЕТСЯ КАЛИБРОВКА</div>
+    
+    <canvas id="c"></canvas>
+    
+    <div class="box">
+        <h3>Калибровка EMG</h3>
+        <button onclick="calib()">Калибровка</button>
+        <button onclick="load()">Загрузить</button>
+        <button onclick="reset()">Сброс</button>
+    </div>
+    
+    <div id="progress" class="box">
+        <div id="msg" style="text-align:center; font-weight:bold; padding:10px;">Готов</div>
+        <div style="background:#E0E0E0;"><div id="bar"></div></div>
+    </div>
+
+    <!-- Секция поз -->
+    <div id="poseStatus" class="box gray">ПОЗА: Ожидание данных...</div>
+    
+    <div class="box">
+        <h3>Углы суставов (градусы)</h3>
+        <div class="pose-info" id="angles">
+            <div class="angle-item">
+                <div class="angle-label">Левое плечо</div>
+                <div class="angle-value" id="a0">--</div>
+                <div class="correction" id="c0"></div>
+            </div>
+            <div class="angle-item">
+                <div class="angle-label">Правое плечо</div>
+                <div class="angle-value" id="a1">--</div>
+                <div class="correction" id="c1"></div>
+            </div>
+            <div class="angle-item">
+                <div class="angle-label">Левый локоть</div>
+                <div class="angle-value" id="a2">--</div>
+                <div class="correction" id="c2"></div>
+            </div>
+            <div class="angle-item">
+                <div class="angle-label">Правый локоть</div>
+                <div class="angle-value" id="a3">--</div>
+                <div class="correction" id="c3"></div>
+            </div>
+            <div class="angle-item">
+                <div class="angle-label">Левое колено</div>
+                <div class="angle-value" id="a4">--</div>
+                <div class="correction" id="c4"></div>
+            </div>
+            <div class="angle-item">
+                <div class="angle-label">Правое колено</div>
+                <div class="angle-value" id="a5">--</div>
+                <div class="correction" id="c5"></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="box">
+        <h3>История поз</h3>
+        <button onclick="clearLogs()">Очистить логи</button>
+        <div class="log-container" id="logs">
+            <div style="text-align:center; color:#999;">Логи будут появляться здесь...</div>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/paho-mqtt/1.0.1/mqttws31.min.js"></script>
+    <script>
+        let mqtt, buf = [], val = 0, min = 0, max = 0, y1 = 0, y2 = 0;
+        let cal = false, phase = '', start = 0, data = { r: [], t: [] };
+        let poseData = null, logs = []; 
+        const W = 5000, D = 500;
+        const MAX_LOGS = 50; 
+        
+        const POSE_NAMES = {
+            '-1': 'UNKNOWN',
+            '0': 'T-POSE',
+            '1': 'ARMS DOWN'
+        };
+        
+        const ANGLE_NAMES = [
+            'Левое плечо', 'Правое плечо', 
+            'Левый локоть', 'Правый локоть',
+            'Левое колено', 'Правое колено'
+        ];
+
+        const cv = document.getElementById('c');
+        const ctx = cv.getContext('2d');
+        cv.width = 800;
+        cv.height = 250;
+        
+        function conn() {
+            mqtt = new Paho.MQTT.Client(location.hostname, 9001, 'c' + Math.random().toString(16).slice(2, 8));
+            
+            mqtt.onConnectionLost = () => {
+                document.getElementById('mqtt').textContent = 'MQTT: Отключен';
+                document.getElementById('mqtt').className = 'box gray';
+                setTimeout(conn, 5000);
+            };
+            
+            mqtt.onMessageArrived = (m) => {
+                if (m.destinationName === 'emg/filtered') {
+                    val = parseFloat(m.payloadString);
+                    buf.push(val);
+                    if (buf.length > D) buf.shift();
+                    if (cal) updateCal();
+                    draw();
+                    updateUI();
+                } else if (m.destinationName === 'camera/detection') {
+                    handlePoseData(m.payloadString);
+                }
+            };
+            
+            mqtt.connect({
+                onSuccess: () => {
+                    document.getElementById('mqtt').textContent = 'MQTT: Подключен';
+                    document.getElementById('mqtt').className = 'box green';
+                    mqtt.subscribe('emg/filtered');
+                    mqtt.subscribe('camera/detection');
+                    checkSaved();
+                },
+                onFailure: () => setTimeout(conn, 5000)
+            });
+        }
+        
+        function handlePoseData(jsonStr) {
+            try {
+                poseData = JSON.parse(jsonStr);
+                console.log('Получены данные позы:', poseData);  // Для отладки
+                updatePoseUI();
+                addLog(poseData);
+            } catch (e) {
+                console.error('Parse error:', e);
+            }
+        }
+        
+        function updatePoseUI() {
+            if (!poseData) return;
+            
+            const status = document.getElementById('poseStatus');
+            const poseName = POSE_NAMES[poseData.pose_id] || 'UNKNOWN';
+            
+            if (poseData.pose_id === -1) {
+                status.textContent = `ПОЗА: ${poseName}`;
+                status.className = 'box gray';
+            } else if (poseData.log.is_correct) {
+                status.textContent = `ПОЗА: ${poseName} ✓`;
+                status.className = 'box green';
+            } else {
+                status.textContent = `ПОЗА: ${poseName} (требует корректировки)`;
+                status.className = 'box yellow';
+            }
+            
+            // Обновляем углы
+            for (let i = 0; i < 6; i++) {
+                const angleEl = document.getElementById(`a${i}`);
+                const corrEl = document.getElementById(`c${i}`);
+                
+                if (poseData.angles && poseData.angles[i] !== undefined) {
+                    angleEl.textContent = poseData.angles[i].toFixed(1) + '°';
+                    
+                    if (poseData.log.needed_correction && poseData.log.needed_correction[i] !== undefined) {
+                        const corr = poseData.log.needed_correction[i];
+                        if (Math.abs(corr) > 0.1) {
+                            corrEl.textContent = corr > 0 ? `▲ ${corr.toFixed(1)}°` : `▼ ${Math.abs(corr).toFixed(1)}°`;
+                            corrEl.style.color = '#f44336';
+                        } else {
+                            corrEl.textContent = '✓';
+                            corrEl.style.color = '#4CAF50';
+                        }
+                    } else {
+                        corrEl.textContent = '';
+                    }
+                }
+            }
+        }
+        
+        function addLog(data) {
+            const time = new Date().toLocaleTimeString();
+            const poseName = POSE_NAMES[data.pose_id] || 'UNKNOWN';
+            
+            let correctionSummary = '';
+            if (data.log.needed_correction && data.log.needed_correction.length > 0) {
+                const needsCorr = data.log.needed_correction.filter((c, i) => Math.abs(c) > 0.1);
+                if (needsCorr.length > 0) {
+                    correctionSummary = ` | Корректировок: ${needsCorr.length}`;
+                }
+            }
+            
+            const logEntry = {
+                time: time,
+                text: `[${time}] ${poseName}${data.log.is_correct ? ' ✓' : ''}${correctionSummary}`
+            };
+            
+            logs.unshift(logEntry);
+            if (logs.length > MAX_LOGS) logs.pop();
+            
+            renderLogs();
+        }
+        
+        function renderLogs() {
+            const container = document.getElementById('logs');
+            if (logs.length === 0) {
+                container.innerHTML = '<div style="text-align:center; color:#999;">Логи будут появляться здесь...</div>';
+            } else {
+                container.innerHTML = logs.map(log => 
+                    `<div class="log-entry">${log.text}</div>`
+                ).join('');
+            }
+        }
+        
+        function clearLogs() {
+            logs = [];
+            renderLogs();
+        }
+        
+        function draw() {
+            ctx.clearRect(0, 0, 800, 250);
+            
+            if (min > 0 && max > 0) {
+                const ymax = Math.max(max * 1.2, ...buf, 1000);
+                
+                ctx.fillStyle = 'rgba(144,238,144,0.3)';
+                ctx.fillRect(0, 250 - (y1/ymax)*250, 800, (y1/ymax)*250);
+                
+                ctx.fillStyle = 'rgba(255,255,153,0.3)';
+                ctx.fillRect(0, 250 - (y2/ymax)*250, 800, ((y2-y1)/ymax)*250);
+                
+                ctx.fillStyle = 'rgba(255,182,193,0.3)';
+                ctx.fillRect(0, 0, 800, 250 - (y2/ymax)*250);
+            }
+            
+            if (buf.length > 1) {
+                const ymax = Math.max(max * 1.2, ...buf, 1000);
+                ctx.strokeStyle = '#2196F3';
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                
+                buf.forEach((v, i) => {
+                    const x = (i / D) * 800;
+                    const y = 250 - (v / ymax) * 250;
+                    i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+                });
+                
+                ctx.stroke();
+            }
+        }
+        
+        function updateUI() {
+            const s = document.getElementById('status');
+            let msg = 'ТРЕБУЕТСЯ КАЛИБРОВКА', cls = 'gray';
+            
+            if (min > 0 && max > 0) {
+                if (val < y1) { msg = 'НАПРЯГИСЬ!'; cls = 'green'; }
+                else if (val <= y2) { msg = 'ДЕРЖИ ТАК!'; cls = 'yellow'; }
+                else { msg = 'РАССЛАБЬСЯ!'; cls = 'red'; }
+            }
+            
+            s.textContent = msg;
+            s.className = 'box ' + cls;
+        }
+        
+        function calib() {
+            if (cal) return;
+            if ((min !== 0 || max !== 0) && !confirm('Потеряете калибровку. Продолжить?')) return;
+            
+            cal = true;
+            phase = 'wr';
+            start = Date.now();
+            data = { r: [], t: [] };
+            
+            document.getElementById('progress').style.display = 'block';
+            document.getElementById('msg').textContent = 'ГОТОВЬТЕСЬ РАССЛАБИТЬ...';
+            document.getElementById('bar').style.width = '0%';
+        }
+        
+        function updateCal() {
+            const t = Date.now() - start;
+            const prog = (t / (2 * (W + W))) * 100;
+            document.getElementById('bar').style.width = Math.min(prog, 100) + '%';
+            
+            if (phase === 'wr' && t >= W) {
+                phase = 'r';
+                start = Date.now();
+                document.getElementById('msg').textContent = 'РАССЛАБЬТЕ РУКУ';
+            } else if (phase === 'r') {
+                data.r.push(val);
+                if (t >= W) {
+                    phase = 'wt';
+                    start = Date.now();
+                    document.getElementById('msg').textContent = 'ГОТОВЬТЕСЬ НАПРЯЧЬ...';
+                }
+            } else if (phase === 'wt' && t >= W) {
+                phase = 't';
+                start = Date.now();
+                document.getElementById('msg').textContent = 'НАПРЯГИТЕ РУКУ!';
+            } else if (phase === 't') {
+                data.t.push(val);
+                if (t >= W) finish();
+            }
+        }
+        
+        function finish() {
+            cal = false;
+            
+            if (data.r.length > 10 && data.t.length > 10) {
+                min = med(data.r) * 0.9;
+                max = med(data.t) * 1.1;
+                const rng = max - min;
+                y1 = min + rng * 0.15;
+                y2 = y1 + rng * 0.70;
+                
+                localStorage.setItem('emg', JSON.stringify({ min, max, y1, y2, ts: Date.now() }));
+                
+                document.getElementById('msg').textContent = 'ЗАВЕРШЕНО!';
+                document.getElementById('bar').style.width = '100%';
+                setTimeout(() => document.getElementById('progress').style.display = 'none', 3000);
+            } else {
+                document.getElementById('msg').textContent = 'ОШИБКА!';
+            }
+        }
+        
+        function med(a) {
+            const s = [...a].sort((x, y) => x - y);
+            const m = Math.floor(s.length / 2);
+            return s.length % 2 ? s[m] : (s[m - 1] + s[m]) / 2;
+        }
+        
+        function load() {
+            const s = localStorage.getItem('emg');
+            if (!s) { alert('Нет сохранённой калибровки'); return; }
+            
+            const c = JSON.parse(s);
+            min = c.min;
+            max = c.max;
+            y1 = c.y1;
+            y2 = c.y2;
+            alert('Загружено от ' + new Date(c.ts).toLocaleString());
+        }
+        
+        function checkSaved() {
+            const s = localStorage.getItem('emg');
+            if (s && confirm('Есть сохранённая калибровка. Загрузить?')) load();
+        }
+        
+        function reset() {
+            if ((min === 0 && max === 0) || !confirm('Сбросить?')) return;
+            min = max = y1 = y2 = 0;
+            updateUI();
+        }
+        
+        conn();
+        setInterval(draw, 20);
+    </script>
+</body>
+</html>
