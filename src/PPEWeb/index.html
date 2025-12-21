@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>EMG</title>
+    <style>
+        body { margin: 20px; font-family: Arial; background: #f5f5f5; }
+        .box { background: white; padding: 15px; margin: 10px 0; border: 1px solid #ddd; }
+        button { padding: 10px 15px; margin: 5px; font-size: 14px; }
+        canvas { width: 100%; height: 250px; border: 1px solid #ccc; display: block; }
+        .green { background: #90EE90; }
+        .yellow { background: #FFFF99; }
+        .red { background: #FFB6C1; }
+        .gray { background: #E0E0E0; }
+        #status { font-size: 20px; font-weight: bold; padding: 15px; text-align: center; }
+        #progress { display: none; }
+        #bar { height: 25px; background: #4CAF50; width: 0%; }
+    </style>
+</head>
+<body>
+    <h2>EMG Калибратор</h2>
+    
+    <div id="mqtt" class="box gray">MQTT: Отключен</div>
+    <div id="status" class="box gray">ТРЕБУЕТСЯ КАЛИБРОВКА</div>
+    
+    <canvas id="c"></canvas>
+    
+    <div class="box">
+        <button onclick="calib()">Калибровка</button>
+        <button onclick="load()">Загрузить</button>
+        <button onclick="reset()">Сброс</button>
+    </div>
+    
+    <div id="progress" class="box">
+        <div id="msg" style="text-align:center; font-weight:bold; padding:10px;">Готов</div>
+        <div style="background:#E0E0E0;"><div id="bar"></div></div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/paho-mqtt/1.0.1/mqttws31.min.js"></script>
+    <script>
+        let mqtt, buf = [], val = 0, min = 0, max = 0, y1 = 0, y2 = 0;
+        let cal = false, phase = '', start = 0, data = { r: [], t: [] };
+        const W = 5000, D = 500;
+        
+        const cv = document.getElementById('c');
+        const ctx = cv.getContext('2d');
+        cv.width = 800;
+        cv.height = 250;
+        
+        function conn() {
+            mqtt = new Paho.MQTT.Client(location.hostname, 9001, 'c' + Math.random().toString(16).slice(2, 8));
+            
+            mqtt.onConnectionLost = () => {
+                document.getElementById('mqtt').textContent = 'MQTT: Отключен';
+                document.getElementById('mqtt').className = 'box gray';
+                setTimeout(conn, 5000);
+            };
+            
+            mqtt.onMessageArrived = (m) => {
+                val = parseFloat(m.payloadString);
+                buf.push(val);
+                if (buf.length > D) buf.shift();
+                if (cal) updateCal();
+                draw();
+                updateUI();
+            };
+            
+            mqtt.connect({
+                onSuccess: () => {
+                    document.getElementById('mqtt').textContent = 'MQTT: Подключен';
+                    document.getElementById('mqtt').className = 'box green';
+                    mqtt.subscribe('emg/filtered');
+                    checkSaved();
+                },
+                onFailure: () => setTimeout(conn, 5000)
+            });
+        }
+        
+        function draw() {
+            ctx.clearRect(0, 0, 800, 250);
+            
+            if (min > 0 && max > 0) {
+                const ymax = Math.max(max * 1.2, ...buf, 1000);
+                
+                ctx.fillStyle = 'rgba(144,238,144,0.3)';
+                ctx.fillRect(0, 250 - (y1/ymax)*250, 800, (y1/ymax)*250);
+                
+                ctx.fillStyle = 'rgba(255,255,153,0.3)';
+                ctx.fillRect(0, 250 - (y2/ymax)*250, 800, ((y2-y1)/ymax)*250);
+                
+                ctx.fillStyle = 'rgba(255,182,193,0.3)';
+                ctx.fillRect(0, 0, 800, 250 - (y2/ymax)*250);
+            }
+            
+            if (buf.length > 1) {
+                const ymax = Math.max(max * 1.2, ...buf, 1000);
+                ctx.strokeStyle = '#2196F3';
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                
+                buf.forEach((v, i) => {
+                    const x = (i / D) * 800;
+                    const y = 250 - (v / ymax) * 250;
+                    i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+                });
+                
+                ctx.stroke();
+            }
+        }
+        
+        function updateUI() {
+            const s = document.getElementById('status');
+            let msg = 'ТРЕБУЕТСЯ КАЛИБРОВКА', cls = 'gray';
+            
+            if (min > 0 && max > 0) {
+                if (val < y1) { msg = 'НАПРЯГИСЬ!'; cls = 'green'; }
+                else if (val <= y2) { msg = 'ДЕРЖИ ТАК!'; cls = 'yellow'; }
+                else { msg = 'РАССЛАБЬСЯ!'; cls = 'red'; }
+            }
+            
+            s.textContent = msg;
+            s.className = 'box ' + cls;
+        }
+        
+        function calib() {
+            if (cal) return;
+            if ((min !== 0 || max !== 0) && !confirm('Потеряете калибровку. Продолжить?')) return;
+            
+            cal = true;
+            phase = 'wr';
+            start = Date.now();
+            data = { r: [], t: [] };
+            
+            document.getElementById('progress').style.display = 'block';
+            document.getElementById('msg').textContent = 'ГОТОВЬТЕСЬ РАССЛАБИТЬ...';
+            document.getElementById('bar').style.width = '0%';
+        }
+        
+        function updateCal() {
+            const t = Date.now() - start;
+            const prog = (t / (2 * (W + W))) * 100;
+            document.getElementById('bar').style.width = Math.min(prog, 100) + '%';
+            
+            if (phase === 'wr' && t >= W) {
+                phase = 'r';
+                start = Date.now();
+                document.getElementById('msg').textContent = 'РАССЛАБЬТЕ РУКУ';
+            } else if (phase === 'r') {
+                data.r.push(val);
+                if (t >= W) {
+                    phase = 'wt';
+                    start = Date.now();
+                    document.getElementById('msg').textContent = 'ГОТОВЬТЕСЬ НАПРЯЧЬ...';
+                }
+            } else if (phase === 'wt' && t >= W) {
+                phase = 't';
+                start = Date.now();
+                document.getElementById('msg').textContent = 'НАПРЯГИТЕ РУКУ!';
+            } else if (phase === 't') {
+                data.t.push(val);
+                if (t >= W) finish();
+            }
+        }
+        
+        function finish() {
+            cal = false;
+            
+            if (data.r.length > 10 && data.t.length > 10) {
+                min = med(data.r) * 0.9;
+                max = med(data.t) * 1.1;
+                const rng = max - min;
+                y1 = min + rng * 0.15;
+                y2 = y1 + rng * 0.70;
+                
+                localStorage.setItem('emg', JSON.stringify({ min, max, y1, y2, ts: Date.now() }));
+                
+                document.getElementById('msg').textContent = 'ЗАВЕРШЕНО!';
+                document.getElementById('bar').style.width = '100%';
+                setTimeout(() => document.getElementById('progress').style.display = 'none', 3000);
+            } else {
+                document.getElementById('msg').textContent = 'ОШИБКА!';
+            }
+        }
+        
+        function med(a) {
+            const s = [...a].sort((x, y) => x - y);
+            const m = Math.floor(s.length / 2);
+            return s.length % 2 ? s[m] : (s[m - 1] + s[m]) / 2;
+        }
+        
+        function load() {
+            const s = localStorage.getItem('emg');
+            if (!s) { alert('Нет сохранённой калибровки'); return; }
+            
+            const c = JSON.parse(s);
+            min = c.min;
+            max = c.max;
+            y1 = c.y1;
+            y2 = c.y2;
+            alert('Загружено от ' + new Date(c.ts).toLocaleString());
+        }
+        
+        function checkSaved() {
+            const s = localStorage.getItem('emg');
+            if (s && confirm('Есть сохранённая калибровка. Загрузить?')) load();
+        }
+        
+        function reset() {
+            if ((min === 0 && max === 0) || !confirm('Сбросить?')) return;
+            min = max = y1 = y2 = 0;
+            updateUI();
+        }
+        
+        conn();
+        setInterval(draw, 20); // Ускорено с 50ms до 20ms
+    </script>
+</body>
+</html>
