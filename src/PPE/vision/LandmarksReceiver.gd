@@ -1,6 +1,9 @@
 class_name LandmarksReceiver
 extends Node
 
+signal data_sended(data: Array)
+
+
 const RESTORER = preload("res://vision/restoration/SkeletalRestorer.py")
 const SYNC_TOLERANCE_MS = 10
 
@@ -85,4 +88,4 @@ func __format_landmarks(landmarks: MediaPipePoseLandmarkerResult) -> Array:
 
 func __send_data(data: Dictionary) -> void:
 	var result = restorer.restore(data)
-	print(result)
+	data_sended.emit(result)
