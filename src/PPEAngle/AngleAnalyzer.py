@@ -1,12 +1,12 @@
-
+import os
 import paho.mqtt.client as mqtt
 import time
 import math
 import json
 
 # Константы программы
-MQTT_BROKER = "127.0.0.1"  # Адрес MQTT брокера
-MQTT_PORT = 1883  # Порт MQTT брокера (стандартный порт Mosquitto)
+MQTT_BROKER = os.getenv('MQTT_BROKER', 'mqtt-broker')
+MQTT_PORT = int(os.getenv('MQTT_PORT', 1883))
 MQTT_TOPIC = "camera/points"  # Топик для получения данных цифрового скелета
 MQTT_OUTPUT_TOPIC = "camera/detection"  # Топик для отправки данных о позах
 NUM_POINTS = 33  # Количество точек цифрового скелета
@@ -105,7 +105,7 @@ class AngleAnalyzer:
         self.angle_history = {}
         self.last_pose_id = -1
 
-        self.mqtt_client = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2)
+        self.mqtt_client = mqtt.Client()
         self.mqtt_connected = False
         self.mqtt_subscribed = False
         self.mqtt_data_received = False
@@ -696,7 +696,12 @@ class AngleAnalyzer:
             print(f"Топик для подписки: {self.mqtt_input_topic}")
             print(f"Топик для отправки: {self.mqtt_output_topic}")
 
-            self.mqtt_client.connect(self.mqtt_broker, self.mqtt_port, 60)
+            try:
+                self.mqtt_client.connect(self.mqtt_broker, self.mqtt_port, 60)
+            except Exception as conn_err:
+                print(f"Ошибка подключения: {conn_err}")
+                return False
+        
             self.mqtt_client.loop_start()
 
             print(f"Ожидание подключения... (до {timeout} секунд)")
@@ -799,11 +804,13 @@ def test_analyzer_with_data():
 
 
 if __name__ == "__main__":
+    """
     print("Выберите режим работы:")
     print("1. Тестирование с предоставленными данными")
     print("2. Работа через MQTT (реальный режим)")
-
-    choice = input("Введите номер (1 или 2): ").strip()
+    """
+    print("Режим выбора отключён — запускаю MQTT режим")
+    choice = "2" # ЗАМЕНИЛ ДЛЯ КОРРЕКТНОЙ РАБОТЫ, ИСПОЛЬЗОВАНИЕ ТЕСТОВЫХ ДАННЫХ МОЖНО ВКЛЮЧИТЬ ВРУЧНУЮ (БЕЗ ДОКЕРА)
 
     if choice == "1":
         analyzer = AngleAnalyzer()
