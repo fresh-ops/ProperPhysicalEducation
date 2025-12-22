@@ -37,7 +37,7 @@ class PoseDeviants:
             current_angles = current_pose.get_angles_list()
             reference_angles = reference_pose.get_angles_list()
             
-            deviations[reference_pose] = [
+            deviations[reference_pose.name] = [
                 abs(curr_angle - ref_angle)
                 for curr_angle, ref_angle in zip(current_angles, reference_angles)
             ]
