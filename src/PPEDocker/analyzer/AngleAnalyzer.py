@@ -1,14 +1,7 @@
-import os
-import paho.mqtt.client as mqtt
 import time
 import math
 import json
 
-# Константы программы
-MQTT_BROKER = os.getenv('MQTT_BROKER', 'mqtt-broker')
-MQTT_PORT = int(os.getenv('MQTT_PORT', 1883))
-MQTT_TOPIC = "camera/points"  # Топик для получения данных цифрового скелета
-MQTT_OUTPUT_TOPIC = "camera/detection"  # Топик для отправки данных о позах
 NUM_POINTS = 33  # Количество точек цифрового скелета
 NUM_COORDINATES = 3  # Количество координатных осей для точки
 
@@ -88,15 +81,12 @@ TEST_POINTS = [[0.4446859061718, -0.04089827090502, -0.44245237112045],
 
 
 class AngleAnalyzer:
-    def __init__(self, broker=MQTT_BROKER, port=MQTT_PORT, input_topic=MQTT_TOPIC, output_topic=MQTT_OUTPUT_TOPIC):
-        self.mqtt_broker = broker
-        self.mqtt_port = port
-        self.mqtt_input_topic = input_topic
-        self.mqtt_output_topic = output_topic
+    def __init__(self):
         self.points = [(0.0, 0.0, 0.0)] * NUM_POINTS
         self.angles = {}
         self.angle_history = {}
 
+<<<<<<< HEAD
         self.mqtt_client = mqtt.Client()
         self.mqtt_connected = False
         self.mqtt_subscribed = False
@@ -109,6 +99,375 @@ class AngleAnalyzer:
         self.mqtt_client.on_connect = self._on_mqtt_connect
         self.mqtt_client.on_message = self._on_mqtt_message
 
+=======
+    def check_arms_down_pose(self, shoulder_threshold=20, elbow_threshold=10):
+        """
+        Проверка позы "руки по швам"
+
+        Критерии:
+        - Углы в плечах: 0-20° (руки опущены вдоль тела)
+        - Углы в локтях: около 180° (руки прямые)
+
+        Args:
+            shoulder_threshold: допустимое отклонение от 0° для плеч
+            elbow_threshold: допустимое отклонение от 180° для локтей
+
+        Returns:
+            dict: Результаты проверки с описанием и статусом
+        """
+        specific_angles = self.get_specific_angles()
+
+        if not specific_angles:
+            return {
+                'pose_id': POSE_IDS["UNKNOWN"],
+                'is_arms_down': False,
+                'reason': 'Нет данных об углах',
+                'details': {}
+            }
+
+        left_shoulder_angle = specific_angles['left_shoulder']['angle']
+        right_shoulder_angle = specific_angles['right_shoulder']['angle']
+        left_elbow_angle = specific_angles['left_elbow']['angle']
+        right_elbow_angle = specific_angles['right_elbow']['angle']
+
+        is_left_shoulder_ok = left_shoulder_angle <= shoulder_threshold
+        is_right_shoulder_ok = right_shoulder_angle <= shoulder_threshold
+        is_left_elbow_ok = abs(left_elbow_angle - 180) <= elbow_threshold
+        is_right_elbow_ok = abs(right_elbow_angle - 180) <= elbow_threshold
+
+        shoulder_symmetry_ok = abs(left_shoulder_angle - right_shoulder_angle) <= 15
+        elbow_symmetry_ok = abs(left_elbow_angle - right_elbow_angle) <= 15
+
+        is_arms_down = (is_left_shoulder_ok and is_right_shoulder_ok and
+                        is_left_elbow_ok and is_right_elbow_ok and
+                        shoulder_symmetry_ok and elbow_symmetry_ok)
+
+        result = {
+            'pose_id': POSE_IDS["ARMS_DOWN"] if is_arms_down else POSE_IDS["UNKNOWN"],
+            'is_arms_down': is_arms_down,
+            'reason': '',
+            'angles': {
+                'left_shoulder': left_shoulder_angle,
+                'right_shoulder': right_shoulder_angle,
+                'left_elbow': left_elbow_angle,
+                'right_elbow': right_elbow_angle,
+                'left_knee': specific_angles.get('left_knee', {}).get('angle', 0),
+                'right_knee': specific_angles.get('right_knee', {}).get('angle', 0)
+            },
+            'status': {
+                'left_shoulder': is_left_shoulder_ok,
+                'right_shoulder': is_right_shoulder_ok,
+                'left_elbow': is_left_elbow_ok,
+                'right_elbow': is_right_elbow_ok,
+                'shoulder_symmetry': shoulder_symmetry_ok,
+                'elbow_symmetry': elbow_symmetry_ok
+            }
+        }
+
+        if not is_arms_down:
+            failed = []
+            if not is_left_shoulder_ok:
+                failed.append("левое плечо")
+            if not is_right_shoulder_ok:
+                failed.append("правое плечо")
+            if not is_left_elbow_ok:
+                failed.append("левый локоть")
+            if not is_right_elbow_ok:
+                failed.append("правый локоть")
+            if not shoulder_symmetry_ok:
+                failed.append("симметрия плеч")
+            if not elbow_symmetry_ok:
+                failed.append("симметрия локтей")
+
+            result['reason'] = f"Не выполнено: {', '.join(failed)}"
+
+        return result
+
+    def check_t_pose(self, shoulder_threshold=5, elbow_threshold=15):
+        """
+        Проверка Т-позы
+
+        Args:
+            shoulder_threshold: допустимое отклонение от 90° для плеч
+            elbow_threshold: допустимое отклонение от 180° для локтей
+
+        Returns:
+            dict: Результаты проверки с описанием и статусом
+        """
+        specific_angles = self.get_specific_angles()
+
+        if not specific_angles:
+            return {
+                'pose_id': POSE_IDS["UNKNOWN"],
+                'is_t_pose': False,
+                'reason': 'Нет данных об углах',
+                'details': {}
+            }
+
+        left_shoulder_angle = specific_angles['left_shoulder']['angle']
+        right_shoulder_angle = specific_angles['right_shoulder']['angle']
+        left_elbow_angle = specific_angles['left_elbow']['angle']
+        right_elbow_angle = specific_angles['right_elbow']['angle']
+
+
+        is_left_shoulder_ok = abs(left_shoulder_angle - 90) <= shoulder_threshold
+        is_right_shoulder_ok = abs(right_shoulder_angle - 90) <= shoulder_threshold
+        is_left_elbow_ok = abs(left_elbow_angle - 180) <= elbow_threshold
+        is_right_elbow_ok = abs(right_elbow_angle - 180) <= elbow_threshold
+
+        shoulder_symmetry_ok = abs(left_shoulder_angle - right_shoulder_angle) <= 20
+        elbow_symmetry_ok = abs(left_elbow_angle - right_elbow_angle) <= 20
+
+        is_t_pose = (is_left_shoulder_ok and is_right_shoulder_ok and
+                     is_left_elbow_ok and is_right_elbow_ok and
+                     shoulder_symmetry_ok and elbow_symmetry_ok)
+
+        result = {
+            'pose_id': POSE_IDS["T_POSE"] if is_t_pose else POSE_IDS["UNKNOWN"],
+            'is_t_pose': is_t_pose,
+            'reason': '',
+            'angles': {
+                'left_shoulder': left_shoulder_angle,
+                'right_shoulder': right_shoulder_angle,
+                'left_elbow': left_elbow_angle,
+                'right_elbow': right_elbow_angle,
+                'left_knee': specific_angles.get('left_knee', {}).get('angle', 0),
+                'right_knee': specific_angles.get('right_knee', {}).get('angle', 0)
+            },
+            'status': {
+                'left_shoulder': is_left_shoulder_ok,
+                'right_shoulder': is_right_shoulder_ok,
+                'left_elbow': is_left_elbow_ok,
+                'right_elbow': is_right_elbow_ok,
+                'shoulder_symmetry': shoulder_symmetry_ok,
+                'elbow_symmetry': elbow_symmetry_ok
+            }
+        }
+
+        if not is_t_pose:
+            failed = []
+            if not is_left_shoulder_ok:
+                failed.append("левое плечо")
+            if not is_right_shoulder_ok:
+                failed.append("правое плечо")
+            if not is_left_elbow_ok:
+                failed.append("левый локоть")
+            if not is_right_elbow_ok:
+                failed.append("правый локоть")
+            if not shoulder_symmetry_ok:
+                failed.append("симметрия плеч")
+            if not elbow_symmetry_ok:
+                failed.append("симметрия локтей")
+
+            result['reason'] = f"Не выполнено: {', '.join(failed)}"
+
+        return result
+
+    def detect_pose(self):
+        """
+        Определяет текущую позу и возвращает данные в формате массива
+        Возвращает JSON с полями:
+        - pose_id: -1 (UNKNOWN), 0 (T_POSE), 1 (ARMS_DOWN)
+        - angles: [6 значений] - текущие углы в градусах:
+            [0] левое плечо, [1] правое плечо, [2] левый локоть, 
+            [3] правый локоть, [4] левое колено, [5] правое колено
+        - deviations: [6 значений] - абсолютные отклонения от целевых углов
+        - log: 
+            - is_correct: True если поза определена (не UNKNOWN)
+            - needed_correction: [6 значений] - корректировки со знаками:
+                + нужно увеличить угол (поднять руку, выпрямить сустав)
+                - нужно уменьшить угол (опустить руку, согнуть сустав)
+
+        Пример при неудачном распознавании (pose_id = -1):
+        {
+            "pose_id": -1,
+            "angles": [71.8, 67.7, 118.0, 128.7, 178.8, 175.3],
+            "deviations": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+            "log": {
+                "is_correct": False,
+                "needed_correction": []
+            }
+        }
+
+        Returns:
+            dict: Данные позы в формате массива
+        """
+        
+        t_pose_result = self.check_t_pose()
+        arms_down_result = self.check_arms_down_pose()
+
+        current_pose_id = POSE_IDS["UNKNOWN"]
+        current_result = None
+        
+        specific_angles = self.get_specific_angles()
+        current_angles = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+        deviations = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+        adjustments = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+        
+        if specific_angles:
+            current_angles = [
+                specific_angles.get('left_shoulder', {}).get('angle', 0),
+                specific_angles.get('right_shoulder', {}).get('angle', 0),
+                specific_angles.get('left_elbow', {}).get('angle', 0),
+                specific_angles.get('right_elbow', {}).get('angle', 0),
+                specific_angles.get('left_knee', {}).get('angle', 0),
+                specific_angles.get('right_knee', {}).get('angle', 0)
+            ]
+
+        if t_pose_result['is_t_pose']:
+            current_pose_id = POSE_IDS["T_POSE"]
+            current_result = t_pose_result
+            deviations = self.calculate_deviations_for_t_pose(specific_angles)
+        
+        elif arms_down_result['is_arms_down']:
+            current_pose_id = POSE_IDS["ARMS_DOWN"]
+            current_result = arms_down_result
+            deviations = self.calculate_deviations_for_arms_down(specific_angles)
+        
+        else:
+            current_result = t_pose_result
+        
+        if current_pose_id == POSE_IDS["T_POSE"]:
+            adjustments = self.calculate_adjustments_for_t_pose(specific_angles)
+        elif current_pose_id == POSE_IDS["ARMS_DOWN"]:
+            adjustments = self.calculate_adjustments_for_arms_down(specific_angles)
+        
+        adjustment_array = self.generate_adjustment_array(adjustments, current_pose_id)
+
+        pose_data = {
+            'pose_id': current_pose_id,
+            'angles': current_angles, 
+            'deviations': deviations,  
+            'log': {
+                'is_correct': current_pose_id != POSE_IDS["UNKNOWN"],
+                'needed_correction': adjustment_array  
+            }
+        }
+        
+        self.last_pose_id = current_pose_id
+        
+        return pose_data
+
+    def generate_adjustment_array(self, adjustments, pose_id):
+        """Генерирует массив корректировок"""
+        if pose_id == POSE_IDS["UNKNOWN"]:
+            return []
+        
+        adjustment_array = []
+        for adj in adjustments:
+            if abs(adj) > 0.1:
+                adjustment_array.append(round(adj, 1))
+            else:
+                adjustment_array.append(0.0)
+            
+        return adjustment_array
+
+    def generate_adjustment_reason(self, adjustments, pose_id):
+        """Генерирует текст reason  из чисел с + и -"""
+        if pose_id == POSE_IDS["UNKNOWN"]:
+            return ""
+        
+
+        filtered_adjustments = []
+        for adj in adjustments:
+            if abs(adj) > 0.1:
+
+                filtered_adjustments.append(f"{adj:.1f}")
+            else:
+                filtered_adjustments.append("0.0")
+        
+
+        return " ".join(filtered_adjustments)
+
+    def calculate_deviations_for_t_pose(self, specific_angles):
+        """Вычисляет отклонения для Т-позы"""
+        deviations = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+        
+        if specific_angles:
+
+            target_shoulder = 90 
+            target_elbow = 180
+            target_knee = 180
+            
+
+            deviations[0] = abs(specific_angles.get('left_shoulder', {}).get('angle', 0) - target_shoulder)
+            deviations[1] = abs(specific_angles.get('right_shoulder', {}).get('angle', 0) - target_shoulder)
+            deviations[2] = abs(specific_angles.get('left_elbow', {}).get('angle', 0) - target_elbow)
+            deviations[3] = abs(specific_angles.get('right_elbow', {}).get('angle', 0) - target_elbow)
+            deviations[4] = abs(specific_angles.get('left_knee', {}).get('angle', 0) - target_knee)
+            deviations[5] = abs(specific_angles.get('right_knee', {}).get('angle', 0) - target_knee)
+        
+        return deviations
+
+    def calculate_deviations_for_arms_down(self, specific_angles):
+        """Вычисляет отклонения для позы 'руки по швам'"""
+        deviations = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+        
+        if specific_angles:
+
+            target_shoulder = 0   
+            target_elbow = 180
+            target_knee = 180
+
+            deviations[0] = abs(specific_angles.get('left_shoulder', {}).get('angle', 0) - target_shoulder)
+            deviations[1] = abs(specific_angles.get('right_shoulder', {}).get('angle', 0) - target_shoulder)
+            deviations[2] = abs(specific_angles.get('left_elbow', {}).get('angle', 0) - target_elbow)
+            deviations[3] = abs(specific_angles.get('right_elbow', {}).get('angle', 0) - target_elbow)
+            deviations[4] = abs(specific_angles.get('left_knee', {}).get('angle', 0) - target_knee)
+            deviations[5] = abs(specific_angles.get('right_knee', {}).get('angle', 0) - target_knee)
+        
+        return deviations
+
+    def calculate_adjustments_for_t_pose(self, specific_angles):
+        """Вычисляет необходимые корректировки углов для Т-позы"""
+        adjustments = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+        
+        if specific_angles:
+            target_shoulder = 90  
+            target_elbow = 180
+            target_knee = 180
+            
+
+            adjustments[0] = target_shoulder - specific_angles.get('left_shoulder', {}).get('angle', 0)
+            adjustments[1] = target_shoulder - specific_angles.get('right_shoulder', {}).get('angle', 0)
+            adjustments[2] = target_elbow - specific_angles.get('left_elbow', {}).get('angle', 0)
+            adjustments[3] = target_elbow - specific_angles.get('right_elbow', {}).get('angle', 0)
+            adjustments[4] = target_knee - specific_angles.get('left_knee', {}).get('angle', 0)
+            adjustments[5] = target_knee - specific_angles.get('right_knee', {}).get('angle', 0)
+        
+        return adjustments
+
+    def calculate_adjustments_for_arms_down(self, specific_angles):
+        """Вычисляет необходимые корректировки углов для позы 'руки по швам'"""
+        adjustments = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+        
+        if specific_angles:
+            target_shoulder = 0  
+            target_elbow = 180
+            target_knee = 180
+            
+            adjustments[0] = target_shoulder - specific_angles.get('left_shoulder', {}).get('angle', 0)
+            adjustments[1] = target_shoulder - specific_angles.get('right_shoulder', {}).get('angle', 0)
+            adjustments[2] = target_elbow - specific_angles.get('left_elbow', {}).get('angle', 0)
+            adjustments[3] = target_elbow - specific_angles.get('right_elbow', {}).get('angle', 0)
+            adjustments[4] = target_knee - specific_angles.get('left_knee', {}).get('angle', 0)
+            adjustments[5] = target_knee - specific_angles.get('right_knee', {}).get('angle', 0)
+        
+        return adjustments
+
+    def get_pose_name(self, pose_id):
+        """Возвращает название позы по ID"""
+        for name, pid in POSE_IDS.items():
+            if pid == pose_id:
+                if name == "T_POSE":
+                    return "Т-поза"
+                elif name == "ARMS_DOWN":
+                    return "Руки по швам"
+                else:
+                    return "Неопределённая поза"
+        return "Неопределённая поза"
+                
+>>>>>>> refs/remotes/origin/server
     def calculate_angle(self, p1_idx, p2_idx, p3_idx):
         """
         Вычисляет угол в точке p2 между линиями p1-p2 и p3-p2
@@ -248,6 +607,7 @@ class AngleAnalyzer:
                 angle_data = specific_angles[key]
                 print(f"{angle_data['name']:25}: {angle_data['angle']:6.1f}°")
 
+<<<<<<< HEAD
 
 
     def _on_mqtt_connect(self, client, userdata, flags, rc):
@@ -332,6 +692,8 @@ class AngleAnalyzer:
             self.mqtt_client.disconnect()
             print("Отключено от MQTT брокера")
 
+=======
+>>>>>>> refs/remotes/origin/server
     def get_point(self, index):
         if 0 <= index < NUM_POINTS:
             return self.points[index]
@@ -376,6 +738,74 @@ if __name__ == "__main__":
         if key in specific_angles:
             angle_data = specific_angles[key]
             print(f"{angle_data['name']:25}: {angle_data['angle']:6.1f}°")
+<<<<<<< HEAD
     
     print("\nТЕСТ ЗАВЕРШЕН")
     print("=" * 60)
+=======
+
+    print("\n" + "=" * 60)
+    print("ТЕСТ ОПРЕДЕЛЕНИЯ ПОЗЫ:")
+    print("=" * 60)
+    pose_data = analyzer.detect_pose()
+    print(f"ID позы: {pose_data['pose_id']}")
+    print(f"Название: {analyzer.get_pose_name(pose_data['pose_id'])}")
+    print(f"Углы: {pose_data['angles']}")
+    print(f"Отклонения: {pose_data['deviations']}")
+    print(f"Корректно: {pose_data['log']['is_correct']}")
+    print(f"Корректировки (массив): {pose_data['log']['needed_correction']}")
+
+    print("\nТЕСТИРОВАНИЕ ЗАВЕРШЕНО")
+    print("=" * 60)
+
+
+if __name__ == "__main__":
+    """
+    print("Выберите режим работы:")
+    print("1. Тестирование с предоставленными данными")
+    print("2. Работа через MQTT (реальный режим)")
+    """
+
+    analyzer = AngleAnalyzer()
+    analyzer.load_test_points()
+    analyzer.calculate_all_angles()
+    specific_angles = analyzer.get_specific_angles()
+    print("\nИНДИВИДУАЛЬНЫЕ ЗНАЧЕНИЯ:")
+    print("=" * 60)
+    for key in ['right_elbow', 'left_elbow', 'right_shoulder', 'left_shoulder', 'left_knee', 'right_knee']:
+        if key in specific_angles:
+            angle_data = specific_angles[key]
+            print(f"{angle_data['name']:25}: {angle_data['angle']:6.1f}°")
+
+    t_pose_result = analyzer.check_t_pose()
+    print("\n=== ПРОВЕРКА T-ПОЗЫ ===")
+    print(f"T-поза: {'ВЕРНО' if t_pose_result['is_t_pose'] else 'НЕВЕРНО'}")
+    print(f"Причина: {t_pose_result['reason']}")
+    print(f"Углы: Л-плечо={t_pose_result['angles']['left_shoulder']:.1f}°, "
+          f"П-плечо={t_pose_result['angles']['right_shoulder']:.1f}°, "
+          f"Л-локоть={t_pose_result['angles']['left_elbow']:.1f}°, "
+          f"П-локоть={t_pose_result['angles']['right_elbow']:.1f}°")
+
+    arms_down_result = analyzer.check_arms_down_pose()
+    print("\n=== ПРОВЕРКА ПОЗЫ 'РУКИ ПО ШВАМ' ===")
+    print(f"Руки по швам: {'ВЕРНО' if arms_down_result['is_arms_down'] else 'НЕВЕРНО'}")
+    print(f"Причина: {arms_down_result['reason']}")
+    print(f"Углы: Л-плечо={arms_down_result['angles']['left_shoulder']:.1f}°, "
+          f"П-плечо={arms_down_result['angles']['right_shoulder']:.1f}°, "
+          f"Л-локоть={arms_down_result['angles']['left_elbow']:.1f}°, "
+          f"П-локоть={arms_down_result['angles']['right_elbow']:.1f}°")
+
+    print("\n" + "=" * 60)
+    print("ТЕСТ ФОРМАТА ДАННЫХ ДЛЯ MQTT:")
+    print("=" * 60)
+    pose_data = analyzer.detect_pose()
+    print(f"Данные для отправки:")
+    print(f"  pose_id: {pose_data['pose_id']}")
+    print(f"  angles: {pose_data['angles']}")
+    print(f"  deviations: {pose_data['deviations']}")
+    print(f"  log: {pose_data['log']}")
+
+    print("\nТЕСТИРОВАНИЕ ЗАВЕРШЕНО")
+    print("=" * 60)
+
+>>>>>>> refs/remotes/origin/server
