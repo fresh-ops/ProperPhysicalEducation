@@ -1,0 +1,10 @@
+{
+	"name": "t_pose",
+	"threshold": 0.0,
+	"left_shoulder_angle": 0.0,
+	"right_shoulder_angle": 0.0,
+	"left_elbow_angle": 0.0,
+	"right_elbow_angle": 0.0,
+	"left_knee_angle": 0.0,
+	"right_knee_angle": 0.0
+}
