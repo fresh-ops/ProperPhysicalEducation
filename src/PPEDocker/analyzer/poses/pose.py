@@ -1,4 +1,4 @@
-from typing import NamedTuple
+from typing import NamedTuple, Tuple
 
 class Pose(NamedTuple):
     """
@@ -23,4 +23,24 @@ class Pose(NamedTuple):
     right_elbow_angle: float
     left_knee_angle: float
     right_knee_angle: float
+
+    def get_angles_list(self) -> Tuple:
+        """
+            Возвращает кортеж углов в конечностях
+
+            Returns:
+                Tuple[float]: список позиционных углов в конечностях
+        """
+        return self[2:]
+
+    def __eq__(self, other) -> bool:
+        if not isinstance(other, Pose):
+            return False
+
+        threshold = self.threshold + other.threshold
+        for first_angle, second_angle in zip(self.get_angles_list(), other.get_angles_list()):
+            if abs(first_angle - second_angle) > threshold:
+                return False
+
+        return True
 
