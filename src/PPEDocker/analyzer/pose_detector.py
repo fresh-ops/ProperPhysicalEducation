@@ -2,6 +2,8 @@ from typing import List
 from poses.pose import Pose
 
 class PoseDetector:
+    poses: List[Pose]
+
     def __init__(self, poses: List[Pose]):
         """
         Инициализация детектора поз
@@ -11,15 +13,14 @@ class PoseDetector:
         """
         self.poses = poses
 
-
-    def detect_pose(self, pose) -> List[Pose]:
+    def detect_pose(self, pose: Pose) -> List[Pose]:
         """
-        Определяет текущую позу на основе углов из AngleAnalyzer
+        Находит список эталонных поз, которые совпадают с данной позой
         
         Args:
-            angle_analyzer: Экземпляр AngleAnalyzer с вычисленными углами
+            pose (Pose): поза для сопаставления
             
         Returns:
-            Dict: Данные позы в формате массива
+            List[Pose]: список подходящих поз
         """
         return [detected for detected in self.poses if detected == pose]
