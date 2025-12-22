@@ -1,6 +1,5 @@
-import time
 import math
-import json
+from poses.pose import Pose
 
 NUM_POINTS = 33  # Количество точек цифрового скелета
 NUM_COORDINATES = 3  # Количество координатных осей для точки
@@ -126,7 +125,13 @@ class AngleAnalyzer:
         return math.degrees(angle_diff)
 
     def calculate_all_angles(self):
-        """Вычисляет все углы между связанными точками"""
+        """
+        Вычисляет все углы между связанными точками скелета согласно конфигурации CONNECTIONS
+
+        Returns:
+            dict: словарь со всеми вычисленными углами, где ключ - кортеж (центральная_точка, точка1, точка2),
+                  значение - словарь с данными угла (angle, points, center)
+        """
         angles = {}
 
         for center_idx, connections in CONNECTIONS.items():
@@ -156,121 +161,25 @@ class AngleAnalyzer:
         self.angles = angles
         return angles
 
-    def get_specific_angles(self):
-        """Получает конкретные важные углы тела"""
-        specific_angles = {}
+    def get_current_pose(self) -> Pose:
+        """
+        Создает объект Pose с текущими вычисленными углами тела
 
-        # Плечи (угол между рукой и туловищем)
-        left_shoulder = self.calculate_angle(13, 11, 23)
-        right_shoulder = self.calculate_angle(14, 12, 24)
+        Вычисляет ключевые углы для определения позы:
+        - Углы плеч (между рукой и туловищем)
+        - Углы локтей (в локтевых суставах)
+        - Углы коленей (в коленных суставах)
 
-        # Локти (угол в локтевом суставе)
-        left_elbow = self.calculate_angle(11, 13, 15)
-        right_elbow = self.calculate_angle(12, 14, 16)
-
-        # Колени (угол в коленном суставе)
-        left_knee = self.calculate_angle(23, 25, 27)
-        right_knee = self.calculate_angle(24, 26, 28)
-
-        specific_angles['left_elbow'] = {
-            'angle': left_elbow,
-            'points': (11, 13, 15),
-            'name': 'Левый локоть'
-        }
-
-        specific_angles['right_elbow'] = {
-            'angle': right_elbow,
-            'points': (12, 14, 16),
-            'name': 'Правый локоть'
-        }
-
-        specific_angles['left_shoulder'] = {
-            'angle': left_shoulder,
-            'points': (13, 11, 23),
-            'name': 'Левое плечо'
-        }
-
-        specific_angles['right_shoulder'] = {
-            'angle': right_shoulder,
-            'points': (14, 12, 24),
-            'name': 'Правое плечо'
-        }
-
-        specific_angles['left_knee'] = {
-            'angle': left_knee,
-            'points': (23, 25, 27),
-            'name': 'Левое колено'
-        }
-
-        specific_angles['right_knee'] = {
-            'angle': right_knee,
-            'points': (24, 26, 28),
-            'name': 'Правое колено'
-        }
-
-        return specific_angles
-
-    def print_specific_angles(self):
-        """Выводит конкретные важные углы"""
-        specific_angles = self.get_specific_angles()
-
-        if not specific_angles:
-            print("Нет данных об углах")
-            return
-
-        print("\n" + "=" * 60)
-        print("ТЕКУЩИЕ ЗНАЧЕНИЯ УГЛОВ:")
-        print("=" * 60)
-        for key in ['right_shoulder', 'left_shoulder', 'right_elbow', 'left_elbow', 'left_knee', 'right_knee']:
-            if key in specific_angles:
-                angle_data = specific_angles[key]
-                print(f"{angle_data['name']:25}: {angle_data['angle']:6.1f}°")
-
-    def get_point(self, index):
-        if 0 <= index < NUM_POINTS:
-            return self.points[index]
-        return None
-
-    def get_all_points(self):
-        return self.points.copy()
-
-    def load_test_points(self):
-        """Загружает тестовые данные для проверки работы анализатора"""
-        print("Загрузка тестовых данных...")
-        for i in range(min(len(TEST_POINTS), NUM_POINTS)):
-            self.points[i] = tuple(TEST_POINTS[i])
-        print(f"Загружено {len(TEST_POINTS)} тестовых точек")
-        self.calculate_all_angles()
-        return True
-
-
-
-if __name__ == "__main__":
-    """
-    Теперь AngleAnalyzer только вычисляет углы.
-    Для тестирования используйте main.py с PoseDetector.
-    """
-    print("=" * 60)
-    print("АНАЛИЗАТОР УГЛОВ (XY проекция)")
-    print("=" * 60)
-    print("Этот модуль только вычисляет углы из точек.")
-    print("Для определения поз используйте PoseDetector.")
-    print("=" * 60)
-    
-    # Простой тест вычисления углов
-    analyzer = AngleAnalyzer()
-    analyzer.load_test_points()
-    analyzer.calculate_all_angles()
-    
-    specific_angles = analyzer.get_specific_angles()
-    
-    print("\nТЕСТ ВЫЧИСЛЕНИЯ УГЛОВ:")
-    print("=" * 60)
-    for key in ['right_elbow', 'left_elbow', 'right_shoulder', 'left_shoulder', 'left_knee', 'right_knee']:
-        if key in specific_angles:
-            angle_data = specific_angles[key]
-            print(f"{angle_data['name']:25}: {angle_data['angle']:6.1f}°")
-
-    print("\n" + "=" * 60)
-    print("ТЕСТИРОВАНИЕ ЗАВЕРШЕНО")
-    print("=" * 60)
+        Returns:
+            Pose: объект позы с вычисленными углами, пустым именем и нулевым порогом
+        """
+        return Pose(
+            name="",
+            threshold=0.0,
+            left_shoulder_angle=self.calculate_angle(13, 11, 23),
+            right_shoulder_angle=self.calculate_angle(14, 12, 24),
+            left_elbow_angle=self.calculate_angle(11, 13, 15),
+            right_elbow_angle=self.calculate_angle(12, 14, 16),
+            left_knee_angle=self.calculate_angle(23, 25, 27),
+            right_knee_angle=self.calculate_angle(24, 26, 28)
+        )
