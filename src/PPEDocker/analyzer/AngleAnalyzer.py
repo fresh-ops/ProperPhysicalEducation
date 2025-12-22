@@ -1,14 +1,7 @@
-import os
-import paho.mqtt.client as mqtt
 import time
 import math
 import json
 
-# Константы программы
-MQTT_BROKER = os.getenv('MQTT_BROKER', 'mqtt-broker')
-MQTT_PORT = int(os.getenv('MQTT_PORT', 1883))
-MQTT_TOPIC = "camera/points"  # Топик для получения данных цифрового скелета
-MQTT_OUTPUT_TOPIC = "camera/detection"  # Топик для отправки данных о позах
 NUM_POINTS = 33  # Количество точек цифрового скелета
 NUM_COORDINATES = 3  # Количество координатных осей для точки
 
@@ -95,23 +88,11 @@ TEST_POINTS = [[0.4446859061718, -0.04089827090502, -0.44245237112045],
 
 
 class AngleAnalyzer:
-    def __init__(self, broker=MQTT_BROKER, port=MQTT_PORT, input_topic=MQTT_TOPIC, output_topic=MQTT_OUTPUT_TOPIC):
-        self.mqtt_broker = broker
-        self.mqtt_port = port
-        self.mqtt_input_topic = input_topic
-        self.mqtt_output_topic = output_topic
+    def __init__(self):
         self.points = [(0.0, 0.0, 0.0)] * NUM_POINTS
         self.angles = {}
         self.angle_history = {}
         self.last_pose_id = -1
-
-        self.mqtt_client = mqtt.Client()
-        self.mqtt_connected = False
-        self.mqtt_subscribed = False
-        self.mqtt_data_received = False
-        self.mqtt_last_message_time = 0
-
-        self.setup_mqtt_callbacks()
 
     def check_arms_down_pose(self, shoulder_threshold=20, elbow_threshold=10):
         """
@@ -479,94 +460,6 @@ class AngleAnalyzer:
                 else:
                     return "Неопределённая поза"
         return "Неопределённая поза"
-
-    def send_pose_data(self):
-        """Определяет текущую позу и отправляет данные через MQTT"""
-        if not self.mqtt_connected:
-            return
-
-        pose_data = self.detect_pose()
-
-        try:
-            json_data = json.dumps(pose_data)
-            self.mqtt_client.publish(self.mqtt_output_topic, json_data)
-            return pose_data
-        except Exception as e:
-            print(f"Ошибка отправки данных через MQTT: {e}")
-            return None
-
-    def setup_mqtt_callbacks(self):
-        self.mqtt_client.on_connect = self._on_mqtt_connect
-        self.mqtt_client.on_message = self._on_mqtt_message
-
-    def on_connect(self, client, userdata, flags, rc):
-        print("MQTT connected", rc)
-        client.subscribe(self.mqtt_input_topic)
-
-    def on_message(self, client, userdata, msg):
-        try:
-            data = json.loads(msg.payload.decode("utf-8"))
-            self.points = data.get("points")
-
-            pose = self.detect_pose()
-            self.publish_pose(pose)
-
-        except Exception as e:
-            print("Ошибка обработки MQTT сообщения:", e)
-
-    def publish_pose(self, pose):
-        payload = json.dumps(pose)
-
-        self.mqtt_client.publish(self.mqtt_output_topic, payload)
-        print("MQTT SEND CAMERA/DETECTION", self.mqtt_output_topic, payload)
-
-    def _on_mqtt_connect(self, client, userdata, flags, rc):
-        if rc == 0:
-            self.mqtt_connected = True
-            client.subscribe(self.mqtt_input_topic)
-            self.mqtt_subscribed = True
-            print(f" Успешное подключение к MQTT брокеру: {self.mqtt_broker}")
-            print(f" Подписан на топик: {self.mqtt_input_topic}")
-            print(f" Отправка данных в топик: {self.mqtt_output_topic}")
-        else:
-            print(f"Ошибка подключения к MQTT брокеру. Код: {rc}")
-            self.mqtt_connected = False
-
-    def _on_mqtt_message(self, client, userdata, msg):
-        try:
-            self.mqtt_data_received = True
-            self.mqtt_last_message_time = time.time()
-            
-            # Декодируем данные как JSON
-            raw_data = json.loads(msg.payload.decode("utf-8"))
-            
-            # 1. Если данные пришли в формате [[x,y,z], [x,y,z]...]
-            if isinstance(raw_data, list) and len(raw_data) > 0 and isinstance(raw_data[0], list):
-                for i in range(min(len(raw_data), NUM_POINTS)):
-                    self.points[i] = tuple(raw_data[i])
-            
-            # 2. Если данные пришли в формате {"points": [x,y,z...]}
-            elif isinstance(raw_data, dict) and "points" in raw_data:
-                pts = raw_data["points"]
-                for i in range(min(len(pts) // 3, NUM_POINTS)):
-                    idx = i * 3
-                    self.points[i] = (pts[idx], pts[idx+1], pts[idx+2])
-            
-            # Запускаем расчеты и отправку
-            self.calculate_all_angles()
-            self.send_pose_data()
-
-        except Exception as e:
-            # Если это не JSON, попробуем старый метод со сплитом (на всякий случай)
-            try:
-                data = msg.payload.decode("utf-8")
-                if ' ' in data:
-                    numbers = list(map(float, data.split()))
-                    # ... (старая логика заполнения self.points)
-                    self.calculate_all_angles()
-                    self.send_pose_data()
-            except:
-                print(f"Ошибка парсинга: {e}")
                 
     def calculate_angle(self, p1_idx, p2_idx, p3_idx):
         """
@@ -707,45 +600,6 @@ class AngleAnalyzer:
                 angle_data = specific_angles[key]
                 print(f"{angle_data['name']:25}: {angle_data['angle']:6.1f}°")
 
-    def check_mqtt_connection(self):
-        if not self.mqtt_client:
-            return False, False, False
-
-        connected = self.mqtt_connected
-        subscribed = self.mqtt_subscribed
-
-        data_recent = False
-        if self.mqtt_data_received and (time.time() - self.mqtt_last_message_time) < 5:
-            data_recent = True
-
-        return connected, subscribed, data_recent
-
-    def connect(self, timeout=5):
-        print(f"Попытка подключения к MQTT брокеру {self.mqtt_broker}:{self.mqtt_port}...")
-        print(f"Топик для подписки: {self.mqtt_input_topic}")
-        print(f"Топик для отправки: {self.mqtt_output_topic}")
-
-        try:
-            self.mqtt_client.connect(self.mqtt_broker, self.mqtt_port, 60)
-        except Exception as conn_err:
-            print(f"Ошибка подключения: {conn_err}")
-
-        self.mqtt_client.loop_start()
-
-        print(f"Ожидание подключения... (до {timeout} секунд)")
-        start_time = time.time()
-
-        while not self.mqtt_connected and (time.time() - start_time) < timeout:
-            time.sleep(0.1)
-
-        return self.mqtt_connected
-
-    def disconnect(self):
-        if self.mqtt_client:
-            self.mqtt_client.loop_stop()
-            self.mqtt_client.disconnect()
-            print("Отключено от MQTT брокера")
-
     def get_point(self, index):
         if 0 <= index < NUM_POINTS:
             return self.points[index]
@@ -809,73 +663,46 @@ if __name__ == "__main__":
     print("1. Тестирование с предоставленными данными")
     print("2. Работа через MQTT (реальный режим)")
     """
-    print("Режим выбора отключён — запускаю MQTT режим")
-    choice = "2" # ЗАМЕНИЛ ДЛЯ КОРРЕКТНОЙ РАБОТЫ, ИСПОЛЬЗОВАНИЕ ТЕСТОВЫХ ДАННЫХ МОЖНО ВКЛЮЧИТЬ ВРУЧНУЮ (БЕЗ ДОКЕРА)
 
-    if choice == "1":
-        analyzer = AngleAnalyzer()
-        analyzer.load_test_points()
-        analyzer.calculate_all_angles()
-        specific_angles = analyzer.get_specific_angles()
-        print("\nИНДИВИДУАЛЬНЫЕ ЗНАЧЕНИЯ:")
-        print("=" * 60)
-        for key in ['right_elbow', 'left_elbow', 'right_shoulder', 'left_shoulder', 'left_knee', 'right_knee']:
-            if key in specific_angles:
-                angle_data = specific_angles[key]
-                print(f"{angle_data['name']:25}: {angle_data['angle']:6.1f}°")
+    analyzer = AngleAnalyzer()
+    analyzer.load_test_points()
+    analyzer.calculate_all_angles()
+    specific_angles = analyzer.get_specific_angles()
+    print("\nИНДИВИДУАЛЬНЫЕ ЗНАЧЕНИЯ:")
+    print("=" * 60)
+    for key in ['right_elbow', 'left_elbow', 'right_shoulder', 'left_shoulder', 'left_knee', 'right_knee']:
+        if key in specific_angles:
+            angle_data = specific_angles[key]
+            print(f"{angle_data['name']:25}: {angle_data['angle']:6.1f}°")
 
-        t_pose_result = analyzer.check_t_pose()
-        print("\n=== ПРОВЕРКА T-ПОЗЫ ===")
-        print(f"T-поза: {'ВЕРНО' if t_pose_result['is_t_pose'] else 'НЕВЕРНО'}")
-        print(f"Причина: {t_pose_result['reason']}")
-        print(f"Углы: Л-плечо={t_pose_result['angles']['left_shoulder']:.1f}°, "
-              f"П-плечо={t_pose_result['angles']['right_shoulder']:.1f}°, "
-              f"Л-локоть={t_pose_result['angles']['left_elbow']:.1f}°, "
-              f"П-локоть={t_pose_result['angles']['right_elbow']:.1f}°")
+    t_pose_result = analyzer.check_t_pose()
+    print("\n=== ПРОВЕРКА T-ПОЗЫ ===")
+    print(f"T-поза: {'ВЕРНО' if t_pose_result['is_t_pose'] else 'НЕВЕРНО'}")
+    print(f"Причина: {t_pose_result['reason']}")
+    print(f"Углы: Л-плечо={t_pose_result['angles']['left_shoulder']:.1f}°, "
+          f"П-плечо={t_pose_result['angles']['right_shoulder']:.1f}°, "
+          f"Л-локоть={t_pose_result['angles']['left_elbow']:.1f}°, "
+          f"П-локоть={t_pose_result['angles']['right_elbow']:.1f}°")
 
-        arms_down_result = analyzer.check_arms_down_pose()
-        print("\n=== ПРОВЕРКА ПОЗЫ 'РУКИ ПО ШВАМ' ===")
-        print(f"Руки по швам: {'ВЕРНО' if arms_down_result['is_arms_down'] else 'НЕВЕРНО'}")
-        print(f"Причина: {arms_down_result['reason']}")
-        print(f"Углы: Л-плечо={arms_down_result['angles']['left_shoulder']:.1f}°, "
-              f"П-плечо={arms_down_result['angles']['right_shoulder']:.1f}°, "
-              f"Л-локоть={arms_down_result['angles']['left_elbow']:.1f}°, "
-              f"П-локоть={arms_down_result['angles']['right_elbow']:.1f}°")
+    arms_down_result = analyzer.check_arms_down_pose()
+    print("\n=== ПРОВЕРКА ПОЗЫ 'РУКИ ПО ШВАМ' ===")
+    print(f"Руки по швам: {'ВЕРНО' if arms_down_result['is_arms_down'] else 'НЕВЕРНО'}")
+    print(f"Причина: {arms_down_result['reason']}")
+    print(f"Углы: Л-плечо={arms_down_result['angles']['left_shoulder']:.1f}°, "
+          f"П-плечо={arms_down_result['angles']['right_shoulder']:.1f}°, "
+          f"Л-локоть={arms_down_result['angles']['left_elbow']:.1f}°, "
+          f"П-локоть={arms_down_result['angles']['right_elbow']:.1f}°")
 
-        print("\n" + "=" * 60)
-        print("ТЕСТ ФОРМАТА ДАННЫХ ДЛЯ MQTT:")
-        print("=" * 60)
-        pose_data = analyzer.detect_pose()
-        print(f"Данные для отправки:")
-        print(f"  pose_id: {pose_data['pose_id']}")
-        print(f"  angles: {pose_data['angles']}")
-        print(f"  deviations: {pose_data['deviations']}")
-        print(f"  log: {pose_data['log']}")
+    print("\n" + "=" * 60)
+    print("ТЕСТ ФОРМАТА ДАННЫХ ДЛЯ MQTT:")
+    print("=" * 60)
+    pose_data = analyzer.detect_pose()
+    print(f"Данные для отправки:")
+    print(f"  pose_id: {pose_data['pose_id']}")
+    print(f"  angles: {pose_data['angles']}")
+    print(f"  deviations: {pose_data['deviations']}")
+    print(f"  log: {pose_data['log']}")
 
-        print("\nТЕСТИРОВАНИЕ ЗАВЕРШЕНО")
-        print("=" * 60)
+    print("\nТЕСТИРОВАНИЕ ЗАВЕРШЕНО")
+    print("=" * 60)
 
-    else:
-        analyzer = AngleAnalyzer()
-
-        if analyzer.connect(timeout=5):
-            print("\n" + "=" * 60)
-            print("АНАЛИЗАТОР УСПЕШНО ПОДКЛЮЧЕН")
-            print("=" * 60)
-            print("Используется XY проекция для вычисления углов")
-            print(f"Данные отправляются в топик: {MQTT_OUTPUT_TOPIC}")
-            print("\nОжидание данных и отправка поз...")
-            print("=" * 60)
-
-            try:
-                while True:
-                    time.sleep(1)
-                    
-            except KeyboardInterrupt:
-                print("\nЗавершение работы пользователем...")
-            finally:
-                analyzer.disconnect()
-                print("Работа завершена.")
-        else:
-            print("Не удалось подключиться к MQTT брокеру или получить данные")
-            print("Завершение работы...")
