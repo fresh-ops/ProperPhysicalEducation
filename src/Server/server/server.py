@@ -3,7 +3,10 @@ import paho.mqtt.client as mqtt
 import struct 
 import time
 import json
+from analyzer.pose_detector import PoseDetector
 from emg_filter import EMGFilter
+from analyzer.poses import load_poses
+from analyzer.skeleton_transformer import landmarks_to_pose
 
 
 MQTT_BROKER = os.getenv('MQTT_BROKER', 'mqtt-broker')
@@ -37,10 +40,13 @@ def on_message(client, userdata, message):
 
             except Exception as e:
                 print(f"EMG_DATA_TOPIC error: {e}")
-        case "emg/points":
+        case "camera/points":
             try:
                 points = json.loads(message.payload.decode('utf-8'))
-                print(points)
+                pose = landmarks_to_pose(points)
+                detected = detector.detect_pose(pose)
+                print(detected)
+
             except Exception as e:
                 print(f"CAMERA_POINTS_TOPIC error: {e}")
 
@@ -49,6 +55,8 @@ def on_message(client, userdata, message):
 # Инициализация MQTT клиента
 client = mqtt.Client()
 filter = EMGFilter()
+reference_poses = load_poses('./analyzer/poses/')
+detector = PoseDetector(reference_poses)
 client.on_connect = on_connect
 client.on_message = on_message
 
