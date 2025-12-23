@@ -1,12 +1,11 @@
 services:
   mqtt-broker:
-    image: eclipse-mosquitto:2.0.19
+    build:
+      context: ./mosquitto
     container_name: mosquitto_broker
     ports:
       - "1883:1883"
       - "9001:9001"
-    volumes:
-      - ./mosquitto/mosquitto.conf:/mosquitto/config/mosquitto.conf:ro
     restart: always
     networks:
       - emg-network
@@ -24,18 +23,18 @@ services:
     networks:
       - emg-network
 
-  pose-analyzer:
-    build:
-      context: ./analyzer
-      dockerfile: Dockerfile
-    container_name: pose_analyzer
-    depends_on:
-      - mqtt-broker
-    environment:
-      - MQTT_BROKER=mqtt-broker
-    restart: on-failure
-    networks:
-      - emg-network
+  # pose-analyzer:
+  #   build:
+  #     context: ./analyzer
+  #     dockerfile: Dockerfile
+  #   container_name: pose_analyzer
+  #   depends_on:
+  #     - mqtt-broker
+  #   environment:
+  #     - MQTT_BROKER=mqtt-broker
+  #   restart: on-failure
+  #   networks:
+  #     - emg-network
 
   web-interface:
     build:
