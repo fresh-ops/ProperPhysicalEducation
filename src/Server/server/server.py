@@ -71,4 +71,4 @@ for attempt in range(max_retries):
             exit(1)
 
 print("Connected successfully! Starting loop...")
-client.loop_start()
+client.loop_forever()
