@@ -1,0 +1,10 @@
+{
+    "name": "arms_down",
+    "threshold": 10.0,
+    "left_shoulder_angle": 0.0,
+    "right_shoulder_angle": 0.0,
+    "left_elbow_angle": 180.0,
+    "right_elbow_angle": 180.0,
+    "left_knee_angle": 180.0,
+    "right_knee_angle": 180.0
+}
