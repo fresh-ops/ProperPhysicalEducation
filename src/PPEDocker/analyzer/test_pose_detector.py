@@ -9,11 +9,11 @@ current_dir = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, current_dir)
 
 from pose_detector import PoseDetector
-from pose_deviants import PoseDeviants
+from pose_deviants import calculate_deviations
 from AngleAnalyzer import AngleAnalyzer
 
 sys.path.insert(0, os.path.join(current_dir, "poses"))
-from pose_loader import load_poses
+from poses.pose_loader import load_poses
 
 class TestPoseDetector(unittest.TestCase):
     
@@ -21,7 +21,6 @@ class TestPoseDetector(unittest.TestCase):
         self.angle_analyzer = AngleAnalyzer()
         self.poses = load_poses("poses") 
         self.detector = PoseDetector(self.poses)
-        self.deviants_analyzer = PoseDeviants(self.detector, self.angle_analyzer)
     
     def test_t_pose_detection(self):
         t_pose_points = [
@@ -68,7 +67,7 @@ class TestPoseDetector(unittest.TestCase):
         t_pose_found = any(pose.name == "t_pose" for pose in detected_poses)
         self.assertTrue(t_pose_found)
         
-        deviations = self.deviants_analyzer.calculate_deviations()
+        deviations = calculate_deviations(current_pose, detected_poses)
         print("T-pose deviations:", deviations)
     
     def test_arms_down_pose_detection(self):
@@ -116,7 +115,7 @@ class TestPoseDetector(unittest.TestCase):
         arms_down_found = any(pose.name == "arms_down" for pose in detected_poses)
         self.assertTrue(arms_down_found)
         
-        deviations = self.deviants_analyzer.calculate_deviations()
+        deviations = calculate_deviations(current_pose, detected_poses)
         print("Arms-down deviations:", deviations)
     
     def test_unknown_pose_no_detection(self):
@@ -164,7 +163,7 @@ class TestPoseDetector(unittest.TestCase):
             if pose == current_pose:
                 self.fail(f"Неизвестная поза ошибочно определена как {pose.name}")
         
-        deviations = self.deviants_analyzer.calculate_deviations()
+        deviations = calculate_deviations(current_pose, detected_poses)
         print("Unknown pose deviations:", deviations)
 
 if __name__ == '__main__':
