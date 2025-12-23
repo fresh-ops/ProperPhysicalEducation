@@ -5,13 +5,13 @@ import time
 import json
 from emg_filter import EMGFilter
 
-# Чтение переменных окружения для конфигурации
+
 MQTT_BROKER = os.getenv('MQTT_BROKER', 'mqtt-broker')
 MQTT_PORT = int(os.getenv('MQTT_PORT', 1883))
-
 EMG_DATA_TOPIC = "emg/raw"
 EMG_FILTERED_DATA_TOPIC = "emg/filtered"
 CAMERA_POINTS_TOPIC = "camera/points"
+
 
 def on_connect(client, userdata, flags, reason_code):
     if reason_code == 0:
@@ -21,9 +21,10 @@ def on_connect(client, userdata, flags, reason_code):
     else:
         print(f"Failed to connect, return code {reason_code}")
 
+
 def on_message(client, userdata, message):
     match message.topic:
-        case EMG_DATA_TOPIC:
+        case "emg/raw":
             try:
                 if len(message.payload) != 2:
                     return
@@ -36,7 +37,7 @@ def on_message(client, userdata, message):
 
             except Exception as e:
                 print(f"EMG_DATA_TOPIC error: {e}")
-        case CAMERA_POINTS_TOPIC:
+        case "emg/points":
             try:
                 points = json.loads(message.payload.decode('utf-8'))
                 print(points)
