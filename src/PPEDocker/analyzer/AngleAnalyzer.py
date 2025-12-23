@@ -1,7 +1,7 @@
 import math
 from poses.pose import Pose
+from skeleton import LANDMARKS_COUNT, Angle, Landmark
 
-NUM_POINTS = 33  # Количество точек цифрового скелета
 NUM_COORDINATES = 3  # Количество координатных осей для точки
 
 CONNECTIONS = {
@@ -45,12 +45,12 @@ CONNECTIONS = {
 
 class AngleAnalyzer:
     def __init__(self):
-        self.points = [(0.0, 0.0, 0.0)] * NUM_POINTS
+        self.points = [(0.0, 0.0, 0.0)] * LANDMARKS_COUNT
         self.angles = {}
         self.angle_history = {}
 
                 
-    def calculate_angle(self, p1_idx, p2_idx, p3_idx):
+    def calculate_angle(self, angle: Angle):
         """
         Вычисляет угол в точке p2 между линиями p1-p2 и p3-p2
         В ПЛОСКОСТИ XY (плоская проекция, Z игнорируется)
@@ -63,6 +63,10 @@ class AngleAnalyzer:
         Returns:
             float: угол в градусах (0-180)
         """
+        p1_idx = angle.side_a.index
+        p2_idx = angle.vertex.index
+        p3_idx = angle.side_b.index
+
         p1 = self.points[p1_idx]
         p2 = self.points[p2_idx]
         p3 = self.points[p3_idx]
@@ -140,10 +144,10 @@ class AngleAnalyzer:
         return Pose(
             name="",
             threshold=0.0,
-            left_shoulder_angle=self.calculate_angle(13, 11, 23),
-            right_shoulder_angle=self.calculate_angle(14, 12, 24),
-            left_elbow_angle=self.calculate_angle(11, 13, 15),
-            right_elbow_angle=self.calculate_angle(12, 14, 16),
-            left_knee_angle=self.calculate_angle(23, 25, 27),
-            right_knee_angle=self.calculate_angle(24, 26, 28)
+            left_shoulder_angle=self.calculate_angle(Angle.LEFT_SHOULDER),
+            right_shoulder_angle=self.calculate_angle(Angle.RIGHT_SHOULDER),
+            left_elbow_angle=self.calculate_angle(Angle.LEFT_ELBOW),
+            right_elbow_angle=self.calculate_angle(Angle.RIGHT_ELBOW),
+            left_knee_angle=self.calculate_angle(Angle.LEFT_KNEE),
+            right_knee_angle=self.calculate_angle(Angle.RIGHT_KNEE)
         )

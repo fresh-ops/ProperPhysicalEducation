@@ -1,6 +1,6 @@
 {
 	"name": "t_pose",
-	"threshold": 10.0,
+	"threshold": 15.0,
 	"left_shoulder_angle": 90.0,
 	"right_shoulder_angle": 90.0,
 	"left_elbow_angle": 180.0,
