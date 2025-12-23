@@ -10,7 +10,7 @@ sys.path.insert(0, current_dir)
 
 from pose_detector import PoseDetector
 from pose_deviants import calculate_deviations
-from AngleAnalyzer import AngleAnalyzer
+from skeleton_transformer import SkeletonTransformer
 
 sys.path.insert(0, os.path.join(current_dir, "poses"))
 from poses.pose_loader import load_poses
@@ -18,7 +18,7 @@ from poses.pose_loader import load_poses
 class TestPoseDetector(unittest.TestCase):
     
     def setUp(self):
-        self.angle_analyzer = AngleAnalyzer()
+        self.angle_analyzer = SkeletonTransformer()
         self.poses = load_poses("poses") 
         self.detector = PoseDetector(self.poses)
     

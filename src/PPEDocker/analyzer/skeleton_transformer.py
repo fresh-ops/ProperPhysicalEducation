@@ -1,8 +1,7 @@
 import math
 from poses.pose import Pose
-from skeleton import LANDMARKS_COUNT, Angle, Landmark
+from skeleton import LANDMARKS_COUNT, Angle
 
-NUM_COORDINATES = 3  # Количество координатных осей для точки
 
 CONNECTIONS = {
     # ГОЛОВА
@@ -43,7 +42,7 @@ CONNECTIONS = {
     32: [28, 30]
 }
 
-class AngleAnalyzer:
+class SkeletonTransformer:
     def __init__(self):
         self.points = [(0.0, 0.0, 0.0)] * LANDMARKS_COUNT
         self.angles = {}
