@@ -38,6 +38,12 @@ version_control/autoload_on_startup=true
 
 enabled=PackedStringArray("res://addons/CameraServerExtension/plugin.cfg", "res://addons/FileAccessWeb/plugin.cfg", "res://addons/GDMP/plugin.cfg")
 
+[file_customization]
+
+folder_colors={
+"res://addons/": "gray"
+}
+
 [rendering]
 
 renderer/rendering_method="gl_compatibility"

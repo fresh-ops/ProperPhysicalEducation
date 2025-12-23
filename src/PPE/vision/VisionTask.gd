@@ -3,9 +3,12 @@ extends Control
 
 
 const CAMERA_VIEW_SCENE = preload("res://vision/camera_view/CameraView.tscn")
+const PUBLISHER_SCENE = preload("res://vision/Publisher.tscn")
 
 
 var _camera_manager: CameraManager
+var _landmarks_receiver: LandmarksReceiver
+var _publisher: Publisher
 
 
 ## Кнопка открытия [member select_camera_dialog]
@@ -24,6 +27,12 @@ var _camera_manager: CameraManager
 func _ready():
 	_camera_manager = CameraManager.new()
 	_camera_manager.init()
+	_landmarks_receiver = LandmarksReceiver.new()
+	_landmarks_receiver.init()
+	_publisher = PUBLISHER_SCENE.instantiate()
+	_publisher.setup(_landmarks_receiver)
+	_publisher.visible = false
+	add_child(_publisher)
 	btn_open_camera.pressed.connect(self.__on_open_camera_button_pressed)
 	_camera_manager.camera_permission_result_asked.connect(self.__on_camera_permission_result_asked)
 	_camera_manager.monitoring_feeds_set.connect(self.__show_camera_selection_dialog)
@@ -88,12 +97,14 @@ func __on_format_selected(index: int) -> void:
 ## Запускает камеру
 func __start_camera() -> void:
 	var camera_view = CAMERA_VIEW_SCENE.instantiate()
+	var provider = LandmarksProvider.new()
 	cameras_container.add_child.call_deferred(camera_view)
 	if cameras_container.get_child_count() >= cameras_container.columns ** 2:
 		cameras_container.columns += 1
 	cameras_container.queue_sort()
-	camera_view.initialize.call_deferred(_camera_manager._camera_feed)
+	camera_view.initialize.call_deferred(_camera_manager._camera_feed, provider)
 	camera_view.start_camera.call_deferred()
+	_landmarks_receiver.add_provider.call_deferred(provider);
 
 
 ## Обрабатывает добавление камеры

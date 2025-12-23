@@ -1,0 +1,19 @@
+[gd_scene load_steps=3 format=3 uid="uid://2jljs74cmrog"]
+
+[ext_resource type="Script" uid="uid://c65dh8o6c5qtj" path="res://vision/Publisher.gd" id="1_gv2yl"]
+[ext_resource type="PackedScene" uid="uid://ktm7k0co2o7l" path="res://addons/mqtt/mqtt.tscn" id="2_gv2yl"]
+
+[node name="Publisher" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_gv2yl")
+
+[node name="MQTT" parent="." instance=ExtResource("2_gv2yl")]
+
+[connection signal="broker_connected" from="MQTT" to="." method="_on_mqtt_broker_connected"]
+[connection signal="broker_connection_failed" from="MQTT" to="." method="_on_mqtt_broker_connection_failed"]
+[connection signal="broker_disconnected" from="MQTT" to="." method="_on_mqtt_broker_disconnected"]
