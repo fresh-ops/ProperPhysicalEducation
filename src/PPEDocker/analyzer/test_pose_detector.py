@@ -59,8 +59,7 @@ class TestPoseDetector(unittest.TestCase):
             [0.41765579581261, 0.93193113803864, 0.30422449111939]
         ]
         
-        self.angle_analyzer.points = t_pose_points
-        current_pose = self.angle_analyzer.get_current_pose()
+        current_pose = self.angle_analyzer.get_current_pose(t_pose_points)
         detected_poses = self.detector.detect_pose(current_pose)
         
         self.assertGreater(len(detected_poses), 0)
@@ -107,8 +106,7 @@ class TestPoseDetector(unittest.TestCase):
             [0.42765524983406, 0.96236550807953, 0.19612842798233]
         ]
         
-        self.angle_analyzer.points = arms_down_points
-        current_pose = self.angle_analyzer.get_current_pose()
+        current_pose = self.angle_analyzer.get_current_pose(arms_down_points)
         detected_poses = self.detector.detect_pose(current_pose)
         
         self.assertGreater(len(detected_poses), 0)
@@ -155,8 +153,7 @@ class TestPoseDetector(unittest.TestCase):
             [0.40908414125443, 0.9309133887291, 0.21493278443813]
         ]
         
-        self.angle_analyzer.points = unknown_pose_points
-        current_pose = self.angle_analyzer.get_current_pose()
+        current_pose = self.angle_analyzer.get_current_pose(unknown_pose_points)
         detected_poses = self.detector.detect_pose(current_pose)
         
         for pose in self.poses:

@@ -1,4 +1,5 @@
 import math
+from typing import List
 from poses.pose import Pose
 from skeleton import LANDMARKS_COUNT, Angle
 
@@ -44,12 +45,11 @@ CONNECTIONS = {
 
 class SkeletonTransformer:
     def __init__(self):
-        self.points = [(0.0, 0.0, 0.0)] * LANDMARKS_COUNT
         self.angles = {}
         self.angle_history = {}
 
                 
-    def calculate_angle(self, angle: Angle):
+    def calculate_angle(self, skeleton, angle: Angle):
         """
         Вычисляет угол в точке p2 между линиями p1-p2 и p3-p2
         В ПЛОСКОСТИ XY (плоская проекция, Z игнорируется)
@@ -66,9 +66,9 @@ class SkeletonTransformer:
         p2_idx = angle.vertex.index
         p3_idx = angle.side_b.index
 
-        p1 = self.points[p1_idx]
-        p2 = self.points[p2_idx]
-        p3 = self.points[p3_idx]
+        p1 = skeleton[p1_idx]
+        p2 = skeleton[p2_idx]
+        p3 = skeleton[p3_idx]
 
         v1 = (p1[0] - p2[0], p1[1] - p2[1])
         v2 = (p3[0] - p2[0], p3[1] - p2[1])
@@ -128,7 +128,7 @@ class SkeletonTransformer:
         self.angles = angles
         return angles
 
-    def get_current_pose(self) -> Pose:
+    def get_current_pose(self, skeleton: List[List[float]]) -> Pose:
         """
         Создает объект Pose с текущими вычисленными углами тела
 
@@ -143,10 +143,10 @@ class SkeletonTransformer:
         return Pose(
             name="",
             threshold=0.0,
-            left_shoulder_angle=self.calculate_angle(Angle.LEFT_SHOULDER),
-            right_shoulder_angle=self.calculate_angle(Angle.RIGHT_SHOULDER),
-            left_elbow_angle=self.calculate_angle(Angle.LEFT_ELBOW),
-            right_elbow_angle=self.calculate_angle(Angle.RIGHT_ELBOW),
-            left_knee_angle=self.calculate_angle(Angle.LEFT_KNEE),
-            right_knee_angle=self.calculate_angle(Angle.RIGHT_KNEE)
+            left_shoulder_angle=self.calculate_angle(skeleton, Angle.LEFT_SHOULDER),
+            right_shoulder_angle=self.calculate_angle(skeleton, Angle.RIGHT_SHOULDER),
+            left_elbow_angle=self.calculate_angle(skeleton, Angle.LEFT_ELBOW),
+            right_elbow_angle=self.calculate_angle(skeleton, Angle.RIGHT_ELBOW),
+            left_knee_angle=self.calculate_angle(skeleton, Angle.LEFT_KNEE),
+            right_knee_angle=self.calculate_angle(skeleton, Angle.RIGHT_KNEE)
         )
