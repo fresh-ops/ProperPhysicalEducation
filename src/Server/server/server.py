@@ -44,14 +44,16 @@ def on_message(client, userdata, message):
             try:
                 points = json.loads(message.payload.decode('utf-8'))
                 pose = landmarks_to_pose(points)
-                detected = detector.detect_pose(pose)
-                print(detected)
+                detected = [d.name for d in detector.detect_pose(pose)]
+                global detected_cnt
+                print(f'Detected poses number {detected_cnt}: {detected}')
+                detected_cnt += 1
 
             except Exception as e:
                 print(f"CAMERA_POINTS_TOPIC error: {e}")
 
 
-
+detected_cnt = 0
 # Инициализация MQTT клиента
 client = mqtt.Client()
 filter = EMGFilter()
