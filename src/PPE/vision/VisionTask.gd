@@ -48,6 +48,7 @@ func _ready():
 
 ## Обработчик нажатия на кнопку OpenCamera
 func __on_open_camera_button_pressed()-> void:
+	_camera_manager.connect_monitoring_feeds()
 	if _camera_manager.is_monitoring():
 		_camera_manager._initialize_camera_extension()
 		__show_camera_selection_dialog()

@@ -27,25 +27,6 @@ func get_feeds():
 	return CameraServer.feeds()
 
 
-## Извлекает доступные форматы для определенной камеры
-func get_formats(id) -> Array:
-	if _camera_feed:
-		_camera_feed = null
-	for feed in CameraServer.feeds():
-		if feed.get_id() == id:
-			_camera_feed = feed
-			break
-	if _camera_feed == null:
-		return []
-	var formats = _camera_feed.get_formats()
-	for format in formats:
-		if format.has("frame_numerator") and format.has("frame_denominator"):
-			format["fps"] = round(format["frame_denominator"] / format["frame_numerator"])
-		if format.has("framerate_numerator") and format.has("framerate_denominator"):
-			format["fps"] = round(format["framerate_numerator"] / format["framerate_denominator"])
-	return formats
-
-
 ## Выставляет формат выбранный пользователем
 func is_format_set(index: int) -> bool:
 	if _camera_feed == null:
@@ -55,13 +36,16 @@ func is_format_set(index: int) -> bool:
 	return false
 
 
-## Подключает monitoring feeds 
+## Проверяет, ведется ли мониторинг камер
 func is_monitoring() -> bool:
-	if not CameraServer.monitoring_feeds:
-		if not CameraServer.camera_feeds_updated.is_connected(func(): monitoring_feeds_set.emit()):
-				CameraServer.camera_feeds_updated.connect(func(): monitoring_feeds_set.emit(), CONNECT_ONE_SHOT | CONNECT_DEFERRED)
-		CameraServer.monitoring_feeds = true
-	return true
+	return true if CameraServer.monitoring_feeds else false
+
+
+## Подключает monitoring feeds 
+func connect_monitoring_feeds() -> void:
+	if not CameraServer.camera_feeds_updated.is_connected(func(): monitoring_feeds_set.emit()):
+		CameraServer.camera_feeds_updated.connect(func(): monitoring_feeds_set.emit(), CONNECT_ONE_SHOT | CONNECT_DEFERRED)
+	CameraServer.monitoring_feeds = true
 
 
 func _initialize_camera_extension() -> void:
