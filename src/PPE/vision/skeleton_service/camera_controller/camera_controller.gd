@@ -41,7 +41,6 @@ func _exit_tree() -> void:
 ## Устанавливает [CameraFeed]. Если до этого был установлен другой [CameraFeed],
 ## то он останавливается независимо от состояния.
 func set_camera_feed(camera_feed: CameraFeed) -> void:
-	print("CameraController: Setting new CameraFeed")
 	__free_resources()
 	__camera_feed = camera_feed
 	__connect_signals()
@@ -122,7 +121,6 @@ func __disconnect_signals() -> void:
 
 ## Обработчик получения нового кадра от управляемого [CameraFeed].
 func __on_frame_changed() -> void:
-	print("CameraController: New frame received from CameraFeed")
 	var image := await __read_image_from_feed()
 	frame_changed.emit(image)
 
