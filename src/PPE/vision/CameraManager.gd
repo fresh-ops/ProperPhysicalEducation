@@ -1,4 +1,3 @@
-class_name CameraManager
 extends Node
 
 
@@ -40,9 +39,13 @@ func connect_monitoring_feeds() -> void:
 
 func _initialize_camera_extension() -> void:
 	if __camera_extension:
+		push_warning("CameraManager: Camera extension already initialized; skipping re-init.")
 		return
+
 	if not CameraServer.monitoring_feeds:
+		push_error("CameraManager: Cannot initialize camera extension while monitoring_feeds is disabled.")
 		return
+
 	if OS.get_name() in ["Windows", "iOS", "macOS"]:
 		__camera_extension = CameraServerExtension.new()
 		__camera_extension.permission_result.connect(func(): camera_permission_result_asked.emit())
