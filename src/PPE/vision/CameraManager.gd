@@ -1,45 +1,53 @@
+## Класс-обертка над [CameraServer].
 extends Node
 
 
-signal camera_feeds_updated
+## Посылается при обновлении списка [CameraFeed].
+signal camera_feeds_updated()
+## Посылается при добавлении новой камеры к списку [CameraFeed]. 
 signal camera_added
-signal camera_removed(id)
+## Посылается при удалении камеры из списка доступных [CameraFeed]. 
+## [param id] - Идентификатор удалённой камеры.
+signal camera_removed(id: int)
+## Посылается при запросе разрешения доступа к камере.
 signal camera_permission_result_asked
-signal monitoring_feeds_set
+## Посылается, когда мониторинг [CameraFeed] установлен.
+signal monitoring_feeds_set()
 
 
 var __camera_extension: CameraServerExtension
 
 
-## Инициализирует менеджер камер
+## Инициализирует менеджер камер.
 func init() -> void:
-	CameraServer.camera_feed_added.connect(func(_index): camera_added.emit(_index))
+	CameraServer.camera_feed_added.connect(func(_index : int): camera_added.emit(_index))
 	CameraServer.camera_feed_removed.connect(self.__on_camera_removed)
 	if CameraServer.monitoring_feeds:
 		_initialize_camera_extension()
 		camera_feeds_updated.emit()
 
 
-## Извлекает доступные камеры из CameraServer
-func get_feeds():
+## Извлекает список доступных [CameraFeed] из CameraServer.
+func get_feeds() -> Array[CameraFeed]:
 	return CameraServer.feeds()
 
 
-## Проверяет, ведется ли мониторинг камер
+## Возвращает, включён ли мониторинг [CameraFeed].
+## Возвращает [code]true[/code], если мониторинг включён.
 func is_monitoring() -> bool:
-	return true if CameraServer.monitoring_feeds else false
+	return CameraServer.monitoring_feeds == true
 
 
-## Подключает monitoring feeds 
+## Подключает monitoring feeds.
 func connect_monitoring_feeds() -> void:
 	if not CameraServer.camera_feeds_updated.is_connected(func(): monitoring_feeds_set.emit()):
 		CameraServer.camera_feeds_updated.connect(func(): monitoring_feeds_set.emit(), CONNECT_ONE_SHOT | CONNECT_DEFERRED)
 	CameraServer.monitoring_feeds = true
 
 
+## Инициализирует расширение камеры.
 func _initialize_camera_extension() -> void:
-	if __camera_extension:
-		push_warning("CameraManager: Camera extension already initialized; skipping re-init.")
+	if __camera_extension != null:
 		return
 
 	if not CameraServer.monitoring_feeds:
@@ -53,5 +61,6 @@ func _initialize_camera_extension() -> void:
 			__camera_extension.request_permission()
 
 
-func __on_camera_removed(id):
+## Обработчик удаления камеры из списка доступных [CameraFeed].
+func __on_camera_removed(id: int) -> void:
 	camera_removed.emit(id)
