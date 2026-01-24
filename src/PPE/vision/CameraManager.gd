@@ -10,7 +10,6 @@ signal monitoring_feeds_set
 
 
 var __camera_extension: CameraServerExtension
-var _camera_feed
 
 
 ## Инициализирует менеджер камер
@@ -25,15 +24,6 @@ func init() -> void:
 ## Извлекает доступные камеры из CameraServer
 func get_feeds():
 	return CameraServer.feeds()
-
-
-## Выставляет формат выбранный пользователем
-func is_format_set(index: int) -> bool:
-	if _camera_feed == null:
-		return false
-	if _camera_feed.set_format(index, {}):
-		return true
-	return false
 
 
 ## Проверяет, ведется ли мониторинг камер
@@ -61,7 +51,4 @@ func _initialize_camera_extension() -> void:
 
 
 func __on_camera_removed(id):
-	## Сбрасываем CameraFeed, если он был удалён
-	if _camera_feed != null and _camera_feed.get_id() == id:
-		_camera_feed = null
 	camera_removed.emit(id)
