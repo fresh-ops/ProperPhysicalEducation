@@ -20,7 +20,6 @@ config/icon="res://icon.svg"
 MediaPipeExternalFiles="*res://addons/GDMP/MediaPipeExternalFiles.gd"
 GDMPAndroid="*res://addons/GDMP/GDMPAndroid.gd"
 Global="*res://Global.gd"
-CameraManager="*res://vision/CameraManager.gd"
 
 [display]
 

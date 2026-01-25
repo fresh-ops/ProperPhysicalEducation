@@ -1,4 +1,5 @@
 ## Класс-обертка над [CameraServer].
+class_name CameraManager
 extends Node
 
 
@@ -23,7 +24,7 @@ func init() -> void:
 	CameraServer.camera_feed_added.connect(func(_index : int): camera_added.emit(_index))
 	CameraServer.camera_feed_removed.connect(self.__on_camera_removed)
 	if CameraServer.monitoring_feeds:
-		_initialize_camera_extension()
+		__initialize_camera_extension()
 		camera_feeds_updated.emit()
 
 
@@ -35,18 +36,19 @@ func get_feeds() -> Array[CameraFeed]:
 ## Возвращает, включён ли мониторинг [CameraFeed].
 ## Возвращает [code]true[/code], если мониторинг включён.
 func is_monitoring() -> bool:
-	return CameraServer.monitoring_feeds == true
+	return CameraServer.monitoring_feeds 
 
 
-## Подключает monitoring feeds.
-func connect_monitoring_feeds() -> void:
+## Подключает monitoring feeds и устанавливает расширение камеры.
+func start_monitoring() -> void:
 	if not CameraServer.camera_feeds_updated.is_connected(func(): monitoring_feeds_set.emit()):
 		CameraServer.camera_feeds_updated.connect(func(): monitoring_feeds_set.emit(), CONNECT_ONE_SHOT | CONNECT_DEFERRED)
 	CameraServer.monitoring_feeds = true
+	__initialize_camera_extension()
 
 
 ## Инициализирует расширение камеры.
-func _initialize_camera_extension() -> void:
+func __initialize_camera_extension() -> void:
 	if __camera_extension != null:
 		return
 
