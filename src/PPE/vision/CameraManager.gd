@@ -21,8 +21,9 @@ var __camera_extension: CameraServerExtension
 
 ## Инициализирует менеджер камер.
 func init() -> void:
-	CameraServer.camera_feed_added.connect(func(_index : int): camera_added.emit(_index))
+	CameraServer.camera_feed_added.connect(self.__on_camera_added)
 	CameraServer.camera_feed_removed.connect(self.__on_camera_removed)
+	print("Start monitoring")
 	if CameraServer.monitoring_feeds:
 		__initialize_camera_extension()
 		camera_feeds_updated.emit()
@@ -63,6 +64,18 @@ func __initialize_camera_extension() -> void:
 			__camera_extension.request_permission()
 
 
+## Обработчик добавления камеры в список доступных [CameraFeed].
+func __on_camera_added(id) -> void:
+	camera_added.emit.call_deferred(id)
+
+
 ## Обработчик удаления камеры из списка доступных [CameraFeed].
-func __on_camera_removed(id: int) -> void:
+func __on_camera_removed(id):
 	camera_removed.emit(id)
+
+
+func create_controller() -> CameraController:
+	var controller := CameraController.new()
+	controller.set_camera_feed(_camera_feed)
+	add_child(controller)
+	return controller

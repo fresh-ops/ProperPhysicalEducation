@@ -12,10 +12,9 @@ var __renderer: MediaPipePoseRenderer
 @onready var __frame_view: TextureRect = $FrameView
 
 
-func initialize(camera_feed: CameraFeed, landmarks_provider: LandmarksProvider) -> void:
+func initialize(landmarks_provider: LandmarksProvider) -> void:
 	__landmarksProvider = landmarks_provider
 	add_child(__landmarksProvider)
-	__landmarksProvider.initialize(camera_feed)
 	__landmarksProvider.landmarks_detected.connect(self._draw_landmarks)
 	__renderer = MediaPipePoseRenderer.new()
 
