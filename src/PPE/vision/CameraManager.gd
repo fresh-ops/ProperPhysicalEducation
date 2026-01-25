@@ -23,7 +23,6 @@ var __camera_extension: CameraServerExtension
 func init() -> void:
 	CameraServer.camera_feed_added.connect(self.__on_camera_added)
 	CameraServer.camera_feed_removed.connect(self.__on_camera_removed)
-	print("Start monitoring")
 	if CameraServer.monitoring_feeds:
 		__initialize_camera_extension()
 		camera_feeds_updated.emit()
