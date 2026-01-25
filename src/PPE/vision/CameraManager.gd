@@ -74,8 +74,18 @@ func __on_camera_removed(id):
 	camera_removed.emit(id)
 
 
-func create_controller() -> CameraController:
+## Возвращает [CameraFeed] по его идентификатору.
+func get_feed_by_id(id: int) -> CameraFeed:
+	for feed in CameraServer.feeds():
+		if feed.get_id() == id:
+			return feed
+	return null
+
+
+## Создаёт и возвращает новый [CameraController] для указанного [CameraFeed]. Новый контроллер
+## добавляется в качестве дочернего узла к [CameraManager].
+func create_controller_for(camera_feed: CameraFeed) -> CameraController:
 	var controller := CameraController.new()
-	controller.set_camera_feed(_camera_feed)
+	controller.set_camera_feed(camera_feed)
 	add_child(controller)
 	return controller

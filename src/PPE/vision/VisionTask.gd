@@ -78,9 +78,9 @@ func __show_camera_selection_dialog() -> void:
 ## Подставляет доступные форматы в поле выбора
 func __on_camera_feed_selected(_index: int) -> void:
 	opt_camera_format.clear()
-	select_camera_dialog.get_ok_button().disabled = false
 	var id := opt_camera_feed.get_selected_id()
-	var formats = _camera_manager.get_formats(id)
+	var camera_feed := _camera_manager.get_feed_by_id(id)
+	var formats = camera_feed.get_formats()
 	for format in formats:
 		opt_camera_format.add_item(String("{width}x{height}@{fps}({format})").format(format))
 		opt_camera_format.selected = -1
@@ -88,10 +88,7 @@ func __on_camera_feed_selected(_index: int) -> void:
 
 ## Выставляет формат выбранный пользователем
 func __on_format_selected(index: int) -> void:
-	if _camera_manager.is_format_set(index):
-		select_camera_dialog.get_ok_button().disabled = false
-	else:
-		select_camera_dialog.get_ok_button().disabled = true
+	select_camera_dialog.get_ok_button().disabled = index < 0
 
 
 ## Запускает камеру
@@ -102,7 +99,13 @@ func __start_camera() -> void:
 		cameras_container.columns += 1
 	cameras_container.queue_sort()
 	var provider := LandmarksProvider.new()
-	var controller := _camera_manager.create_controller()
+
+	var camera_feed_id := opt_camera_feed.get_selected_id()
+	var camera_feed := _camera_manager.get_feed_by_id(camera_feed_id)
+	var format_index := opt_camera_format.selected
+	var controller := _camera_manager.create_controller_for(camera_feed)
+	controller.set_format(format_index)
+
 	provider.initialize(controller)
 	camera_view.initialize(provider)
 	camera_view.start_camera()
