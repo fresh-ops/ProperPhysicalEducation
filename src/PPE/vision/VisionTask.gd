@@ -5,7 +5,6 @@ extends Control
 const CAMERA_VIEW_SCENE = preload("res://vision/camera_view/CameraView.tscn")
 const PUBLISHER_SCENE = preload("res://vision/Publisher.tscn")
 
-
 var _camera_manager: CameraManager
 var _landmarks_receiver: LandmarksReceiver
 var _publisher: Publisher
@@ -49,8 +48,8 @@ func _ready():
 
 ## Обработчик нажатия на кнопку OpenCamera
 func __on_open_camera_button_pressed()-> void:
+	_camera_manager.start_monitoring()
 	if _camera_manager.is_monitoring():
-		_camera_manager._initialize_camera_extension()
 		__show_camera_selection_dialog()
 	
 

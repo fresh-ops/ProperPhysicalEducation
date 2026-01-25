@@ -1,76 +1,62 @@
+## Класс-обертка над [CameraServer].
 class_name CameraManager
 extends Node
 
 
-signal camera_feeds_updated
+## Посылается при обновлении списка [CameraFeed].
+signal camera_feeds_updated()
+## Посылается при добавлении новой камеры к списку [CameraFeed]. 
 signal camera_added
-signal camera_removed(id)
+## Посылается при удалении камеры из списка доступных [CameraFeed]. 
+## [param id] - Идентификатор удалённой камеры.
+signal camera_removed(id: int)
+## Посылается при запросе разрешения доступа к камере.
 signal camera_permission_result_asked
-signal monitoring_feeds_set
+## Посылается, когда мониторинг [CameraFeed] установлен.
+signal monitoring_feeds_set()
 
 
 var __camera_extension: CameraServerExtension
-var _camera_feed
 
 
-## Инициализирует менеджер камер
+## Инициализирует менеджер камер.
 func init() -> void:
-	print("Connect CameraServer signals")
 	CameraServer.camera_feed_added.connect(self.__on_camera_added)
 	CameraServer.camera_feed_removed.connect(self.__on_camera_removed)
 	print("Start monitoring")
 	if CameraServer.monitoring_feeds:
-		_initialize_camera_extension()
+		__initialize_camera_extension()
 		camera_feeds_updated.emit()
 
 
-## Извлекает доступные камеры из CameraServer
-func get_feeds():
+## Извлекает список доступных [CameraFeed] из CameraServer.
+func get_feeds() -> Array[CameraFeed]:
 	return CameraServer.feeds()
 
 
-## Извлекает доступные форматы для определенной камеры
-func get_formats(id) -> Array:
-	if _camera_feed:
-		_camera_feed = null
-	for feed in CameraServer.feeds():
-		if feed.get_id() == id:
-			_camera_feed = feed
-			break
-	if _camera_feed == null:
-		return []
-	var formats = _camera_feed.get_formats()
-	for format in formats:
-		if format.has("frame_numerator") and format.has("frame_denominator"):
-			format["fps"] = round(format["frame_denominator"] / format["frame_numerator"])
-		if format.has("framerate_numerator") and format.has("framerate_denominator"):
-			format["fps"] = round(format["framerate_numerator"] / format["framerate_denominator"])
-	return formats
-
-
-## Выставляет формат выбранный пользователем
-func is_format_set(index: int) -> bool:
-	if _camera_feed == null:
-		return false
-	if _camera_feed.set_format(index, {}):
-		return true
-	return false
-
-
-## Подключает monitoring feeds 
+## Возвращает, включён ли мониторинг [CameraFeed].
+## Возвращает [code]true[/code], если мониторинг включён.
 func is_monitoring() -> bool:
-	if not CameraServer.monitoring_feeds:
-		if not CameraServer.camera_feeds_updated.is_connected(func(): monitoring_feeds_set.emit()):
-				CameraServer.camera_feeds_updated.connect(func(): monitoring_feeds_set.emit(), CONNECT_ONE_SHOT | CONNECT_DEFERRED)
-		CameraServer.monitoring_feeds = true
-	return true
+	return CameraServer.monitoring_feeds 
 
 
-func _initialize_camera_extension() -> void:
-	if __camera_extension:
+## Подключает monitoring feeds и устанавливает расширение камеры.
+func start_monitoring() -> void:
+	if not CameraServer.camera_feeds_updated.is_connected(func(): monitoring_feeds_set.emit()):
+		CameraServer.camera_feeds_updated.connect(func(): monitoring_feeds_set.emit(), CONNECT_ONE_SHOT | CONNECT_DEFERRED)
+	CameraServer.monitoring_feeds = true
+	__initialize_camera_extension()
+
+
+## Инициализирует расширение камеры.
+func __initialize_camera_extension() -> void:
+	if __camera_extension != null:
 		return
+
 	if not CameraServer.monitoring_feeds:
+		push_error("CameraManager: Cannot initialize camera extension while monitoring_feeds is disabled.")
 		return
+
 	if OS.get_name() in ["Windows", "iOS", "macOS"]:
 		__camera_extension = CameraServerExtension.new()
 		__camera_extension.permission_result.connect(func(): camera_permission_result_asked.emit())
@@ -78,14 +64,13 @@ func _initialize_camera_extension() -> void:
 			__camera_extension.request_permission()
 
 
+## Обработчик добавления камеры в список доступных [CameraFeed].
 func __on_camera_added(id) -> void:
 	camera_added.emit.call_deferred(id)
 
 
+## Обработчик удаления камеры из списка доступных [CameraFeed].
 func __on_camera_removed(id):
-	## Сбрасываем CameraFeed, если он был удалён
-	if _camera_feed != null and _camera_feed.get_id() == id:
-		_camera_feed = null
 	camera_removed.emit(id)
 
 
