@@ -120,8 +120,10 @@ func __connect_signals() -> void:
 
 ## Отвязывает все сигналы от управляемого [CameraFeed].
 func __disconnect_signals() -> void:
-	__camera_feed.frame_changed.disconnect(__on_frame_changed)
-	__camera_feed.format_changed.disconnect(__on_format_changed)
+	if __camera_feed.frame_changed.is_connected(__on_frame_changed):
+		__camera_feed.frame_changed.disconnect(__on_frame_changed)
+	if __camera_feed.format_changed.is_connected(__on_format_changed):
+		__camera_feed.format_changed.disconnect(__on_format_changed)
 
 
 ## Освобождает ресурсы текстуры и материала.
