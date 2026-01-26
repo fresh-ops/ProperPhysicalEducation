@@ -80,6 +80,9 @@ func __on_camera_feed_selected(_index: int) -> void:
 	opt_camera_format.clear()
 	var id := opt_camera_feed.get_selected_id()
 	var camera_feed := _camera_manager.get_feed_by_id(id)
+	if camera_feed == null:
+		push_error("VisionTask: Cannot load formats, CameraFeed is null")
+		return
 	var formats = camera_feed.get_formats()
 	for format in formats:
 		if format.has("frame_numerator") and format.has("frame_denominator"):
