@@ -82,8 +82,12 @@ func __on_camera_feed_selected(_index: int) -> void:
 	var camera_feed := _camera_manager.get_feed_by_id(id)
 	var formats = camera_feed.get_formats()
 	for format in formats:
+		if format.has("frame_numerator") and format.has("frame_denominator"):
+			format["fps"] = round(format["frame_denominator"] / format["frame_numerator"])
+		if format.has("framerate_numerator") and format.has("framerate_denominator"):
+			format["fps"] = round(format["framerate_numerator"] / format["framerate_denominator"])
 		opt_camera_format.add_item(String("{width}x{height}@{fps}({format})").format(format))
-		opt_camera_format.selected = -1
+	opt_camera_format.selected = -1
 
 
 ## Выставляет формат выбранный пользователем
