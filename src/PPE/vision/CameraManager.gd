@@ -88,3 +88,14 @@ func create_controller_for(camera_feed: CameraFeed) -> CameraController:
 	controller.set_camera_feed(camera_feed)
 	add_child(controller)
 	return controller
+
+
+## Удаляет контроллер, которым владеет менеджер камер.
+## Если контроллер не является дочерним узлом менеджера — выводится предупреждение.
+func remove_controller(controller: Node) -> void:
+	if controller == null:
+		return
+	if controller.get_parent() != self:
+		push_warning("CameraManager: Attempt to remove controller not owned by manager")
+		return
+	controller.queue_free()

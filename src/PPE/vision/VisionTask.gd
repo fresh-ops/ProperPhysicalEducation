@@ -97,20 +97,27 @@ func __on_format_selected(index: int) -> void:
 
 ## Запускает камеру
 func __start_camera() -> void:
+	var camera_feed_id := opt_camera_feed.get_selected_id()
+	var camera_feed := _camera_manager.get_feed_by_id(camera_feed_id)
+	if camera_feed == null:
+		push_error("VisionTask: Cannot start camera, CameraFeed is null")
+		return
+	var format_index := opt_camera_format.selected
+	var controller := _camera_manager.create_controller_for(camera_feed)
+	if not controller.set_format(format_index):
+		push_error("VisionTask: Cannot set format index %d for CameraFeed id %d".format([format_index, camera_feed_id]))
+		_camera_manager.remove_controller(controller)
+		return
+
+	var provider := LandmarksProvider.new()
+	provider.initialize(controller)
+
 	var camera_view := CAMERA_VIEW_SCENE.instantiate()
 	cameras_container.add_child.call_deferred(camera_view)
 	if cameras_container.get_child_count() >= cameras_container.columns ** 2:
 		cameras_container.columns += 1
 	cameras_container.queue_sort()
-	var provider := LandmarksProvider.new()
 
-	var camera_feed_id := opt_camera_feed.get_selected_id()
-	var camera_feed := _camera_manager.get_feed_by_id(camera_feed_id)
-	var format_index := opt_camera_format.selected
-	var controller := _camera_manager.create_controller_for(camera_feed)
-	controller.set_format(format_index)
-
-	provider.initialize(controller)
 	camera_view.initialize(provider)
 	camera_view.start_camera()
 	_landmarks_receiver.add_provider.call_deferred(provider);
