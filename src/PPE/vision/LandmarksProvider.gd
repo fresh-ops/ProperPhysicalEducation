@@ -50,6 +50,8 @@ func activate() -> void:
 
 ## Останавливает камеру 
 func deactivate() -> void:
+	if __camera_controller == null:
+		return
 	if __camera_controller.frame_changed.is_connected(self.__mark_image):
 		__camera_controller.frame_changed.disconnect(self.__mark_image)
 	__camera_controller.stop()
