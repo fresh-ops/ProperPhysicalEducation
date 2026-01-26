@@ -17,6 +17,7 @@ signal format_changed
 var __camera_feed: CameraFeed = null
 var __viewport: SubViewport
 var __texture: TextureRect
+var __processing_frame: bool = false
 
 
 # =====================================================================
@@ -135,8 +136,12 @@ func __free_texture_resources() -> void:
 
 ## Обработчик получения нового кадра от управляемого [CameraFeed].
 func __on_frame_changed() -> void:
+	if __processing_frame:
+		return
+	__processing_frame = true
 	var image := await __read_image_from_feed()
 	frame_changed.emit(image)
+	__processing_frame = false
 
 
 ## Обработчик изменения формата у управляемого [CameraFeed].
