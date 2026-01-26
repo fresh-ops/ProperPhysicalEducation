@@ -61,7 +61,7 @@ func start() -> bool:
 ## Останавливает поток от [CameraFeed]. При вызове данного метода посылается
 ## [signal CameraController.feed_stopped].
 func stop() -> void:
-	if __camera_feed:
+	if __camera_feed != null:
 		__camera_feed.feed_is_active = false
 	feed_stopped.emit()
 
@@ -82,8 +82,11 @@ func set_format(index: int) -> bool:
 	return __camera_feed.set_format(index, {})
 
 
-## Возвращает положение камеры на устройстве.[br]
+## Возвращает положение камеры на устройстве.
 func get_position() -> CameraFeed.FeedPosition:
+	if __camera_feed == null:
+		push_error("CameraController: CameraFeed must be set before getting position")
+		return CameraFeed.FEED_UNSPECIFIED
 	return __camera_feed.get_position()
 
 
@@ -99,7 +102,7 @@ func get_feed_id() -> int:
 
 ## Освобождает ресурсы связанные с управляемым [CameraFeed].
 func __free_resources() -> void:
-	if __camera_feed:
+	if __camera_feed != null:
 		stop()
 		__disconnect_signals()
 	__free_texture_resources()
@@ -107,6 +110,9 @@ func __free_resources() -> void:
 
 ## Привязывает обработчики сигналов к управляемому [CameraFeed].
 func __connect_signals() -> void:
+	if __camera_feed == null:
+		push_error("CameraController: CameraFeed must be set before connecting signals")
+		return
 	__camera_feed.frame_changed.connect(__on_frame_changed)
 	__camera_feed.format_changed.connect(__on_format_changed)
 
