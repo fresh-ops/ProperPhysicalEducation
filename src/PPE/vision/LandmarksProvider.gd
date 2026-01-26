@@ -42,6 +42,9 @@ func get_camera_feed_id() -> int:
 
 ## Активирует камеру и настраивает формат
 func activate() -> void:
+	if __camera_controller == null:
+		push_error("LandmarksProvider: Cannot activate, CameraController is null")
+		return
 	__camera_controller.frame_changed.connect(self.__mark_image, ConnectFlags.CONNECT_DEFERRED)
 	__camera_controller.start.call_deferred()
 
