@@ -6,7 +6,8 @@ extends Node
 ## Посылается при обновлении списка [CameraFeed].
 signal camera_feeds_updated()
 ## Посылается при добавлении новой камеры к списку [CameraFeed]. 
-signal camera_added
+## [param id] - Идентификатор добавленной камеры.
+signal camera_added(id: int)
 ## Посылается при удалении камеры из списка доступных [CameraFeed]. 
 ## [param id] - Идентификатор удалённой камеры.
 signal camera_removed(id: int)
