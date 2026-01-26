@@ -65,13 +65,13 @@ func __initialize_camera_extension() -> void:
 
 
 ## Обработчик добавления камеры в список доступных [CameraFeed].
-func __on_camera_added(id) -> void:
+func __on_camera_added(id: int) -> void:
 	camera_added.emit.call_deferred(id)
 
 
 ## Обработчик удаления камеры из списка доступных [CameraFeed].
-func __on_camera_removed(id):
-	camera_removed.emit(id)
+func __on_camera_removed(id: int) -> void:
+	camera_removed.emit.call_deferred(id)
 
 
 ## Возвращает [CameraFeed] по его идентификатору.

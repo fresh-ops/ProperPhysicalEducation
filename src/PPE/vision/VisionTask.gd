@@ -127,7 +127,7 @@ func __start_camera() -> void:
 
 
 ## Обрабатывает добавление камеры
-func __on_camera_added(id: int):
+func __on_camera_added(id: int) -> void:
 	# Проверяем, есть ли данный CameraFeed в списке
 	for i in range(opt_camera_feed.item_count):
 		if opt_camera_feed.get_item_id(i) == id:
@@ -143,7 +143,7 @@ func __on_camera_added(id: int):
 
 
 ## Обрабатывает удаление камеры
-func __on_camera_removed(id: int):
+func __on_camera_removed(id: int) -> void:
 	# Если удаляем выбранный, то очищаем форматы
 	if opt_camera_feed.get_selected_id() == id:
 		opt_camera_format.clear.call_deferred()

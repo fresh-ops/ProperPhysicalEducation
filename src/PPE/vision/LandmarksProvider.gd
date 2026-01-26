@@ -21,7 +21,7 @@ func initialize(camera_controller: CameraController) -> void:
 	_initialize_task()
 
 
-func _initialize_task():
+func _initialize_task() -> void:
 	__model_provider = ModelProvider.new()
 	var file := __model_provider.load_model(TASK_FILEPATH)
 	if file == null:
