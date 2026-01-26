@@ -35,6 +35,8 @@ func _initialize_task():
 
 
 func get_camera_feed_id() -> int:
+	if __camera_controller == null:
+		return -1
 	return __camera_controller.get_feed_id()
 
 
