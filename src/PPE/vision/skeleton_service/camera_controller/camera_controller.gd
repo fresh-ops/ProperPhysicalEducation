@@ -245,6 +245,7 @@ func __setup_ycbcr_sep_feed() -> Vector2i:
 
 ## Применяет поворот к отображаемому потоку в зависимости от положения камеры.
 func __apply_feed_rotation(frame_size: Vector2i) -> void:
+	__texture.flip_h = __camera_feed.get_position() != CameraFeed.FEED_FRONT
 	var feed_rotation: float = __camera_feed.feed_transform.get_rotation()
 	if __texture.flip_h:
 		feed_rotation *= -1
@@ -253,5 +254,3 @@ func __apply_feed_rotation(frame_size: Vector2i) -> void:
 	__texture.rotation = feed_rotation
 	__texture.position = offset * -1
 	__viewport.size = frame_size
-
-	__texture.flip_h = __camera_feed.get_position() != CameraFeed.FEED_FRONT
