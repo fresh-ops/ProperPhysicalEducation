@@ -102,6 +102,7 @@ func __free_resources() -> void:
 	if __camera_feed:
 		stop()
 		__disconnect_signals()
+	__free_texture_resources()
 
 
 ## Привязывает обработчики сигналов к управляемому [CameraFeed].
@@ -114,6 +115,13 @@ func __connect_signals() -> void:
 func __disconnect_signals() -> void:
 	__camera_feed.frame_changed.disconnect(__on_frame_changed)
 	__camera_feed.format_changed.disconnect(__on_format_changed)
+
+
+## Освобождает ресурсы текстуры и материала.
+func __free_texture_resources() -> void:
+	if __texture:
+		__texture.texture = null
+		__texture.material = null
 
 # =====================================================================
 # ОБРАБОТЧИКИ СИГНАЛОВ
@@ -171,6 +179,7 @@ func __setup_feed_display() -> void:
 	if __camera_feed == null:
 		push_error("CameraController: CameraFeed must be set before setting up display")
 		return
+	__free_texture_resources()
 	var frame_size := Vector2i.ZERO
 	match __camera_feed.get_datatype():
 		CameraFeed.FEED_RGB:
@@ -181,8 +190,6 @@ func __setup_feed_display() -> void:
 			frame_size = __setup_ycbcr_sep_feed()
 		_:
 			push_warning("CameraController: Unsupported camera feed datatype")
-			__texture.texture = null
-			__texture.material = null
 			return
 	__apply_feed_rotation(frame_size)
 
