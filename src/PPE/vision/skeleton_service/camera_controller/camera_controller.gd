@@ -144,7 +144,10 @@ func __on_frame_changed() -> void:
 		return
 	__processing_frame = true
 	var image := await __read_image_from_feed()
-	frame_changed.emit(image)
+	if image != null:
+		frame_changed.emit(image)
+	else:
+		push_error("CameraController: Received null image from feed")
 	__processing_frame = false
 
 
