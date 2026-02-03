@@ -5,7 +5,6 @@ extends Control
 const CAMERA_VIEW_SCENE = preload("res://vision/camera_view/CameraView.tscn")
 const PUBLISHER_SCENE = preload("res://vision/Publisher.tscn")
 
-
 var _camera_manager: CameraManager
 var _landmarks_receiver: LandmarksReceiver
 var _publisher: Publisher
@@ -27,6 +26,7 @@ var _publisher: Publisher
 func _ready():
 	_camera_manager = CameraManager.new()
 	_camera_manager.init()
+	add_child(_camera_manager)
 	_landmarks_receiver = LandmarksReceiver.new()
 	_landmarks_receiver.init()
 	_publisher = PUBLISHER_SCENE.instantiate()
@@ -48,8 +48,8 @@ func _ready():
 
 ## Обработчик нажатия на кнопку OpenCamera
 func __on_open_camera_button_pressed()-> void:
+	_camera_manager.start_monitoring()
 	if _camera_manager.is_monitoring():
-		_camera_manager._initialize_camera_extension()
 		__show_camera_selection_dialog()
 	
 
@@ -78,37 +78,62 @@ func __show_camera_selection_dialog() -> void:
 ## Подставляет доступные форматы в поле выбора
 func __on_camera_feed_selected(_index: int) -> void:
 	opt_camera_format.clear()
-	select_camera_dialog.get_ok_button().disabled = false
 	var id := opt_camera_feed.get_selected_id()
-	var formats = _camera_manager.get_formats(id)
+	var camera_feed := _camera_manager.get_feed_by_id(id)
+	if camera_feed == null:
+		push_error("VisionTask: Cannot load formats, CameraFeed is null")
+		return
+	var formats = camera_feed.get_formats()
 	for format in formats:
+		if format.has("frame_numerator") and format.has("frame_denominator"):
+			if format["frame_denominator"] != 0:
+				format["fps"] = round(format["frame_denominator"] / format["frame_numerator"])
+			else:
+				push_error("VisionTask: frame_denominator is zero, cannot calculate fps")
+		if format.has("framerate_numerator") and format.has("framerate_denominator"):
+			if format["framerate_denominator"] != 0:
+				format["fps"] = round(format["framerate_numerator"] / format["framerate_denominator"])
+			else:
+				push_error("VisionTask: framerate_denominator is zero, cannot calculate fps")
 		opt_camera_format.add_item(String("{width}x{height}@{fps}({format})").format(format))
-		opt_camera_format.selected = -1
+	opt_camera_format.selected = -1
 
 
 ## Выставляет формат выбранный пользователем
 func __on_format_selected(index: int) -> void:
-	if _camera_manager.is_format_set(index):
-		select_camera_dialog.get_ok_button().disabled = false
-	else:
-		select_camera_dialog.get_ok_button().disabled = true
+	select_camera_dialog.get_ok_button().disabled = index < 0
 
 
 ## Запускает камеру
 func __start_camera() -> void:
-	var camera_view = CAMERA_VIEW_SCENE.instantiate()
-	var provider = LandmarksProvider.new()
+	var camera_feed_id := opt_camera_feed.get_selected_id()
+	var camera_feed := _camera_manager.get_feed_by_id(camera_feed_id)
+	if camera_feed == null:
+		push_error("VisionTask: Cannot start camera, CameraFeed is null")
+		return
+	var format_index := opt_camera_format.selected
+	var controller := _camera_manager.create_controller_for(camera_feed)
+	if not controller.set_format(format_index):
+		push_error("VisionTask: Cannot set format index %d for CameraFeed id %d".format([format_index, camera_feed_id]))
+		_camera_manager.remove_controller(controller)
+		return
+
+	var provider := LandmarksProvider.new()
+	provider.initialize(controller)
+
+	var camera_view := CAMERA_VIEW_SCENE.instantiate()
 	cameras_container.add_child.call_deferred(camera_view)
 	if cameras_container.get_child_count() >= cameras_container.columns ** 2:
 		cameras_container.columns += 1
 	cameras_container.queue_sort()
-	camera_view.initialize.call_deferred(_camera_manager._camera_feed, provider)
-	camera_view.start_camera.call_deferred()
+
+	camera_view.initialize(provider)
+	camera_view.start_camera()
 	_landmarks_receiver.add_provider.call_deferred(provider);
 
 
 ## Обрабатывает добавление камеры
-func __on_camera_added(id: int):
+func __on_camera_added(id: int) -> void:
 	# Проверяем, есть ли данный CameraFeed в списке
 	for i in range(opt_camera_feed.item_count):
 		if opt_camera_feed.get_item_id(i) == id:
@@ -124,7 +149,7 @@ func __on_camera_added(id: int):
 
 
 ## Обрабатывает удаление камеры
-func __on_camera_removed(id: int):
+func __on_camera_removed(id: int) -> void:
 	# Если удаляем выбранный, то очищаем форматы
 	if opt_camera_feed.get_selected_id() == id:
 		opt_camera_format.clear.call_deferred()
