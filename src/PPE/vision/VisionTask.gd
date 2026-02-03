@@ -86,9 +86,15 @@ func __on_camera_feed_selected(_index: int) -> void:
 	var formats = camera_feed.get_formats()
 	for format in formats:
 		if format.has("frame_numerator") and format.has("frame_denominator"):
-			format["fps"] = round(format["frame_denominator"] / format["frame_numerator"])
+			if format["frame_denominator"] != 0:
+				format["fps"] = round(format["frame_denominator"] / format["frame_numerator"])
+			else:
+				push_error("VisionTask: frame_denominator is zero, cannot calculate fps")
 		if format.has("framerate_numerator") and format.has("framerate_denominator"):
-			format["fps"] = round(format["framerate_numerator"] / format["framerate_denominator"])
+			if format["framerate_denominator"] != 0:
+				format["fps"] = round(format["framerate_numerator"] / format["framerate_denominator"])
+			else:
+				push_error("VisionTask: framerate_denominator is zero, cannot calculate fps")
 		opt_camera_format.add_item(String("{width}x{height}@{fps}({format})").format(format))
 	opt_camera_format.selected = -1
 
