@@ -212,7 +212,7 @@ func __setup_rgb_feed() -> Vector2i:
 	var texture_rgb := CameraTexture.new()
 	texture_rgb.camera_feed_id = __camera_feed.get_id()
 	texture_rgb.which_feed = CameraServer.FEED_RGBA_IMAGE
-	var frame_size : Vector2i = texture_rgb.get_size()
+	var frame_size := texture_rgb.get_size()
 	__texture.material = null
 	__texture.texture = texture_rgb
 	return frame_size
@@ -223,7 +223,7 @@ func __setup_ycbcr_feed() -> Vector2i:
 	var texture_yuy2 := CameraTexture.new()
 	texture_yuy2.camera_feed_id = __camera_feed.get_id()
 	texture_yuy2.which_feed = CameraServer.FEED_YCBCR_IMAGE
-	var frame_size : Vector2i = texture_yuy2.get_size()
+	var frame_size := texture_yuy2.get_size()
 	var mat := ShaderMaterial.new()
 	mat.shader = load("res://vision/yuy2_to_rgb.gdshader")
 	mat.set_shader_parameter("texture_yuy2", texture_yuy2)
@@ -248,7 +248,7 @@ func __setup_ycbcr_sep_feed() -> Vector2i:
 	mat.set_shader_parameter("texture_y", texture_y)
 	mat.set_shader_parameter("texture_uv", texture_uv)
 	__texture.material = mat
-	var frame_size : Vector2i = texture_y.get_size()
+	var frame_size := texture_y.get_size()
 	var image := Image.create_empty(frame_size.x, frame_size.y, false, Image.FORMAT_RGB8)
 	var image_texture := ImageTexture.new()
 	image_texture.set_image(image)
@@ -259,7 +259,7 @@ func __setup_ycbcr_sep_feed() -> Vector2i:
 ## Применяет поворот к отображаемому потоку в зависимости от положения камеры.
 func __apply_feed_rotation(frame_size: Vector2i) -> void:
 	__texture.flip_h = __camera_feed.get_position() != CameraFeed.FEED_FRONT
-	var feed_rotation: float = __camera_feed.feed_transform.get_rotation()
+	var feed_rotation := __camera_feed.feed_transform.get_rotation()
 	if __texture.flip_h:
 		feed_rotation *= -1
 	var size_rotated := Vector2(frame_size).rotated(feed_rotation)
