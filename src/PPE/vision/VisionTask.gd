@@ -5,7 +5,6 @@ extends Control
 const CAMERA_VIEW_SCENE = preload("res://vision/camera_view/CameraView.tscn")
 const PUBLISHER_SCENE = preload("res://vision/Publisher.tscn")
 
-var _camera_manager: CameraManager
 var _landmarks_receiver: LandmarksReceiver
 var _publisher: Publisher
 
@@ -24,9 +23,7 @@ var _publisher: Publisher
 
 
 func _ready():
-	_camera_manager = CameraManager.new()
-	_camera_manager.init()
-	add_child(_camera_manager)
+	CameraManager.init()
 	_landmarks_receiver = LandmarksReceiver.new()
 	_landmarks_receiver.init()
 	_publisher = PUBLISHER_SCENE.instantiate()
@@ -34,11 +31,11 @@ func _ready():
 	_publisher.visible = false
 	add_child(_publisher)
 	btn_open_camera.pressed.connect(self.__on_open_camera_button_pressed)
-	_camera_manager.camera_permission_result_asked.connect(self.__on_camera_permission_result_asked)
-	_camera_manager.monitoring_feeds_set.connect(self.__show_camera_selection_dialog)
-	_camera_manager.camera_added.connect(self.__on_camera_added)
-	_camera_manager.camera_removed.connect(self.__on_camera_removed)
-	_camera_manager.camera_feeds_updated.connect(self.__on_camera_feeds_updated)
+	CameraManager.camera_permission_result_asked.connect(self.__on_camera_permission_result_asked)
+	CameraManager.monitoring_feeds_set.connect(self.__show_camera_selection_dialog)
+	CameraManager.camera_added.connect(self.__on_camera_added)
+	CameraManager.camera_removed.connect(self.__on_camera_removed)
+	CameraManager.camera_feeds_updated.connect(self.__on_camera_feeds_updated)
 	opt_camera_feed.item_selected.connect(self.__on_camera_feed_selected)
 	opt_camera_format.item_selected.connect(self.__on_format_selected)
 	select_camera_dialog.confirmed.connect(self.__start_camera)
@@ -48,8 +45,8 @@ func _ready():
 
 ## Обработчик нажатия на кнопку OpenCamera
 func __on_open_camera_button_pressed()-> void:
-	_camera_manager.start_monitoring()
-	if _camera_manager.is_monitoring():
+	CameraManager.start_monitoring()
+	if CameraManager.is_monitoring():
 		__show_camera_selection_dialog()
 	
 
@@ -63,7 +60,7 @@ func __on_camera_permission_result_asked(granted: bool) -> void:
 
 ## Заносит все фиды в список для выбора
 func __on_camera_feeds_updated() -> void:
-	var feeds = _camera_manager.get_feeds()
+	var feeds = CameraManager.get_feeds()
 	opt_camera_feed.clear()
 	for feed in feeds:
 		opt_camera_feed.add_item(feed.get_name(), feed.get_id())
@@ -79,7 +76,7 @@ func __show_camera_selection_dialog() -> void:
 func __on_camera_feed_selected(_index: int) -> void:
 	opt_camera_format.clear()
 	var id := opt_camera_feed.get_selected_id()
-	var camera_feed := _camera_manager.get_feed_by_id(id)
+	var camera_feed := CameraManager.get_feed_by_id(id)
 	if camera_feed == null:
 		push_error("VisionTask: Cannot load formats, CameraFeed is null")
 		return
@@ -107,15 +104,15 @@ func __on_format_selected(index: int) -> void:
 ## Запускает камеру
 func __start_camera() -> void:
 	var camera_feed_id := opt_camera_feed.get_selected_id()
-	var camera_feed := _camera_manager.get_feed_by_id(camera_feed_id)
+	var camera_feed := CameraManager.get_feed_by_id(camera_feed_id)
 	if camera_feed == null:
 		push_error("VisionTask: Cannot start camera, CameraFeed is null")
 		return
 	var format_index := opt_camera_format.selected
-	var controller := _camera_manager.create_controller_for(camera_feed)
+	var controller := CameraManager.create_controller_for(camera_feed)
 	if not controller.set_format(format_index):
 		push_error("VisionTask: Cannot set format index %d for CameraFeed id %d".format([format_index, camera_feed_id]))
-		_camera_manager.remove_controller(controller)
+		CameraManager.remove_controller(controller)
 		return
 
 	var provider := LandmarksProvider.new()
@@ -139,7 +136,7 @@ func __on_camera_added(id: int) -> void:
 		if opt_camera_feed.get_item_id(i) == id:
 			return # Если да, то ничего не делаем
 	# Иначе выбираем добавленный CameraFeed
-	var feeds = _camera_manager.get_feeds()
+	var feeds = CameraManager.get_feeds()
 	for feed in feeds:
 		if feed.get_id() == id:
 			# И добавляем его в список, при этом не изменяя последний выбранный элемент

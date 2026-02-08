@@ -10,14 +10,6 @@ var __camera_controller: CameraController
 
 
 var __landmarker: MediaPipePoseLandmarker
-
-
-func _ready() -> void:
-	__camera_viewport = SubViewport.new()
-	__camera_viewport.render_target_update_mode = SubViewport.UPDATE_ALWAYS
-	add_child(__camera_viewport)
-	__camera_texture = TextureRect.new()
-	__camera_viewport.add_child(__camera_texture)
   
   
 func initialize(camera_controller: CameraController) -> void:
