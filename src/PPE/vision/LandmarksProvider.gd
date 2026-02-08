@@ -5,32 +5,28 @@ extends Node
 signal landmarks_detected(result: MediaPipePoseLandmarkerResult, image: MediaPipeImage, timestamp_ms: int)
 signal landmarks_sended(camera_feed: CameraFeed, result: MediaPipePoseLandmarkerResult, timestamp_ms: int)
 
-const TASK_FILEPATH := "pose_landmarker/pose_landmarker_full/float16/latest/pose_landmarker_full.task"
-
 
 var __camera_controller: CameraController
 
+
 var __landmarker: MediaPipePoseLandmarker
-var __model_provider: ModelProvider
-var __running_mode := MediaPipeVisionTask.RUNNING_MODE_LIVE_STREAM
-var __delegate := MediaPipeTaskBaseOptions.DELEGATE_CPU
 
 
+func _ready() -> void:
+	__camera_viewport = SubViewport.new()
+	__camera_viewport.render_target_update_mode = SubViewport.UPDATE_ALWAYS
+	add_child(__camera_viewport)
+	__camera_texture = TextureRect.new()
+	__camera_viewport.add_child(__camera_texture)
+  
+  
 func initialize(camera_controller: CameraController) -> void:
 	__camera_controller = camera_controller
-	_initialize_task()
+	_initialize_landmarker()
 
 
-func _initialize_task() -> void:
-	__model_provider = ModelProvider.new()
-	var file := __model_provider.load_model(TASK_FILEPATH)
-	if file == null:
-		return
-	var base_options := MediaPipeTaskBaseOptions.new()
-	base_options.delegate = __delegate
-	base_options.model_asset_buffer = file.get_buffer(file.get_length())
-	__landmarker = MediaPipePoseLandmarker.new()
-	__landmarker.initialize(base_options, __running_mode)
+func _initialize_landmarker():
+	__landmarker = ModelProvider.setup_model()
 	__landmarker.result_callback.connect(self.__on_landmarks_detected)
 
 
