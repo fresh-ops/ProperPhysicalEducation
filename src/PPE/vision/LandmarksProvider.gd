@@ -2,8 +2,7 @@ class_name LandmarksProvider
 extends Node
 
 
-signal landmarks_detected(result: MediaPipePoseLandmarkerResult, image: MediaPipeImage, timestamp_ms: int)
-signal landmarks_sended(camera_feed: CameraFeed, result: MediaPipePoseLandmarkerResult, timestamp_ms: int)
+signal landmarks_detected(camera_feed: CameraFeed, result: MediaPipePoseLandmarkerResult, image: MediaPipeImage, timestamp_ms: int)
 
 
 var __camera_controller: CameraController
@@ -57,5 +56,4 @@ func __mark_image(base_image: Image) -> void:
 
 ## Callback когда landmarks определены
 func __on_landmarks_detected(result: MediaPipePoseLandmarkerResult, image: MediaPipeImage, timestamp_ms: int) -> void:
-	landmarks_sended.emit.call_deferred(get_camera_feed_id(), result, timestamp_ms)
-	landmarks_detected.emit.call_deferred(result, image, timestamp_ms)
+	landmarks_detected.emit.call_deferred(get_camera_feed_id(), result, image, timestamp_ms)
