@@ -4,11 +4,11 @@ class_name LandmarksProvider
 extends Node
 
 ## Посылается, когда landmarks успешно обнаружены.[br]
-## [param camera_feed] - идентификатор видеопотока.[br]
+## [param camera_feed_id] - идентификатор видеопотока.[br]
 ## [param result] - результат детектирования с информацией о landmarks.[br]
 ## [param image] - обработанное изображение.[br]
 ## [param timestamp_ms] - метка времени в миллисекундах.
-signal landmarks_detected(camera_feed: CameraFeed, result: MediaPipePoseLandmarkerResult, image: MediaPipeImage, timestamp_ms: int)
+signal landmarks_detected(camera_feed_id: int, result: MediaPipePoseLandmarkerResult, image: MediaPipeImage, timestamp_ms: int)
 
 
 var __camera_controller: CameraController
