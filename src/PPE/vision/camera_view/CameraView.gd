@@ -32,7 +32,7 @@ func stop_camera() -> void:
 
 
 ## Отрисовывает landmarks на кадре
-func _draw_landmarks(result: MediaPipePoseLandmarkerResult, image: MediaPipeImage, _timestamp_ms: int) -> void:
+func _draw_landmarks(_camera_feed: CameraFeed, result: MediaPipePoseLandmarkerResult, image: MediaPipeImage, _timestamp_ms: int) -> void:
 	var output_image := __renderer.render(image, result.pose_landmarks)
 	_update_frame(output_image.image)
 
