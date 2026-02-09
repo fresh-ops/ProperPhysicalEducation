@@ -26,7 +26,6 @@ var _publisher: Publisher
 func _ready():
 	_camera_manager = CameraManager.new()
 	_camera_manager.init()
-	add_child(_camera_manager)
 	_landmarks_receiver = LandmarksReceiver.new()
 	_landmarks_receiver.init()
 	_publisher = PUBLISHER_SCENE.instantiate()

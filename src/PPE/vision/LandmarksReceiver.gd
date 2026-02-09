@@ -23,10 +23,10 @@ func add_provider(provider: LandmarksProvider) -> void:
 	if not __base_feed_set:
 		restorer.set_base_feed_id(provider.get_camera_feed_id())
 		__base_feed_set = true
-	provider.landmarks_sended.connect(__add_signal_to_queue)
+	provider.landmarks_detected.connect(__add_signal_to_queue)
 
 
-func __add_signal_to_queue(camera_id: int, landmarks: MediaPipePoseLandmarkerResult, timestamp_ms: int) -> void:
+func __add_signal_to_queue(camera_id: int, landmarks: MediaPipePoseLandmarkerResult, _image: MediaPipeImage, timestamp_ms: int) -> void:
 	if not __queues.has(camera_id):
 		__queues[camera_id] = []
 	__queues[camera_id].push_back({"landmarks": landmarks, "timestamp_ms": timestamp_ms})
