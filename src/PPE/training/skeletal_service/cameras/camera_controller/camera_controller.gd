@@ -229,7 +229,7 @@ func __setup_ycbcr_feed() -> Vector2i:
 	texture_yuy2.camera_feed_id = __camera_feed.get_id()
 	texture_yuy2.which_feed = CameraServer.FEED_YCBCR_IMAGE
 	var mat := ShaderMaterial.new()
-	mat.shader = load("res://vision/yuy2_to_rgb.gdshader")
+	mat.shader = load("res://resources/shaders/yuy2_to_rgb.gdshader")
 	mat.set_shader_parameter("texture_yuy2", texture_yuy2)
 	__texture.material = mat
 	var frame_size := Vector2i(texture_yuy2.get_size())
@@ -249,7 +249,7 @@ func __setup_ycbcr_sep_feed() -> Vector2i:
 	texture_y.which_feed = CameraServer.FEED_Y_IMAGE
 	texture_uv.which_feed = CameraServer.FEED_CBCR_IMAGE
 	var mat := ShaderMaterial.new()
-	mat.shader = load("res://vision/yuv420_to_rgb.gdshader")
+	mat.shader = load("res://resources/shaders/yuv420_to_rgb.gdshader")
 	mat.set_shader_parameter("texture_y", texture_y)
 	mat.set_shader_parameter("texture_uv", texture_uv)
 	__texture.material = mat

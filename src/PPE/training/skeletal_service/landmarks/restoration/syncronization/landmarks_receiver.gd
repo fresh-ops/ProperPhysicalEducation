@@ -4,7 +4,7 @@ extends Node
 signal data_sended(data: Array)
 
 
-const RESTORER = preload("res://vision/restoration/skeletal_restorer.py")
+const RESTORER = preload("res://training/skeletal_service/landmarks/restoration/skeletal_restorer/skeletal_restorer.py")
 const SYNC_TOLERANCE_MS = 10
 
 var restorer

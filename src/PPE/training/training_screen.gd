@@ -1,9 +1,9 @@
-class_name VisionTask
+class_name TrainingScreen
 extends Control
 
 
-const CAMERA_VIEW_SCENE = preload("res://vision/camera_view/camera_view.tscn")
-const PUBLISHER_SCENE = preload("res://vision/publisher.tscn")
+const CAMERA_VIEW_SCENE = preload("res://training/skeletal_service/camera_view/camera_view.tscn")
+const PUBLISHER_SCENE = preload("res://training/network/publisher.tscn")
 
 var _camera_manager: CameraManager
 var _landmarks_receiver: LandmarksReceiver

@@ -24,7 +24,7 @@ config/icon="res://icon.svg"
 MediaPipeExternalFiles="*uid://dsyuq4kjrnbs4"
 GDMPAndroid="*uid://cdvhdf5dmteib"
 Global="*res://global.gd"
-ModelProvider="*res://vision/model_provider.gd"
+ModelProvider="*res://training/skeletal_service/landmarks/marking/model_provider.gd"
 
 [display]
 

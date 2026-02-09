@@ -4,7 +4,7 @@ from py4godot.classes.Node import Node
 from py4godot.methods import private
 
 import numpy as np
-from vision.restoration.translater import BasisTranslator
+from training.skeletal_service.landmarks.restoration.skeletal_restorer.translater import BasisTranslator
 
 
 def array_to_ndarray(array: Array, depth: int) -> np.ndarray:
