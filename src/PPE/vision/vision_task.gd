@@ -2,8 +2,8 @@ class_name VisionTask
 extends Control
 
 
-const CAMERA_VIEW_SCENE = preload("res://vision/camera_view/CameraView.tscn")
-const PUBLISHER_SCENE = preload("res://vision/Publisher.tscn")
+const CAMERA_VIEW_SCENE = preload("res://vision/camera_view/camera_view.tscn")
+const PUBLISHER_SCENE = preload("res://vision/publisher.tscn")
 
 var _camera_manager: CameraManager
 var _landmarks_receiver: LandmarksReceiver

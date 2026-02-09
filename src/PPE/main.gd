@@ -2,7 +2,7 @@ extends Control
 
 
 var tasks_vision := {
-	"Vision Task": "res://vision/VisionTask.tscn",
+	"Vision Task": "res://vision/vision_task.tscn",
 }
 
 

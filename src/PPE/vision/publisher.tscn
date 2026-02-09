@@ -1,6 +1,6 @@
-[gd_scene load_steps=3 format=3 uid="uid://2jljs74cmrog"]
+[gd_scene format=3 uid="uid://2jljs74cmrog"]
 
-[ext_resource type="Script" uid="uid://c65dh8o6c5qtj" path="res://vision/Publisher.gd" id="1_gv2yl"]
+[ext_resource type="Script" uid="uid://c65dh8o6c5qtj" path="res://vision/publisher.gd" id="1_gv2yl"]
 [ext_resource type="PackedScene" uid="uid://ktm7k0co2o7l" path="res://addons/mqtt/mqtt.tscn" id="2_gv2yl"]
 
 [node name="Publisher" type="Control"]

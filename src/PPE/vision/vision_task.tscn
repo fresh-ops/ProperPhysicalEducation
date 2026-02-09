@@ -1,6 +1,6 @@
-[gd_scene load_steps=4 format=3 uid="uid://cu2jsegm1nbtf"]
+[gd_scene format=3 uid="uid://cu2jsegm1nbtf"]
 
-[ext_resource type="Script" uid="uid://cd8j4q768wuxu" path="res://vision/VisionTask.gd" id="1_xmyhf"]
+[ext_resource type="Script" uid="uid://cd8j4q768wuxu" path="res://vision/vision_task.gd" id="1_xmyhf"]
 
 [sub_resource type="Theme" id="Theme_pmbf8"]
 default_font_size = 48

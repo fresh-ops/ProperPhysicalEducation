@@ -1,6 +1,6 @@
-[gd_scene load_steps=3 format=3 uid="uid://dkldeapg4j86w"]
+[gd_scene format=3 uid="uid://dkldeapg4j86w"]
 
-[ext_resource type="Script" uid="uid://8x8ihi01mgxn" path="res://vision/camera_view/CameraView.gd" id="1_rkmwp"]
+[ext_resource type="Script" uid="uid://8x8ihi01mgxn" path="res://vision/camera_view/camera_view.gd" id="1_rkmwp"]
 
 [sub_resource type="ImageTexture" id="ImageTexture_rkmwp"]
 
