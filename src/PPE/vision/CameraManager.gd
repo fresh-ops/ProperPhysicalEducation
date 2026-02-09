@@ -1,4 +1,5 @@
 ## Класс-обертка над [CameraServer].
+class_name CameraManager
 extends Node
 
 
