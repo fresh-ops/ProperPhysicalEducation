@@ -1,0 +1,4 @@
+src/PPE/addons/py4godot/cpython-3.12.4-darwin64/** filter=lfs diff=lfs merge=lfs -text
+src/PPE/addons/py4godot/cpython-3.12.4-linux64/** filter=lfs diff=lfs merge=lfs -text
+src/PPE/addons/py4godot/cpython-3.12.4-linuxarm64/** filter=lfs diff=lfs merge=lfs -text
+src/PPE/addons/py4godot/cpython-3.12.4-windows64/** filter=lfs diff=lfs merge=lfs -text

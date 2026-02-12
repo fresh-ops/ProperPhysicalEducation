@@ -8,18 +8,23 @@
 
 config_version=5
 
+[animation]
+
+compatibility/default_parent_skeleton_in_mesh_instance_3d=true
+
 [application]
 
 config/name="Proper Physical Education"
 run/main_scene="uid://c5lpjegcml0ma"
-config/features=PackedStringArray("4.5", "GL Compatibility")
+config/features=PackedStringArray("4.6", "GL Compatibility")
 config/icon="res://icon.svg"
 
 [autoload]
 
-MediaPipeExternalFiles="*res://addons/GDMP/MediaPipeExternalFiles.gd"
-GDMPAndroid="*res://addons/GDMP/GDMPAndroid.gd"
-Global="*res://Global.gd"
+MediaPipeExternalFiles="*uid://dsyuq4kjrnbs4"
+GDMPAndroid="*uid://cdvhdf5dmteib"
+Global="*res://global.gd"
+ModelProvider="*res://training/skeletal_service/landmarks/marking/model_provider.gd"
 
 [display]
 
@@ -28,11 +33,6 @@ window/stretch/mode="canvas_items"
 [dotnet]
 
 project/assembly_name="Proper Physical Education"
-
-[editor]
-
-version_control/plugin_name="GitPlugin"
-version_control/autoload_on_startup=true
 
 [editor_plugins]
 
