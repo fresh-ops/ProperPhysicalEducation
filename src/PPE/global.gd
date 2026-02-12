@@ -1,6 +1,6 @@
 extends Node
 
-var main_scene := preload("res://Main.tscn")
+var main_scene := preload("res://main.tscn")
 var enable_download_files: bool = true
 
 func _get_external_file(
