@@ -25,6 +25,17 @@ text = "PPE"
 horizontal_alignment = 1
 vertical_alignment = 1
 
-[node name="Main" type="Control" parent="VBoxContainer" unique_id=1821091133]
+[node name="Main" type="VBoxContainer" parent="VBoxContainer" unique_id=425291128]
 layout_mode = 2
 size_flags_vertical = 3
+alignment = 1
+
+[node name="OpenTrainingButton" type="Button" parent="VBoxContainer/Main" unique_id=2057392879]
+layout_mode = 2
+size_flags_horizontal = 4
+text = "Open Training Screen"
+
+[node name="OpenSensorsButton" type="Button" parent="VBoxContainer/Main" unique_id=535876365]
+layout_mode = 2
+size_flags_horizontal = 4
+text = "Open Sensors Screen"

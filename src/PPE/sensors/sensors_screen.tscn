@@ -1,0 +1,21 @@
+[gd_scene format=3 uid="uid://cexkeh2y252vw"]
+
+[ext_resource type="Script" uid="uid://brk0km2rm1mb3" path="res://sensors/sensors_screen.gd" id="1_u13xn"]
+
+[node name="SensorsScreen" type="VBoxContainer" unique_id=1470845814]
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -64.5
+offset_top = -15.5
+offset_right = 64.5
+offset_bottom = 15.5
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_u13xn")
+
+[node name="ConnectSensorButton" type="Button" parent="." unique_id=131987211]
+layout_mode = 2
+text = "Connect Sensor"
