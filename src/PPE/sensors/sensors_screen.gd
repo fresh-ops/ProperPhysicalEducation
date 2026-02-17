@@ -4,7 +4,7 @@ extends VBoxContainer
 @onready var connect_sensors_btn: Button = $ConnectSensorButton
 
 func _ready() -> void:
-	connect_sensors_btn.connect("pressed", self.__on_connect_sensors_pressed)
+	connect_sensors_btn.pressed.connect(self.__on_connect_sensors_pressed)
 
 
 func __on_connect_sensors_pressed() -> void:

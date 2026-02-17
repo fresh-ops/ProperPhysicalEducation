@@ -12,8 +12,8 @@ const SCREENS := {
 
 
 func _ready() -> void:
-	open_sensors_btn.connect("pressed", self.__on_open_sensors_pressed)
-	open_training_btn.connect("pressed", self.__on_open_training_pressed)
+	open_sensors_btn.pressed.connect(self.__on_open_sensors_pressed)
+	open_training_btn.pressed.connect(self.__on_open_training_pressed)
 
 func __on_open_sensors_pressed() -> void:
 	__select_screen("Sensors Screen")
