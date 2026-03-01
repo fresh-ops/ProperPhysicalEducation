@@ -1,5 +1,5 @@
 from typing import List
-from analyzer.poses.pose import Pose
+from model.Pose import Pose
 
 class PoseDetector:
     poses: List[Pose]

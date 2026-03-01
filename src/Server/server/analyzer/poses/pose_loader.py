@@ -1,5 +1,5 @@
 from typing import List
-from analyzer.poses.pose import Pose
+from model.Pose import Pose
 from pathlib import Path
 import json
 

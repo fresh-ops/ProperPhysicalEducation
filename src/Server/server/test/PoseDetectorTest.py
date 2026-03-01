@@ -3,22 +3,23 @@
 """
 import unittest
 import sys
-import os
+from pathlib import Path
 
-current_dir = os.path.dirname(os.path.abspath(__file__))
-sys.path.insert(0, current_dir)
+sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from pose_detector import PoseDetector
-from pose_deviants import calculate_deviations
-import skeleton_transformer as transformer
+from analyzer.PoseDetector import PoseDetector
+from analyzer.pose_deviants import calculate_deviations
+import analyzer.skeleton_transformer as transformer
+from analyzer.poses.pose_loader import load_poses
 
-sys.path.insert(0, os.path.join(current_dir, "poses"))
-from poses.pose_loader import load_poses
 
-class TestPoseDetector(unittest.TestCase):
+POSE_DIR = "data/pose"
+
+
+class PoseDetectorTest(unittest.TestCase):
     
     def setUp(self):
-        self.poses = load_poses("poses") 
+        self.poses = load_poses(POSE_DIR) 
         self.detector = PoseDetector(self.poses)
     
     def test_t_pose_detection(self):
