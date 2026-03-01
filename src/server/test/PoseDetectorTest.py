@@ -1,24 +1,26 @@
 """
 Тесты для детектора поз
 """
+import os
 import unittest
 import sys
-import os
+from pathlib import Path
 
-current_dir = os.path.dirname(os.path.abspath(__file__))
-sys.path.insert(0, current_dir)
+server_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+sys.path.insert(0, server_dir)
 
-from pose_detector import PoseDetector
-from pose_deviants import calculate_deviations
-import skeleton_transformer as transformer
+from analyzer.pose.PoseDetector import PoseDetector
+from analyzer.pose.pose_deviants import calculate_deviations
+import analyzer.pose.skeleton_transformer.skeleton_transformer as transformer
+from registry.PoseRegistry import PoseRegistry
 
-sys.path.insert(0, os.path.join(current_dir, "poses"))
-from poses.pose_loader import load_poses
 
-class TestPoseDetector(unittest.TestCase):
+class PoseDetectorTest(unittest.TestCase):
     
     def setUp(self):
-        self.poses = load_poses("poses") 
+        poses_dir = os.path.join(server_dir, "data", "pose")
+        self.pose_registry = PoseRegistry(poses_dir)
+        self.poses = self.pose_registry.load_poses() 
         self.detector = PoseDetector(self.poses)
     
     def test_t_pose_detection(self):
