@@ -9,9 +9,9 @@ from pathlib import Path
 server_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, server_dir)
 
-from analyzer.PoseDetector import PoseDetector
-from analyzer.pose_deviants import calculate_deviations
-import analyzer.skeleton_transformer as transformer
+from analyzer.pose.PoseDetector import PoseDetector
+from analyzer.pose.pose_deviants import calculate_deviations
+import analyzer.pose.skeleton_transformer.skeleton_transformer as transformer
 from registry.PoseRegistry import PoseRegistry
 
 
