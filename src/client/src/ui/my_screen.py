@@ -3,7 +3,7 @@ from typing import Any, override
 
 from PySide6 import QtCore, QtWidgets
 
-from ui.routing import Payload, Route, Screen
+from .routing import Payload, Route, Screen
 
 
 @dataclass

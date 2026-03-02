@@ -1,8 +1,8 @@
 from PySide6 import QtWidgets
 
-from ui.my_screen import MyScreen, MyScreenPayload
-from ui.routing import Route
-from ui.routing.router import Router
+from .my_screen import MyScreen, MyScreenPayload
+from .routing import Route
+from .routing.router import Router
 
 
 class MainWindow(QtWidgets.QMainWindow):
