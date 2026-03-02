@@ -1,19 +1,33 @@
-from PySide6 import QtCore, QtWidgets
+from PySide6 import QtWidgets
+
+from ui.my_screen import MyScreen, MyScreenPayload
+from ui.routing import Route
+from ui.routing.router import Router
 
 
 class MainWindow(QtWidgets.QMainWindow):
+    _stack_widget: QtWidgets.QStackedWidget
+    _router: Router
+
     def __init__(self, parent: QtWidgets.QWidget | None = None) -> None:
         super().__init__(parent)
-        self.setWindowTitle("Proper Physical Education")
+        self.setWindowTitle("My Best App")
 
-        central_widget = QtWidgets.QWidget()
-        self.setCentralWidget(central_widget)
+        self._stack_widget = QtWidgets.QStackedWidget()
 
-        self.label = QtWidgets.QLabel(
-            "Hello World", alignment=QtCore.Qt.AlignmentFlag.AlignCenter
+        container = QtWidgets.QWidget()
+
+        layout = QtWidgets.QVBoxLayout(container)
+        layout.addWidget(self._stack_widget)
+
+        self.setCentralWidget(container)
+
+        self._router = Router(
+            stacked_widget=self._stack_widget,
+            scheme={
+                Route.HOME: (MyScreen, MyScreenPayload),
+            },
+            parent=self,
         )
 
-        layout = QtWidgets.QVBoxLayout(central_widget)
-        layout.addWidget(self.label)
-
-        self.setLayout(layout)
+        self._router.navigate_to(Route.HOME, MyScreenPayload(label="Hell"))
