@@ -2,6 +2,7 @@ from typing import Any
 
 from PySide6 import QtCore, QtWidgets
 
+from .errors import DuplicateRouteError, InvalidPayloadError, RouteNotFoundError
 from .payload import Payload
 from .route import Route
 from .screen import Screen
@@ -39,13 +40,13 @@ class Router(QtCore.QObject):
         payload_type: type[Payload],
     ) -> None:
         if route in self._routes:
-            raise ValueError(f"Route '{route}' already exists in scheme")
+            raise DuplicateRouteError(route)
         self._routes[route] = transition
         self._payload_types[route] = payload_type
 
     def navigate_to(self, route: Route, payload: Payload | None = None) -> None:
         if route not in self._routes:
-            raise ValueError(f"Route '{route}' not found in scheme")
+            raise RouteNotFoundError(route)
 
         self._validate_payload_type(route, payload)
 
@@ -68,10 +69,7 @@ class Router(QtCore.QObject):
             and payload is not None
             and not isinstance(payload, expected_payload_type)
         ):
-            raise TypeError(
-                f"Route '{route}' expects payload '{expected_payload_type.__name__}', "
-                f"got '{type(payload).__name__}'"
-            )
+            raise InvalidPayloadError(route, expected_payload_type, type(payload))
 
     def _get_widget_for(self, route: Route) -> Screen[Any]:
         if route in self._widgets:
