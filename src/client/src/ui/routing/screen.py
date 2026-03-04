@@ -10,7 +10,7 @@ class Screen[P: Payload](QtWidgets.QWidget):
     def request_navigation(
         self,
         route: Route,
-        payload: P | None = None,
+        payload: Payload | None = None,
     ) -> None:
         self.navigation_requested.emit(route, payload)
 
