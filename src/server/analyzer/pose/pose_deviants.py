@@ -2,7 +2,7 @@ from typing import Dict, List
 from model.pose import Pose
 
 
-def calculate_deviations(current_pose: Pose, poses: List[Pose]) -> Dict[Pose, List[float]]:
+def calculate_deviations(current_pose: Pose, reference_poses: List[Pose]) -> Dict[Pose, List[float]]:
     """
     Вычисляет отклонения между текущей позой и эталонными позами.
     
@@ -14,11 +14,11 @@ def calculate_deviations(current_pose: Pose, poses: List[Pose]) -> Dict[Pose, Li
     """
     deviations = {}
     
-    for reference_pose in poses:
+    for reference_pose in reference_poses:
         current_angles = current_pose.get_angles_list()
         reference_angles = reference_pose.get_angles_list()
         
-        deviations[reference_pose.name] = [
+        deviations[reference_pose] = [
             abs(curr_angle - ref_angle)
             for curr_angle, ref_angle in zip(current_angles, reference_angles)
         ]
