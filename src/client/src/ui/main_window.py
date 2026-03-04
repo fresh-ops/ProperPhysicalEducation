@@ -1,8 +1,9 @@
 from PySide6 import QtWidgets
 
-from .my_screen import MyScreen, MyScreenPayload
 from .routing import Route
 from .routing.router import Router
+from .screens.cameras_screen import CamerasPayload, CamerasScreen
+from .screens.my_screen import MyScreen, MyScreenPayload
 
 
 class MainWindow(QtWidgets.QMainWindow):
@@ -26,8 +27,9 @@ class MainWindow(QtWidgets.QMainWindow):
             stacked_widget=self._stack_widget,
             scheme={
                 Route.HOME: (MyScreen, MyScreenPayload),
+                Route.CAMERAS: (CamerasScreen, CamerasPayload),
             },
             parent=self,
         )
 
-        self._router.navigate_to(Route.HOME, MyScreenPayload(label="Hell"))
+        self._router.navigate_to(Route.CAMERAS, CamerasPayload())
