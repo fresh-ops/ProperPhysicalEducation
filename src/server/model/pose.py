@@ -33,7 +33,14 @@ class Pose(NamedTuple):
             Returns:
                 Tuple[float]: список позиционных углов в конечностях
         """
-        return self[2:]
+        return (
+            self.left_shoulder_angle,
+            self.right_shoulder_angle,
+            self.left_elbow_angle,
+            self.right_elbow_angle,
+            self.left_knee_angle,
+            self.right_knee_angle,
+        )
 
     def __eq__(self, other) -> bool:
         if not isinstance(other, Pose):
