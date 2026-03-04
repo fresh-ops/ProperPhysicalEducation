@@ -5,6 +5,7 @@ class Pose(NamedTuple):
         Класс эталлонной позы. Содержит в себе информацию об эталонных углах в конечностях для конкретной позы, а также допустимое отклонение.
 
         Fields:
+            id (int): идентификатор позы
             name (str): имя позы
             threshold (float): допустимое отклонение
             left_shoulder_angle (float): угол в левом плече
@@ -14,6 +15,7 @@ class Pose(NamedTuple):
             left_knee_angle (float): угол в левом колене
             right_knee_angle (float): угол в правом колене
     """
+    id: int
     name: str
     threshold: float
 

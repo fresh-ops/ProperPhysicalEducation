@@ -1,4 +1,5 @@
 {
+    "id": 1,
     "name": "arms_down",
     "threshold": 10.0,
     "left_shoulder_angle": 0.0,

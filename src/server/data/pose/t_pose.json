@@ -1,4 +1,5 @@
 {
+	"id": 2,
 	"name": "t_pose",
 	"threshold": 15.0,
 	"left_shoulder_angle": 90.0,

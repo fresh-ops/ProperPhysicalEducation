@@ -54,6 +54,7 @@ def landmarks_to_pose(skeleton: List[List[float]]) -> Pose:
         Pose: объект позы с вычисленными углами, пустым именем и нулевым порогом
     """
     return Pose(
+        id=0,
         name="",
         threshold=0.0,
         left_shoulder_angle=calculate_angle_xy(skeleton, Angle.LEFT_SHOULDER),
