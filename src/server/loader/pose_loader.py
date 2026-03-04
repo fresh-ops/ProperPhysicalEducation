@@ -1,10 +1,10 @@
 from typing import List
-from model.Pose import Pose
+from model.pose import Pose
 from pathlib import Path
 import json
 
 
-class PoseRegistry:
+class PoseLoader:
     """
     Загрузчик поз из JSON файлов
     """

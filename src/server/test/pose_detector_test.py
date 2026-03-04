@@ -9,18 +9,18 @@ from pathlib import Path
 server_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, server_dir)
 
-from analyzer.pose.PoseDetector import PoseDetector
+from analyzer.pose.pose_detector import PoseDetector
 from analyzer.pose.pose_deviants import calculate_deviations
 import analyzer.pose.skeleton_transformer.skeleton_transformer as transformer
-from registry.PoseRegistry import PoseRegistry
+from loader.pose_loader import PoseLoader
 
 
 class PoseDetectorTest(unittest.TestCase):
     
     def setUp(self):
         poses_dir = os.path.join(server_dir, "data", "pose")
-        self.pose_registry = PoseRegistry(poses_dir)
-        self.poses = self.pose_registry.load_poses() 
+        self.pose_loader = PoseLoader(poses_dir)
+        self.poses = self.pose_loader.load_poses() 
         self.detector = PoseDetector(self.poses)
     
     def test_t_pose_detection(self):

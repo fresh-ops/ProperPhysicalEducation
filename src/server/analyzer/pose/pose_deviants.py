@@ -1,5 +1,5 @@
 from typing import Dict, List
-from model.Pose import Pose
+from model.pose import Pose
 
 
 def calculate_deviations(current_pose: Pose, poses: List[Pose]) -> Dict[Pose, List[float]]:
