@@ -1,6 +1,6 @@
 from typing import List
+from analyzer.pose.pose_deviants import calculate_deviations
 from model.pose import Pose
-
 
 class PoseDetector:
     poses: List[Pose]
@@ -14,14 +14,7 @@ class PoseDetector:
         """
         self.poses = poses
 
-    def detect_pose(self, pose: Pose) -> List[Pose]:
-        """
-        Находит список эталонных поз, которые совпадают с данной позой
-        
-        Args:
-            pose (Pose): поза для сопаставления
-            
-        Returns:
-            List[Pose]: список подходящих поз
-        """
-        return [detected for detected in self.poses if detected == pose]
+    def detect_closest_reference_pose(self, current_pose: Pose) -> Pose:
+        deviations = calculate_deviations(current_pose, self.poses)
+        closest_reference_pose = min(deviations.keys(), key=lambda p: sum(deviations[p]))
+        return closest_reference_pose
