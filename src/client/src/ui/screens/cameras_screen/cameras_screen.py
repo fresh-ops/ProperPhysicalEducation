@@ -35,5 +35,5 @@ class CamerasScreen(Screen[CamerasPayload]):
         result = dialog.exec()
 
         if result == QtWidgets.QDialog.DialogCode.Accepted:
-            selected_camera = dialog.get_selected_camera()
+            selected_camera = dialog.get_selected_camera_info()
             print(selected_camera)

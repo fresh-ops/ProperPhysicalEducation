@@ -1,6 +1,9 @@
 from typing import Any
 
+from cv2_enumerate_cameras.camera_info import CameraInfo
 from PySide6 import QtCore, QtWidgets
+
+from src.poses.cameras import CameraService
 
 from .select_camera_view_model import SelectCameraViewModel
 
@@ -25,7 +28,8 @@ class SelectCameraDialog(QtWidgets.QDialog):
         super().__init__(parent, **kwargs)
         self.setWindowTitle("Select Camera")
 
-        self._vm = SelectCameraViewModel()
+        camera_service = CameraService.get_instance()
+        self._vm = SelectCameraViewModel(camera_service)
         self._vm.available_cameras_updated.connect(self._on_available_cameras_updated)
 
         layout = QtWidgets.QVBoxLayout()
@@ -41,13 +45,13 @@ class SelectCameraDialog(QtWidgets.QDialog):
 
         self._vm.update_available_cameras()
 
-    def get_selected_camera(self) -> str:
-        """Return currently selected camera name.
+    def get_selected_camera_info(self) -> CameraInfo:
+        """Return the information about the selected camera.
 
         Returns:
-            str: The name of the currently selected camera.
+            CameraInfo: the selected camera information
         """
-        return self._vm.get_selected_camera()
+        return self._vm.get_selected_camera_info()
 
     @QtCore.Slot(int)
     def _on_camera_selected(self, selected_index: int) -> None:
