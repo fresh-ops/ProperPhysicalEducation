@@ -3,6 +3,7 @@ from typing import Any, override
 from PySide6 import QtCore, QtWidgets
 
 from ...routing import Screen
+from ...widgets.camera_capture_view import CameraCaptureView
 from ...widgets.select_camera_dialog import SelectCameraDialog
 from .cameras_payload import CamerasPayload
 from .cameras_view_model import CamerasViewModel
@@ -16,12 +17,13 @@ class CamerasScreen(Screen[CamerasPayload]):
 
         self._vm = CamerasViewModel()
 
-        self._label = QtWidgets.QLabel("You are at cameras screen")
         self._button = QtWidgets.QPushButton("Select Camera")
         self._button.clicked.connect(self._on_button_clicked)
 
+        self._preview = CameraCaptureView(None, self)
+
         layout = QtWidgets.QVBoxLayout()
-        layout.addWidget(self._label)
+        layout.addWidget(self._preview)
         layout.addWidget(self._button)
         self.setLayout(layout)
 
@@ -36,4 +38,4 @@ class CamerasScreen(Screen[CamerasPayload]):
 
         if result == QtWidgets.QDialog.DialogCode.Accepted:
             selected_camera = dialog.get_selected_camera_info()
-            print(selected_camera)
+            self._preview.update_camera_info(selected_camera)

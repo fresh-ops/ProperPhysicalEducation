@@ -12,7 +12,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
     def __init__(self, parent: QtWidgets.QWidget | None = None) -> None:
         super().__init__(parent)
-        self.setWindowTitle("My Best App")
+        self.setWindowTitle("PPE")
 
         self._stack_widget = QtWidgets.QStackedWidget()
 
