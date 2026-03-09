@@ -1,6 +1,12 @@
+import time
+
 import cv2
+import mediapipe as mp
 from cv2_enumerate_cameras.camera_info import CameraInfo
 from PySide6 import QtCore, QtGui
+
+from src.poses.model import create_video_pose_landmarker
+from src.poses.visualize import draw_landmarks_on_image
 
 
 class CameraCaptureWorker(QtCore.QObject):
@@ -37,14 +43,21 @@ class CameraCaptureWorker(QtCore.QObject):
             self.finished.emit()
             return
 
+        pose_landmarker = create_video_pose_landmarker()
+
         while self._running:
             success, cv_image = capture.read()
             if not success:
                 continue
 
-            h, w, ch = cv_image.shape
+            mp_image = mp.Image(image_format=mp.ImageFormat.SRGB, data=cv_image)
+            timestamp_ms = int(time.monotonic() * 1_000)
+            pose = pose_landmarker.detect_for_video(mp_image, timestamp_ms)
+            marked_frame = draw_landmarks_on_image(cv_image, pose)
+
+            h, w, ch = marked_frame.shape
             qimg = QtGui.QImage(
-                cv_image.data,
+                marked_frame.data,
                 w,
                 h,
                 ch * w,
