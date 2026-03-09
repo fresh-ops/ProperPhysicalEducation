@@ -10,7 +10,7 @@ class ExerciseAnalyzer:
         self.pose_detector = PoseDetector(self.poses)
 
     
-    def analyze(self, current_pose: Pose):
+    def analyze(self, current_pose: Pose) -> int:
         current_reference_pose: Pose = self.poses[self.current_pose_index]
         next_pose_index: int = (self.current_pose_index + 1) % len(self.poses)
 
@@ -19,7 +19,10 @@ class ExerciseAnalyzer:
             if current_pose == current_reference_pose:
                 self.current_pose_index = next_pose_index
                 print("Correct pose!")
+                return 0
             else:
                 print("Almost correct pose. Try to adjust your position.")
+                return 1
         else:
             print("Incorrect pose. Try again.")
+            return 1
