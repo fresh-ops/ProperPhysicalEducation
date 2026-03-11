@@ -19,6 +19,7 @@ class CameraCaptureView(QtWidgets.QWidget):
 
     def __init__(
         self,
+        camera_service: CameraService,
         camera_info: CameraInfo | None = None,
         parent: QtWidgets.QWidget | None = None,
         **kwargs: Any,
@@ -26,6 +27,7 @@ class CameraCaptureView(QtWidgets.QWidget):
         """Initialize preview UI and bind it to the camera capture view model.
 
         Args:
+            camera_service (CameraService): Service for retrieving cameras data.
             camera_info (CameraInfo | None): Optional camera used as initial
                 capture source. If not provided, the first available camera is used.
             parent (QtWidgets.QWidget | None): Optional parent widget for Qt
@@ -33,7 +35,7 @@ class CameraCaptureView(QtWidgets.QWidget):
             **kwargs: Additional keyword arguments for QWidget initialization.
         """
         super().__init__(parent, **kwargs)
-        camera_service = CameraService.get_instance()
+
         self._vm = CameraCaptureViewModel(camera_service, camera_info, self)
         self._vm.frame_ready.connect(self._on_frame_ready)
         self._vm.start_capture()

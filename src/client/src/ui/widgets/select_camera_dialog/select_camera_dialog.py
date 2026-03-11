@@ -17,10 +17,16 @@ class SelectCameraDialog(QtWidgets.QDialog):
 
     _vm: SelectCameraViewModel
 
-    def __init__(self, parent: QtWidgets.QWidget | None = None, **kwargs: Any) -> None:
+    def __init__(
+        self,
+        camera_service: CameraService,
+        parent: QtWidgets.QWidget | None = None,
+        **kwargs: Any,
+    ) -> None:
         """Initialize dialog widgets and connect them to the view model.
 
         Args:
+            camera_service (CameraService): Service for retrieving cameras data.
             parent (QtWidgets.QWidget | None): Optional parent widget for Qt ownership
                 and modality.
             **kwargs: Additional keyword arguments for Qt dialog initialization.
@@ -28,7 +34,6 @@ class SelectCameraDialog(QtWidgets.QDialog):
         super().__init__(parent, **kwargs)
         self.setWindowTitle("Select Camera")
 
-        camera_service = CameraService.get_instance()
         self._vm = SelectCameraViewModel(camera_service)
         self._vm.available_cameras_updated.connect(self._on_available_cameras_updated)
 

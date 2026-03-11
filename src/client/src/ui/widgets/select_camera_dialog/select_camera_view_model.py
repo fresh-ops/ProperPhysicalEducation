@@ -29,6 +29,7 @@ class SelectCameraViewModel(QtCore.QObject):
         """Initialize view model state and optionally set parent for Qt ownership.
 
         Args:
+            camera_service (CameraService): Service for retrieving cameras data.
             parent (QtCore.QObject | None): Optional parent QObject for ownership and
                 signal propagation.
             **kwargs: Additional keyword arguments for QObject initialization.

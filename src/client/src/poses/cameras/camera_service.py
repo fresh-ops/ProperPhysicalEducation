@@ -2,29 +2,12 @@ from cv2 import VideoCapture
 from cv2_enumerate_cameras import enumerate_cameras
 from cv2_enumerate_cameras.camera_info import CameraInfo
 
-from .errors import CameraServiceDoubleInstanceError
-
 
 class CameraService:
-    _instance: "CameraService | None" = None
     _cameras: list[CameraInfo]
 
     def __init__(self) -> None:
-        if CameraService._instance is not None:
-            raise CameraServiceDoubleInstanceError()
         self._cameras = []
-        CameraService._instance = self
-
-    @classmethod
-    def get_instance(cls) -> "CameraService":
-        """Returns the singleton instance of CameraService.
-
-        Returns:
-            CameraService: The singleton instance of CameraService.
-        """
-        if cls._instance is None:
-            cls._instance = cls()
-        return cls._instance
 
     def get_cameras(self) -> list[CameraInfo]:
         """Returns a list of available cameras."""
