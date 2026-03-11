@@ -50,5 +50,14 @@ class CameraService:
         return VideoCapture(index)
 
     def _update_cameras(self) -> None:
-        """Updates the cameras list."""
-        self._cameras = enumerate_cameras()
+        """Refresh the cached camera list.
+
+        Only cameras that can be opened for video capture are kept.
+        """
+        self._cameras = []
+        raw_cameras = enumerate_cameras()
+        for camera in raw_cameras:
+            capture = VideoCapture(camera.index, camera.backend)
+            if capture.isOpened():
+                self._cameras.append(camera)
+            capture.release()
