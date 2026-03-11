@@ -1,10 +1,10 @@
 import time
 
-import cv2
 import mediapipe as mp
 from cv2_enumerate_cameras.camera_info import CameraInfo
 from PySide6 import QtCore, QtGui
 
+from src.poses.cameras.camera_service import CameraService
 from src.poses.model import create_video_pose_landmarker
 from src.poses.visualize import draw_landmarks_on_image
 
@@ -21,7 +21,10 @@ class CameraCaptureWorker(QtCore.QObject):
     finished = QtCore.Signal()
 
     def __init__(
-        self, camera_info: CameraInfo, parent: QtCore.QObject | None = None
+        self,
+        camera_info: CameraInfo,
+        camera_service: CameraService,
+        parent: QtCore.QObject | None = None,
     ) -> None:
         """Initialize worker state for a specific camera.
 
@@ -33,12 +36,13 @@ class CameraCaptureWorker(QtCore.QObject):
         """
         super().__init__(parent)
         self._camera_info = camera_info
+        self._camera_service = camera_service
         self._running = True
 
     @QtCore.Slot()
     def run(self) -> None:
         """Run continuous capture loop and emit converted Qt frames."""
-        capture = cv2.VideoCapture(self._camera_info.index, self._camera_info.backend)
+        capture = self._camera_service.get_camera_by(self._camera_info)
         if not capture.isOpened():
             self.finished.emit()
             return

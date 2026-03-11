@@ -99,7 +99,7 @@ class CameraCaptureViewModel(QtCore.QObject):
             self.stop_capture()
 
         self._capture_thread = QtCore.QThread(self)
-        self._capture_worker = CameraCaptureWorker(camera_info)
+        self._capture_worker = CameraCaptureWorker(camera_info, self._camera_service)
         self._capture_worker.moveToThread(self._capture_thread)
 
         self._capture_thread.started.connect(self._capture_worker.run)
