@@ -29,7 +29,7 @@ class CameraCaptureViewModel(QtCore.QObject):
 
         Args:
             camera_service (CameraService): Camera service used to resolve
-                available devices and default camera.
+                available devices.
             camera_info (CameraInfo | None): Optional camera selected initially.
             parent (QtCore.QObject | None): Optional parent QObject for Qt
                 ownership and signal lifecycle.
@@ -42,18 +42,11 @@ class CameraCaptureViewModel(QtCore.QObject):
         self._capture_worker = None
 
     def start_capture(self) -> None:
-        """Start frame capture with selected or default camera.
-
-        Note:
-            If there are no available cameras, method exits without starting
-            the worker thread.
-        """
-        camera_info = self._camera_info or self._get_default_camera()
-        if camera_info is None:
+        """Start frame capture with selected camera if provided."""
+        if self._camera_info is None:
             return
 
-        self._camera_info = camera_info
-        self._start_worker_with(camera_info)
+        self._start_worker_with(self._camera_info)
 
     def stop_capture(self) -> None:
         """Stop active capture thread and release worker references."""
@@ -77,17 +70,6 @@ class CameraCaptureViewModel(QtCore.QObject):
         self._camera_info = camera_info
         self.stop_capture()
         self.start_capture()
-
-    def _get_default_camera(self) -> CameraInfo | None:
-        """Return first available camera or ``None`` if list is empty.
-
-        Returns:
-            CameraInfo | None: First discovered camera, if present.
-        """
-        cameras = self._camera_service.get_cameras()
-        if not cameras:
-            return None
-        return cameras[0]
 
     def _start_worker_with(self, camera_info: CameraInfo) -> None:
         """Create and start worker thread configured for a camera.
