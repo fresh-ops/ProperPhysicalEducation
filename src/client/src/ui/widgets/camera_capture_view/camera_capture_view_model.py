@@ -1,9 +1,12 @@
 from typing import Any
 
+from cv2.typing import MatLike
 from cv2_enumerate_cameras.camera_info import CameraInfo
+from mediapipe.tasks.python.vision.pose_landmarker import PoseLandmarkerResult
 from PySide6 import QtCore, QtGui
 
-from src.poses.cameras import CameraCaptureWorker, CameraService
+from src.poses import draw_landmarks_on_image
+from src.poses.cameras import CameraService, PoseCaptureWorker
 
 
 class CameraCaptureViewModel(QtCore.QObject):
@@ -15,7 +18,7 @@ class CameraCaptureViewModel(QtCore.QObject):
     """
 
     frame_ready = QtCore.Signal(QtGui.QImage)
-    _capture_worker: CameraCaptureWorker | None = None
+    _capture_worker: PoseCaptureWorker | None = None
     _capture_thread: QtCore.QThread | None = None
 
     def __init__(
@@ -81,16 +84,29 @@ class CameraCaptureViewModel(QtCore.QObject):
             self.stop_capture()
 
         self._capture_thread = QtCore.QThread(self)
-        self._capture_worker = CameraCaptureWorker(camera_info, self._camera_service)
+        self._capture_worker = PoseCaptureWorker(camera_info, self._camera_service)
         self._capture_worker.moveToThread(self._capture_thread)
 
         self._capture_thread.started.connect(self._capture_worker.run)
-        self._capture_worker.frame_ready.connect(self.frame_ready)
+        self._capture_worker.pose_ready.connect(self._draw_frame)
         self._capture_worker.finished.connect(self._capture_thread.quit)
         self._capture_worker.finished.connect(self._capture_worker.deleteLater)
         self._capture_thread.finished.connect(self._capture_thread.deleteLater)
         self._capture_thread.destroyed.connect(self._clear_thread)
         self._capture_thread.start()
+
+    @QtCore.Slot(object, object)
+    def _draw_frame(self, pose: PoseLandmarkerResult, frame: MatLike) -> None:
+        marked_frame = draw_landmarks_on_image(frame, pose)
+        height, width, channels = marked_frame.shape
+        image = QtGui.QImage(
+            marked_frame.data,
+            width,
+            height,
+            channels * width,
+            QtGui.QImage.Format.Format_BGR888,
+        )
+        self.frame_ready.emit(image)
 
     def _clear_thread(self) -> None:
         """Clear internal thread and worker references after capture shutdown.
