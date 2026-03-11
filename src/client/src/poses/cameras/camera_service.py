@@ -2,7 +2,7 @@ from cv2 import VideoCapture
 from cv2_enumerate_cameras import enumerate_cameras
 from cv2_enumerate_cameras.camera_info import CameraInfo
 
-from .errors import CameraNotFoundError, CameraServiceDoubleInstanceError
+from .errors import CameraServiceDoubleInstanceError
 
 
 class CameraService:
@@ -32,22 +32,16 @@ class CameraService:
             self._update_cameras()
         return self._cameras
 
-    def get_camera_by(self, index: int) -> VideoCapture:
-        """Returns a camera by its index.
+    def get_camera_by(self, info: CameraInfo) -> VideoCapture:
+        """Returns a camera by its information.
 
         Args:
-            index (int): The index of the camera to retrieve.
+            info (CameraInfo): The information about a camera to get. This information
+                should be taken from this CameraService.
         Returns:
-            VideoCapture: The camera object corresponding to the specified index.
-        Raises:
-            CameraNotFoundError: If the camera with the specified index is not found.
+            VideoCapture: The camera object corresponding to the specified information.
         """
-        if self._cameras == []:
-            self._update_cameras()
-        if index < 0 or index >= len(self._cameras):
-            raise CameraNotFoundError(index)
-
-        return VideoCapture(index)
+        return VideoCapture(info.index, info.backend)
 
     def _update_cameras(self) -> None:
         """Refresh the cached camera list.
