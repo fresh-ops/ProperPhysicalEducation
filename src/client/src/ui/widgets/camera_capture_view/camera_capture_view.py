@@ -74,8 +74,16 @@ class CameraCaptureView(QtWidgets.QWidget):
         Args:
             event (QtGui.QCloseEvent): Qt close event propagated to base class.
         """
-        self._vm.stop_capture()
+        self.stop_capture()
         super().closeEvent(event)
+
+    def start_capture(self) -> None:
+        """Ensure camera capture is running for this preview."""
+        self._vm.start_capture()
+
+    def stop_capture(self) -> None:
+        """Ensure camera capture is stopped for this preview."""
+        self._vm.stop_capture()
 
     def update_camera_info(self, camera_info: CameraInfo) -> None:
         """Switch preview to another camera.

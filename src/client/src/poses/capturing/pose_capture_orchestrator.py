@@ -1,11 +1,11 @@
 from cv2_enumerate_cameras.camera_info import CameraInfo
 from PySide6 import QtCore
 
-from src.poses.cameras import CameraService
+from src.poses.cameras import CameraKey, CameraService, camera_key
 
 from .pose_capture_session import PoseCaptureSession
 
-type CameraSessionKey = tuple[int, int]
+type CameraSessionKey = CameraKey
 
 
 class PoseCaptureOrchestrator(QtCore.QObject):
@@ -59,7 +59,7 @@ class PoseCaptureOrchestrator(QtCore.QObject):
 
         self._collect_sessions()
 
-        key = self._camera_key(camera_info)
+        key = camera_key(camera_info)
         current = self._sessions.get(key)
         if current is not None:
             session, refs = current
@@ -85,7 +85,7 @@ class PoseCaptureOrchestrator(QtCore.QObject):
         Args:
             camera_info (CameraInfo): Camera descriptor to disconnect.
         """
-        key = self._camera_key(camera_info)
+        key = camera_key(camera_info)
         current = self._sessions.get(key)
         if current is None:
             return
@@ -168,14 +168,3 @@ class PoseCaptureOrchestrator(QtCore.QObject):
             self._sessions.pop(key)
             self._stop_retry_attempts.pop(key, None)
             session.deleteLater()
-
-    def _camera_key(self, camera_info: CameraInfo) -> CameraSessionKey:
-        """Build a stable dictionary key for camera descriptor.
-
-        Args:
-            camera_info (CameraInfo): Camera descriptor from camera service.
-
-        Returns:
-            CameraSessionKey: Tuple of backend and index.
-        """
-        return (camera_info.backend, camera_info.index)
