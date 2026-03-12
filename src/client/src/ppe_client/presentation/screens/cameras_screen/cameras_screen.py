@@ -5,10 +5,10 @@ from PySide6 import QtCore, QtWidgets
 
 from ppe_client.poses.cameras import CameraKey, CameraService
 from ppe_client.poses.capturing import PoseCaptureOrchestrator
+from ppe_client.presentation.dialogs.select_camera_dialog import SelectCameraDialog
+from ppe_client.presentation.routing import Screen
+from ppe_client.presentation.widgets.camera_capture_view import CameraCaptureView
 
-from ...routing import Screen
-from ...widgets.camera_capture_view import CameraCaptureView
-from ...widgets.select_camera_dialog import SelectCameraDialog
 from .cameras_payload import CamerasPayload
 from .cameras_view_model import CamerasViewModel
 
