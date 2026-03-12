@@ -22,6 +22,7 @@ class PoseCaptureWorker(QtCore.QObject):
 
     def __init__(
         self,
+        /,
         camera_info: CameraInfo,
         camera_service: CameraService,
         parent: QtCore.QObject | None = None,
@@ -37,11 +38,12 @@ class PoseCaptureWorker(QtCore.QObject):
         super().__init__(parent)
         self._camera_info = camera_info
         self._camera_service = camera_service
-        self._running = True
+        self._running = False
 
     @QtCore.Slot()
     def run(self) -> None:
         """Run continuous capture loop and emit converted Qt frames."""
+        self._running = True
         capture = self._camera_service.get_camera_by(self._camera_info)
         if not capture.isOpened():
             capture.release()
@@ -50,18 +52,24 @@ class PoseCaptureWorker(QtCore.QObject):
 
         pose_landmarker = create_video_pose_landmarker()
 
-        while self._running:
-            success, cv_image = capture.read()
-            if not success:
-                continue
+        try:
+            while self._running:
+                success, cv_image = capture.read()
+                if not success:
+                    continue
 
-            mp_image = mp.Image(image_format=mp.ImageFormat.SRGB, data=cv_image)
-            timestamp_ms = int(time.monotonic() * 1_000)
-            pose = pose_landmarker.detect_for_video(mp_image, timestamp_ms)
-            self.pose_ready.emit(pose, cv_image)
-
-        capture.release()
-        self.finished.emit()
+                mp_image = mp.Image(image_format=mp.ImageFormat.SRGB, data=cv_image)
+                timestamp_ms = int(time.monotonic() * 1_000)
+                try:
+                    pose = pose_landmarker.detect_for_video(mp_image, timestamp_ms)
+                except RuntimeError:
+                    # Runtime can already be shutting down while worker exits.
+                    break
+                self.pose_ready.emit(pose, cv_image)
+        finally:
+            capture.release()
+            pose_landmarker.close()
+            self.finished.emit()
 
     @QtCore.Slot()
     def stop(self) -> None:

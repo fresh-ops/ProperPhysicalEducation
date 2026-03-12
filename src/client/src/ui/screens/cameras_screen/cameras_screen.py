@@ -3,6 +3,7 @@ from typing import Any, override
 from PySide6 import QtCore, QtWidgets
 
 from src.poses.cameras import CameraService
+from src.poses.capturing import PoseCaptureOrchestrator
 
 from ...routing import Screen
 from ...widgets.camera_capture_view import CameraCaptureView
@@ -14,18 +15,30 @@ from .cameras_view_model import CamerasViewModel
 class CamerasScreen(Screen[CamerasPayload]):
     _vm: CamerasViewModel
     _camera_service: CameraService
+    _capture_orchestrator: PoseCaptureOrchestrator
 
-    def __init__(self, camera_service: CameraService, **kwargs: Any):
+    def __init__(
+        self,
+        camera_service: CameraService,
+        capture_orchestrator: PoseCaptureOrchestrator,
+        **kwargs: Any,
+    ):
         super().__init__(**kwargs)
 
         self._vm = CamerasViewModel()
 
         self._camera_service = camera_service
+        self._capture_orchestrator = capture_orchestrator
 
         self._button = QtWidgets.QPushButton("Select Camera")
         self._button.clicked.connect(self._on_button_clicked)
 
-        self._preview = CameraCaptureView(self._camera_service, None, self)
+        self._preview = CameraCaptureView(
+            camera_service=self._camera_service,
+            capture_orchestrator=self._capture_orchestrator,
+            camera_info=None,
+            parent=self,
+        )
 
         layout = QtWidgets.QVBoxLayout()
         layout.addWidget(self._preview)

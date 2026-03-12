@@ -6,7 +6,8 @@ from mediapipe.tasks.python.vision.pose_landmarker import PoseLandmarkerResult
 from PySide6 import QtCore, QtGui
 
 from src.poses import draw_landmarks_on_image
-from src.poses.cameras import CameraService, PoseCaptureWorker
+from src.poses.cameras import CameraService
+from src.poses.capturing import PoseCaptureOrchestrator, PoseCaptureSession
 
 
 class CameraCaptureViewModel(QtCore.QObject):
@@ -18,12 +19,17 @@ class CameraCaptureViewModel(QtCore.QObject):
     """
 
     frame_ready = QtCore.Signal(QtGui.QImage)
-    _capture_worker: PoseCaptureWorker | None = None
-    _capture_thread: QtCore.QThread | None = None
+
+    _camera_service: CameraService
+    _capture_orchestrator: PoseCaptureOrchestrator
+    _camera_info: CameraInfo | None
+    _active_session_camera_info: CameraInfo | None
+    _capture_session: PoseCaptureSession | None
 
     def __init__(
         self,
         camera_service: CameraService,
+        capture_orchestrator: PoseCaptureOrchestrator,
         camera_info: CameraInfo | None = None,
         parent: QtCore.QObject | None = None,
         **kwargs: Any,
@@ -33,6 +39,8 @@ class CameraCaptureViewModel(QtCore.QObject):
         Args:
             camera_service (CameraService): Camera service used to resolve
                 available devices.
+            capture_orchestrator (PoseCaptureOrchestrator): Shared capture
+                sessions coordinator.
             camera_info (CameraInfo | None): Optional camera selected initially.
             parent (QtCore.QObject | None): Optional parent QObject for Qt
                 ownership and signal lifecycle.
@@ -40,28 +48,32 @@ class CameraCaptureViewModel(QtCore.QObject):
         """
         super().__init__(parent, **kwargs)
         self._camera_service = camera_service
+        self._capture_orchestrator = capture_orchestrator
         self._camera_info = camera_info
-        self._capture_thread = None
-        self._capture_worker = None
+        self._active_session_camera_info = None
+        self._capture_session = None
 
+    @QtCore.Slot()
     def start_capture(self) -> None:
         """Start frame capture with selected camera if provided."""
-        if self._camera_info is None:
+        if self._camera_info is None or self._capture_session is not None:
             return
 
-        self._start_worker_with(self._camera_info)
+        self._capture_session = self._capture_orchestrator.connect_session(
+            self._camera_info
+        )
+        self._active_session_camera_info = self._camera_info
+        self._capture_session.finished.connect(self._unwire_session)
+        self._capture_session.pose_ready.connect(self._draw_frame)
 
+    @QtCore.Slot()
     def stop_capture(self) -> None:
         """Stop active capture thread and release worker references."""
-        if self._capture_thread is None or self._capture_worker is None:
+        if self._capture_session is None or self._active_session_camera_info is None:
             return
 
-        if self._capture_worker and not self._capture_thread.isFinished():
-            self._capture_worker.stop()
-            self._capture_thread.quit()
-            self._capture_thread.wait(1500)
-
-        self._clear_thread()
+        self._capture_orchestrator.disconnect_session(self._active_session_camera_info)
+        self._unwire_session()
 
     def update_camera_info(self, camera_info: CameraInfo) -> None:
         """Replace current camera source and restart capture.
@@ -74,26 +86,17 @@ class CameraCaptureViewModel(QtCore.QObject):
         self.stop_capture()
         self.start_capture()
 
-    def _start_worker_with(self, camera_info: CameraInfo) -> None:
-        """Create and start worker thread configured for a camera.
+    @QtCore.Slot()
+    def _unwire_session(self) -> None:
+        if self._capture_session is None:
+            return
 
-        Args:
-            camera_info (CameraInfo): Camera metadata used by worker capture loop.
-        """
-        if self._capture_thread is not None or self._capture_worker is not None:
-            self.stop_capture()
+        self._capture_session.pose_ready.disconnect(self._draw_frame)
 
-        self._capture_thread = QtCore.QThread(self)
-        self._capture_worker = PoseCaptureWorker(camera_info, self._camera_service)
-        self._capture_worker.moveToThread(self._capture_thread)
+        self._capture_session.finished.disconnect(self._unwire_session)
 
-        self._capture_thread.started.connect(self._capture_worker.run)
-        self._capture_worker.pose_ready.connect(self._draw_frame)
-        self._capture_worker.finished.connect(self._capture_thread.quit)
-        self._capture_worker.finished.connect(self._capture_worker.deleteLater)
-        self._capture_thread.finished.connect(self._capture_thread.deleteLater)
-        self._capture_thread.destroyed.connect(self._clear_thread)
-        self._capture_thread.start()
+        self._active_session_camera_info = None
+        self._capture_session = None
 
     @QtCore.Slot(object, object)
     def _draw_frame(self, pose: PoseLandmarkerResult, frame: MatLike) -> None:
@@ -107,13 +110,3 @@ class CameraCaptureViewModel(QtCore.QObject):
             QtGui.QImage.Format.Format_BGR888,
         )
         self.frame_ready.emit(image)
-
-    def _clear_thread(self) -> None:
-        """Clear internal thread and worker references after capture shutdown.
-
-        Note:
-            This method only resets view model state. It does not stop or join
-            a running thread and should be called after stop/finish handling.
-        """
-        self._capture_worker = None
-        self._capture_thread = None

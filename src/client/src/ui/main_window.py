@@ -1,6 +1,9 @@
-from PySide6 import QtWidgets
+from typing import override
+
+from PySide6 import QtGui, QtWidgets
 
 from src.poses.cameras import CameraService
+from src.poses.capturing import PoseCaptureOrchestrator
 
 from .routing import Route
 from .routing.router import Router
@@ -32,7 +35,11 @@ class MainWindow(QtWidgets.QMainWindow):
             scheme={
                 Route.HOME: (MyScreen, MyScreenPayload),
                 Route.CAMERAS: (
-                    lambda **kwargs: CamerasScreen(self._camera_service, **kwargs),
+                    lambda **kwargs: CamerasScreen(
+                        camera_service=self._camera_service,
+                        capture_orchestrator=self._pose_capture_orchestrator,
+                        **kwargs,
+                    ),
                     CamerasPayload,
                 ),
             },
@@ -43,3 +50,12 @@ class MainWindow(QtWidgets.QMainWindow):
 
     def _setup_services(self) -> None:
         self._camera_service = CameraService()
+        self._pose_capture_orchestrator = PoseCaptureOrchestrator(
+            self._camera_service, parent=self
+        )
+
+    @override
+    def closeEvent(self, event: QtGui.QCloseEvent) -> None:
+        """Stop all capture sessions before window closes."""
+        self._pose_capture_orchestrator.shutdown()
+        super().closeEvent(event)

@@ -4,6 +4,7 @@ from cv2_enumerate_cameras.camera_info import CameraInfo
 from PySide6 import QtCore, QtGui, QtWidgets
 
 from src.poses.cameras import CameraService
+from src.poses.capturing import PoseCaptureOrchestrator
 
 from .camera_capture_view_model import CameraCaptureViewModel
 
@@ -20,6 +21,7 @@ class CameraCaptureView(QtWidgets.QWidget):
     def __init__(
         self,
         camera_service: CameraService,
+        capture_orchestrator: PoseCaptureOrchestrator,
         camera_info: CameraInfo | None = None,
         parent: QtWidgets.QWidget | None = None,
         **kwargs: Any,
@@ -28,6 +30,8 @@ class CameraCaptureView(QtWidgets.QWidget):
 
         Args:
             camera_service (CameraService): Service for retrieving cameras data.
+            capture_orchestrator (PoseCaptureOrchestrator): Shared coordinator
+                for camera capture sessions lifecycle.
             camera_info (CameraInfo | None): Optional camera used as initial
                 capture source. If not provided, the first available camera is used.
             parent (QtWidgets.QWidget | None): Optional parent widget for Qt
@@ -36,7 +40,12 @@ class CameraCaptureView(QtWidgets.QWidget):
         """
         super().__init__(parent, **kwargs)
 
-        self._vm = CameraCaptureViewModel(camera_service, camera_info, self)
+        self._vm = CameraCaptureViewModel(
+            camera_service=camera_service,
+            capture_orchestrator=capture_orchestrator,
+            camera_info=camera_info,
+            parent=self,
+        )
         self._vm.frame_ready.connect(self._on_frame_ready)
         self._vm.start_capture()
 
