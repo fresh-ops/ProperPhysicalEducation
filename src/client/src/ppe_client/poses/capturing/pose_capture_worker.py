@@ -4,8 +4,8 @@ import mediapipe as mp
 from cv2_enumerate_cameras.camera_info import CameraInfo
 from PySide6 import QtCore
 
-from src.poses.cameras.camera_service import CameraService
-from src.poses.model import create_video_pose_landmarker
+from ppe_client.poses.cameras.camera_service import CameraService
+from ppe_client.poses.model import create_video_pose_landmarker
 
 
 class PoseCaptureWorker(QtCore.QObject):

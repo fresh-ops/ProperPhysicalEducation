@@ -2,8 +2,8 @@ from typing import override
 
 from PySide6 import QtGui, QtWidgets
 
-from src.poses.cameras import CameraService
-from src.poses.capturing import PoseCaptureOrchestrator
+from ppe_client.poses.cameras import CameraService
+from ppe_client.poses.capturing import PoseCaptureOrchestrator
 
 from .routing import Route
 from .routing.router import Router

@@ -5,9 +5,9 @@ from cv2_enumerate_cameras.camera_info import CameraInfo
 from mediapipe.tasks.python.vision.pose_landmarker import PoseLandmarkerResult
 from PySide6 import QtCore, QtGui
 
-from src.poses import draw_landmarks_on_image
-from src.poses.cameras import CameraService
-from src.poses.capturing import PoseCaptureOrchestrator, PoseCaptureSession
+from ppe_client.poses import draw_landmarks_on_image
+from ppe_client.poses.cameras import CameraService
+from ppe_client.poses.capturing import PoseCaptureOrchestrator, PoseCaptureSession
 
 
 class CameraCaptureViewModel(QtCore.QObject):

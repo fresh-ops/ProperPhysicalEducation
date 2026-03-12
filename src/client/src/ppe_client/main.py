@@ -2,7 +2,7 @@ import sys
 
 from PySide6 import QtWidgets
 
-from src.ui import MainWindow
+from ppe_client.ui import MainWindow
 
 
 def main() -> None:

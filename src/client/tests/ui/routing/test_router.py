@@ -5,7 +5,7 @@ from PySide6 import QtWidgets
 from pytest_mock import MockerFixture
 from pytestqt.qtbot import QtBot
 
-from src.ui.routing import (
+from ppe_client.ui.routing import (
     DuplicateRouteError,
     InvalidPayloadError,
     Payload,

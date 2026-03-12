@@ -3,8 +3,8 @@ from typing import Any, override
 from cv2_enumerate_cameras.camera_info import CameraInfo
 from PySide6 import QtCore, QtWidgets
 
-from src.poses.cameras import CameraKey, CameraService
-from src.poses.capturing import PoseCaptureOrchestrator
+from ppe_client.poses.cameras import CameraKey, CameraService
+from ppe_client.poses.capturing import PoseCaptureOrchestrator
 
 from ...routing import Screen
 from ...widgets.camera_capture_view import CameraCaptureView

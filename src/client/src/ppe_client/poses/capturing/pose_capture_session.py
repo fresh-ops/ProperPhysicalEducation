@@ -1,7 +1,7 @@
 from cv2_enumerate_cameras.camera_info import CameraInfo
 from PySide6 import QtCore
 
-from src.poses.cameras import CameraService
+from ppe_client.poses.cameras import CameraService
 
 from .pose_capture_worker import PoseCaptureWorker
 

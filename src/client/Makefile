@@ -1,4 +1,4 @@
-.PHONY: help lint fmt fmt-check typecheck test check fix ci
+.PHONY: help lint fmt fmt-check typecheck test check fix ci run
 
 help:
 	@echo "Available targets:"
@@ -10,6 +10,7 @@ help:
 	@echo "  make check      - Run all checks (lint + fmt-check + typecheck + test)"
 	@echo "  make fix        - Auto-fix lint issues and format"
 	@echo "  make ci         - Alias for make check"
+	@echo "  make run        - Run the application"
 
 lint:
 	uv run ruff check .
@@ -39,3 +40,6 @@ fix:
 	uv run ruff format .
 
 ci: check
+
+run:
+	uv run python -m ppe_client.main

@@ -3,7 +3,7 @@ from typing import Any
 from cv2_enumerate_cameras.camera_info import CameraInfo
 from PySide6 import QtCore, QtWidgets
 
-from src.poses.cameras import CameraService
+from ppe_client.poses.cameras import CameraService
 
 from .select_camera_view_model import SelectCameraViewModel
 
