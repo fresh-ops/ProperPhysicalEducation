@@ -4,7 +4,7 @@ from PySide6 import QtCore, QtWidgets
 
 from ppe_client.application.capturing import PoseCaptureOrchestrator
 from ppe_client.application.ports import CameraGateway
-from ppe_client.domain import CameraDescriptor, CameraKey
+from ppe_client.domain import CameraDescriptor, CameraIdentity
 from ppe_client.presentation.dialogs.select_camera_dialog import SelectCameraDialog
 from ppe_client.presentation.routing import Screen
 from ppe_client.presentation.widgets.camera_capture_view import CameraCaptureView
@@ -32,7 +32,7 @@ class CamerasScreen(Screen[CamerasPayload]):
         self._capture_orchestrator = capture_orchestrator
 
         self._grid_columns = 2
-        self._previews_by_camera: dict[CameraKey, CameraCaptureView] = {}
+        self._previews_by_camera: dict[CameraIdentity, CameraCaptureView] = {}
 
         self._add_camera_button = QtWidgets.QPushButton("Add Camera")
         self._add_camera_button.clicked.connect(self._on_button_clicked)

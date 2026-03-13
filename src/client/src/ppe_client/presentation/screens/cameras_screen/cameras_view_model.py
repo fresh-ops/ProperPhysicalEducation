@@ -1,6 +1,6 @@
 from PySide6 import QtCore
 
-from ppe_client.domain import CameraDescriptor, CameraKey, camera_key
+from ppe_client.domain import CameraDescriptor, CameraIdentity
 
 from .cameras_payload import CamerasPayload
 
@@ -8,7 +8,7 @@ from .cameras_payload import CamerasPayload
 class CamerasViewModel(QtCore.QObject):
     cameras_changed = QtCore.Signal(list)
 
-    _cameras_by_key: dict[CameraKey, CameraDescriptor]
+    _cameras_by_key: dict[CameraIdentity, CameraDescriptor]
 
     def __init__(self, parent: QtCore.QObject | None = None) -> None:
         super().__init__(parent)
@@ -19,7 +19,7 @@ class CamerasViewModel(QtCore.QObject):
             return
 
     def add_camera(self, camera_info: CameraDescriptor) -> bool:
-        key = camera_key(camera_info)
+        key = camera_info.identity
         if key in self._cameras_by_key:
             return False
 
@@ -40,5 +40,5 @@ class CamerasViewModel(QtCore.QObject):
     def get_cameras(self) -> list[CameraDescriptor]:
         return list(self._cameras_by_key.values())
 
-    def camera_key(self, camera_info: CameraDescriptor) -> CameraKey:
-        return camera_key(camera_info)
+    def camera_key(self, camera_info: CameraDescriptor) -> CameraIdentity:
+        return camera_info.identity

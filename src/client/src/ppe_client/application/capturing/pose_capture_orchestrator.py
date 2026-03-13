@@ -1,11 +1,11 @@
 from PySide6 import QtCore
 
 from ppe_client.application.ports import CameraGateway, PoseLandmarkerFactory
-from ppe_client.domain import CameraDescriptor, CameraKey, camera_key
+from ppe_client.domain import CameraDescriptor, CameraIdentity
 
 from .pose_capture_session import PoseCaptureSession
 
-type CameraSessionKey = CameraKey
+type CameraSessionKey = CameraIdentity
 
 
 class PoseCaptureOrchestrator(QtCore.QObject):
@@ -41,7 +41,7 @@ class PoseCaptureOrchestrator(QtCore.QObject):
 
         self._collect_sessions()
 
-        key = camera_key(camera_info)
+        key = camera_info.identity
         current = self._sessions.get(key)
         if current is not None:
             session, refs = current
@@ -63,7 +63,7 @@ class PoseCaptureOrchestrator(QtCore.QObject):
         return session
 
     def disconnect_session(self, camera_info: CameraDescriptor) -> None:
-        key = camera_key(camera_info)
+        key = camera_info.identity
         current = self._sessions.get(key)
         if current is None:
             return
