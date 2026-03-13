@@ -1,7 +1,5 @@
 class CameraServiceError(Exception):
-    """Base class for exceptions in this module."""
-
-    pass
+    """Base class for camera adapter exceptions."""
 
 
 class CameraNotFoundError(CameraServiceError):

@@ -1,9 +1,7 @@
-from typing import Any
-
-from cv2_enumerate_cameras.camera_info import CameraInfo
 from PySide6 import QtCore
 
-from ppe_client.poses.cameras import CameraService
+from ppe_client.application.ports import CameraGateway
+from ppe_client.domain import CameraDescriptor
 
 
 class SelectCameraViewModel(QtCore.QObject):
@@ -17,26 +15,24 @@ class SelectCameraViewModel(QtCore.QObject):
     available_cameras_updated = QtCore.Signal(list)
 
     _selected_camera_index: int = 0
-    _cameras_list: list[CameraInfo]
-    _camera_service: CameraService
+    _cameras_list: list[CameraDescriptor]
+    _camera_gateway: CameraGateway
 
     def __init__(
         self,
-        camera_service: CameraService,
+        camera_gateway: CameraGateway,
         parent: QtCore.QObject | None = None,
-        **kwargs: Any,
     ) -> None:
         """Initialize view model state and optionally set parent for Qt ownership.
 
         Args:
-            camera_service (CameraService): Service for retrieving cameras data.
+            camera_gateway (CameraGateway): Port for retrieving camera data.
             parent (QtCore.QObject | None): Optional parent QObject for ownership and
                 signal propagation.
-            **kwargs: Additional keyword arguments for QObject initialization.
         """
-        super().__init__(parent, **kwargs)
+        super().__init__(parent)
         self._cameras_list = []
-        self._camera_service = camera_service
+        self._camera_gateway = camera_gateway
 
     def update_available_cameras(self) -> None:
         """Refresh available camera names and notify observers.
@@ -45,7 +41,7 @@ class SelectCameraViewModel(QtCore.QObject):
             Current implementation uses mock values and should later be
             replaced with real camera discovery.
         """
-        self._cameras_list = self._camera_service.get_cameras()
+        self._cameras_list = self._camera_gateway.get_cameras()
         names = [camera.name for camera in self._cameras_list]
         self.available_cameras_updated.emit(names)
 
@@ -57,10 +53,10 @@ class SelectCameraViewModel(QtCore.QObject):
         """
         self._selected_camera_index = index
 
-    def get_selected_camera_info(self) -> CameraInfo:
+    def get_selected_camera_info(self) -> CameraDescriptor:
         """Return the inforamation about the selected camera.
 
         Returns:
-            CameraInfo: the selected camera infromation.
+            CameraDescriptor: the selected camera infromation.
         """
         return self._cameras_list[self._selected_camera_index]

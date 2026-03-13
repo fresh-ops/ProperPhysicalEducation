@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import Any, override
+from typing import override
 
 from PySide6 import QtCore, QtWidgets
 
@@ -12,8 +12,8 @@ class MyScreenPayload(Payload):
 
 
 class MyScreen(Screen[MyScreenPayload]):
-    def __init__(self, **knargs: Any) -> None:
-        super().__init__(**knargs)
+    def __init__(self) -> None:
+        super().__init__()
 
         self.label = QtWidgets.QLabel("")
         self.button = QtWidgets.QPushButton("Click me")

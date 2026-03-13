@@ -1,13 +1,13 @@
-from typing import Any
-
 from cv2.typing import MatLike
-from cv2_enumerate_cameras.camera_info import CameraInfo
 from mediapipe.tasks.python.vision.pose_landmarker import PoseLandmarkerResult
 from PySide6 import QtCore, QtGui
 
-from ppe_client.poses import draw_landmarks_on_image
-from ppe_client.poses.cameras import CameraService
-from ppe_client.poses.capturing import PoseCaptureOrchestrator, PoseCaptureSession
+from ppe_client.application.capturing import (
+    PoseCaptureOrchestrator,
+    PoseCaptureSession,
+)
+from ppe_client.domain import CameraDescriptor
+from ppe_client.visualization import draw_landmarks_on_image
 
 
 class CameraCaptureViewModel(QtCore.QObject):
@@ -20,34 +20,27 @@ class CameraCaptureViewModel(QtCore.QObject):
 
     frame_ready = QtCore.Signal(QtGui.QImage)
 
-    _camera_service: CameraService
     _capture_orchestrator: PoseCaptureOrchestrator
-    _camera_info: CameraInfo | None
-    _active_session_camera_info: CameraInfo | None
+    _camera_info: CameraDescriptor | None
+    _active_session_camera_info: CameraDescriptor | None
     _capture_session: PoseCaptureSession | None
 
     def __init__(
         self,
-        camera_service: CameraService,
         capture_orchestrator: PoseCaptureOrchestrator,
-        camera_info: CameraInfo | None = None,
+        camera_info: CameraDescriptor | None = None,
         parent: QtCore.QObject | None = None,
-        **kwargs: Any,
     ) -> None:
         """Initialize capture dependencies and optional initial camera state.
 
         Args:
-            camera_service (CameraService): Camera service used to resolve
-                available devices.
             capture_orchestrator (PoseCaptureOrchestrator): Shared capture
                 sessions coordinator.
-            camera_info (CameraInfo | None): Optional camera selected initially.
+            camera_info (CameraDescriptor | None): Optional camera selected initially.
             parent (QtCore.QObject | None): Optional parent QObject for Qt
                 ownership and signal lifecycle.
-            **kwargs: Additional keyword arguments for QObject initialization.
         """
-        super().__init__(parent, **kwargs)
-        self._camera_service = camera_service
+        super().__init__(parent)
         self._capture_orchestrator = capture_orchestrator
         self._camera_info = camera_info
         self._active_session_camera_info = None
@@ -75,11 +68,11 @@ class CameraCaptureViewModel(QtCore.QObject):
         self._capture_orchestrator.disconnect_session(self._active_session_camera_info)
         self._unwire_session()
 
-    def update_camera_info(self, camera_info: CameraInfo) -> None:
+    def update_camera_info(self, camera_info: CameraDescriptor) -> None:
         """Replace current camera source and restart capture.
 
         Args:
-            camera_info (CameraInfo): Camera metadata used to configure
+            camera_info (CameraDescriptor): Camera metadata used to configure
                 the worker capture source.
         """
         self._camera_info = camera_info

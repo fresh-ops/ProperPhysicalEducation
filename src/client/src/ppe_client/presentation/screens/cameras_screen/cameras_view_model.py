@@ -1,7 +1,6 @@
-from cv2_enumerate_cameras.camera_info import CameraInfo
 from PySide6 import QtCore
 
-from ppe_client.poses.cameras import CameraKey, camera_key
+from ppe_client.domain import CameraDescriptor, CameraKey, camera_key
 
 from .cameras_payload import CamerasPayload
 
@@ -9,7 +8,7 @@ from .cameras_payload import CamerasPayload
 class CamerasViewModel(QtCore.QObject):
     cameras_changed = QtCore.Signal(list)
 
-    _cameras_by_key: dict[CameraKey, CameraInfo]
+    _cameras_by_key: dict[CameraKey, CameraDescriptor]
 
     def __init__(self, parent: QtCore.QObject | None = None) -> None:
         super().__init__(parent)
@@ -19,7 +18,7 @@ class CamerasViewModel(QtCore.QObject):
         if payload is None:
             return
 
-    def add_camera(self, camera_info: CameraInfo) -> bool:
+    def add_camera(self, camera_info: CameraDescriptor) -> bool:
         key = camera_key(camera_info)
         if key in self._cameras_by_key:
             return False
@@ -38,8 +37,8 @@ class CamerasViewModel(QtCore.QObject):
     def has_cameras(self) -> bool:
         return bool(self._cameras_by_key)
 
-    def get_cameras(self) -> list[CameraInfo]:
+    def get_cameras(self) -> list[CameraDescriptor]:
         return list(self._cameras_by_key.values())
 
-    def camera_key(self, camera_info: CameraInfo) -> CameraKey:
+    def camera_key(self, camera_info: CameraDescriptor) -> CameraKey:
         return camera_key(camera_info)

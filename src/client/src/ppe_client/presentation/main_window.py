@@ -2,8 +2,9 @@ from typing import override
 
 from PySide6 import QtGui, QtWidgets
 
-from ppe_client.poses.cameras import CameraService
-from ppe_client.poses.capturing import PoseCaptureOrchestrator
+from ppe_client.adapters.cameras import CameraService
+from ppe_client.adapters.ml import create_video_pose_landmarker
+from ppe_client.application.capturing import PoseCaptureOrchestrator
 
 from .routing import Route
 from .routing.router import Router
@@ -36,7 +37,7 @@ class MainWindow(QtWidgets.QMainWindow):
                 Route.HOME: (MyScreen, MyScreenPayload),
                 Route.CAMERAS: (
                     lambda **kwargs: CamerasScreen(
-                        camera_service=self._camera_service,
+                        camera_gateway=self._camera_service,
                         capture_orchestrator=self._pose_capture_orchestrator,
                         **kwargs,
                     ),
@@ -51,7 +52,9 @@ class MainWindow(QtWidgets.QMainWindow):
     def _setup_services(self) -> None:
         self._camera_service = CameraService()
         self._pose_capture_orchestrator = PoseCaptureOrchestrator(
-            self._camera_service, parent=self
+            camera_service=self._camera_service,
+            pose_landmarker_factory=create_video_pose_landmarker,
+            parent=self,
         )
 
     @override

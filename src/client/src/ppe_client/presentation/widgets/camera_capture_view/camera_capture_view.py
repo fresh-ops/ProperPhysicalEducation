@@ -1,10 +1,9 @@
-from typing import Any, override
+from typing import override
 
-from cv2_enumerate_cameras.camera_info import CameraInfo
 from PySide6 import QtCore, QtGui, QtWidgets
 
-from ppe_client.poses.cameras import CameraService
-from ppe_client.poses.capturing import PoseCaptureOrchestrator
+from ppe_client.application.capturing import PoseCaptureOrchestrator
+from ppe_client.domain import CameraDescriptor
 
 from .camera_capture_view_model import CameraCaptureViewModel
 
@@ -20,28 +19,23 @@ class CameraCaptureView(QtWidgets.QWidget):
 
     def __init__(
         self,
-        camera_service: CameraService,
         capture_orchestrator: PoseCaptureOrchestrator,
-        camera_info: CameraInfo | None = None,
+        camera_info: CameraDescriptor | None = None,
         parent: QtWidgets.QWidget | None = None,
-        **kwargs: Any,
     ) -> None:
         """Initialize preview UI and bind it to the camera capture view model.
 
         Args:
-            camera_service (CameraService): Service for retrieving cameras data.
             capture_orchestrator (PoseCaptureOrchestrator): Shared coordinator
                 for camera capture sessions lifecycle.
-            camera_info (CameraInfo | None): Optional camera used as initial
+            camera_info (CameraDescriptor | None): Optional camera used as initial
                 capture source. If not provided, the first available camera is used.
             parent (QtWidgets.QWidget | None): Optional parent widget for Qt
                 ownership.
-            **kwargs: Additional keyword arguments for QWidget initialization.
         """
-        super().__init__(parent, **kwargs)
+        super().__init__(parent)
 
         self._vm = CameraCaptureViewModel(
-            camera_service=camera_service,
             capture_orchestrator=capture_orchestrator,
             camera_info=camera_info,
             parent=self,
@@ -85,11 +79,11 @@ class CameraCaptureView(QtWidgets.QWidget):
         """Ensure camera capture is stopped for this preview."""
         self._vm.stop_capture()
 
-    def update_camera_info(self, camera_info: CameraInfo) -> None:
+    def update_camera_info(self, camera_info: CameraDescriptor) -> None:
         """Switch preview to another camera.
 
         Args:
-            camera_info (CameraInfo): Camera metadata for the new capture source.
+            camera_info (CameraDescriptor): Camera metadata for the new capture source.
         """
         self._vm.update_camera_info(camera_info)
         self._preview_label.setText("Select a camera to start capturing")

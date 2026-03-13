@@ -1,9 +1,7 @@
-from typing import Any
-
-from cv2_enumerate_cameras.camera_info import CameraInfo
 from PySide6 import QtCore, QtWidgets
 
-from ppe_client.poses.cameras import CameraService
+from ppe_client.application.ports import CameraGateway
+from ppe_client.domain import CameraDescriptor
 
 from .select_camera_view_model import SelectCameraViewModel
 
@@ -19,22 +17,20 @@ class SelectCameraDialog(QtWidgets.QDialog):
 
     def __init__(
         self,
-        camera_service: CameraService,
+        camera_gateway: CameraGateway,
         parent: QtWidgets.QWidget | None = None,
-        **kwargs: Any,
     ) -> None:
         """Initialize dialog widgets and connect them to the view model.
 
         Args:
-            camera_service (CameraService): Service for retrieving cameras data.
+            camera_gateway (CameraGateway): Port for retrieving camera data.
             parent (QtWidgets.QWidget | None): Optional parent widget for Qt ownership
                 and modality.
-            **kwargs: Additional keyword arguments for Qt dialog initialization.
         """
-        super().__init__(parent, **kwargs)
+        super().__init__(parent)
         self.setWindowTitle("Select Camera")
 
-        self._vm = SelectCameraViewModel(camera_service)
+        self._vm = SelectCameraViewModel(camera_gateway)
         self._vm.available_cameras_updated.connect(self._on_available_cameras_updated)
 
         layout = QtWidgets.QVBoxLayout()
@@ -50,11 +46,11 @@ class SelectCameraDialog(QtWidgets.QDialog):
 
         self._vm.update_available_cameras()
 
-    def get_selected_camera_info(self) -> CameraInfo:
+    def get_selected_camera_info(self) -> CameraDescriptor:
         """Return the information about the selected camera.
 
         Returns:
-            CameraInfo: the selected camera information
+            CameraDescriptor: the selected camera information
         """
         return self._vm.get_selected_camera_info()
 

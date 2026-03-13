@@ -1,7 +1,7 @@
-from cv2_enumerate_cameras.camera_info import CameraInfo
 from PySide6 import QtCore
 
-from ppe_client.poses.cameras import CameraKey, CameraService, camera_key
+from ppe_client.application.ports import CameraGateway, PoseLandmarkerFactory
+from ppe_client.domain import CameraDescriptor, CameraKey, camera_key
 
 from .pose_capture_session import PoseCaptureSession
 
@@ -9,51 +9,33 @@ type CameraSessionKey = CameraKey
 
 
 class PoseCaptureOrchestrator(QtCore.QObject):
-    """Coordinate shared lifecycle of pose capture sessions per camera.
-
-    The orchestrator keeps one ``PoseCaptureSession`` per camera and tracks
-    reference counts for consumers interested in that camera stream.
-
-    Sessions are started on first consumer connect and stopped when last
-    consumer disconnects.
-    """
+    """Coordinate shared lifecycle of pose capture sessions per camera."""
 
     _sessions: dict[CameraSessionKey, tuple[PoseCaptureSession, int]]
     _stop_retry_attempts: dict[CameraSessionKey, int]
-    _camera_service: CameraService
+    _camera_service: CameraGateway
+    _pose_landmarker_factory: PoseLandmarkerFactory
     _max_stop_retry_attempts: int
     _is_shutting_down: bool
 
     _STOP_RETRY_DELAY_MS = 300
 
     def __init__(
-        self, /, camera_service: CameraService, parent: QtCore.QObject | None = None
+        self,
+        /,
+        camera_service: CameraGateway,
+        pose_landmarker_factory: PoseLandmarkerFactory,
+        parent: QtCore.QObject | None = None,
     ) -> None:
-        """Initialize orchestrator state and capture dependencies.
-
-        Args:
-            camera_service (CameraService): Camera provider used by sessions.
-            parent (QtCore.QObject | None): Optional parent for Qt ownership.
-        """
         super().__init__(parent)
         self._camera_service = camera_service
+        self._pose_landmarker_factory = pose_landmarker_factory
         self._sessions = {}
         self._stop_retry_attempts = {}
         self._max_stop_retry_attempts = 3
         self._is_shutting_down = False
 
-    def connect_session(self, camera_info: CameraInfo) -> PoseCaptureSession:
-        """Acquire session for camera and increment its consumer counter.
-
-        Args:
-            camera_info (CameraInfo): Camera descriptor to connect.
-
-        Returns:
-            PoseCaptureSession: Shared session for the selected camera.
-
-        Raises:
-            RuntimeError: If orchestrator is shutting down.
-        """
+    def connect_session(self, camera_info: CameraDescriptor) -> PoseCaptureSession:
         if self._is_shutting_down:
             raise RuntimeError("Cannot connect capture session during shutdown")
 
@@ -71,6 +53,7 @@ class PoseCaptureOrchestrator(QtCore.QObject):
         session = PoseCaptureSession(
             camera_info=camera_info,
             camera_service=self._camera_service,
+            pose_landmarker_factory=self._pose_landmarker_factory,
             parent=self,
         )
         session.finished.connect(self._collect_sessions)
@@ -79,12 +62,7 @@ class PoseCaptureOrchestrator(QtCore.QObject):
         session.start()
         return session
 
-    def disconnect_session(self, camera_info: CameraInfo) -> None:
-        """Release one consumer reference from camera session.
-
-        Args:
-            camera_info (CameraInfo): Camera descriptor to disconnect.
-        """
+    def disconnect_session(self, camera_info: CameraDescriptor) -> None:
         key = camera_key(camera_info)
         current = self._sessions.get(key)
         if current is None:
@@ -100,11 +78,6 @@ class PoseCaptureOrchestrator(QtCore.QObject):
 
     @QtCore.Slot()
     def _collect_sessions(self) -> None:
-        """Stop and remove sessions that no longer have consumers.
-
-        For sessions that fail cooperative stop, retry collection up to a
-        limited number of attempts with a short delay.
-        """
         removable: list[CameraSessionKey] = []
         should_schedule_retry = False
 
@@ -138,11 +111,6 @@ class PoseCaptureOrchestrator(QtCore.QObject):
 
     @QtCore.Slot()
     def shutdown(self) -> None:
-        """Stop all sessions before application teardown.
-
-        This method performs bounded, synchronous stop attempts to reduce
-        the chance of worker activity during interpreter shutdown.
-        """
         self._is_shutting_down = True
 
         for key, (session, _) in list(self._sessions.items()):

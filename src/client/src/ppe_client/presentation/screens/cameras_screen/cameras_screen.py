@@ -1,10 +1,10 @@
-from typing import Any, override
+from typing import override
 
-from cv2_enumerate_cameras.camera_info import CameraInfo
 from PySide6 import QtCore, QtWidgets
 
-from ppe_client.poses.cameras import CameraKey, CameraService
-from ppe_client.poses.capturing import PoseCaptureOrchestrator
+from ppe_client.application.capturing import PoseCaptureOrchestrator
+from ppe_client.application.ports import CameraGateway
+from ppe_client.domain import CameraDescriptor, CameraKey
 from ppe_client.presentation.dialogs.select_camera_dialog import SelectCameraDialog
 from ppe_client.presentation.routing import Screen
 from ppe_client.presentation.widgets.camera_capture_view import CameraCaptureView
@@ -15,21 +15,20 @@ from .cameras_view_model import CamerasViewModel
 
 class CamerasScreen(Screen[CamerasPayload]):
     _vm: CamerasViewModel
-    _camera_service: CameraService
+    _camera_gateway: CameraGateway
     _capture_orchestrator: PoseCaptureOrchestrator
 
     def __init__(
         self,
-        camera_service: CameraService,
+        camera_gateway: CameraGateway,
         capture_orchestrator: PoseCaptureOrchestrator,
-        **kwargs: Any,
-    ):
-        super().__init__(**kwargs)
+    ) -> None:
+        super().__init__()
 
         self._vm = CamerasViewModel()
         self._vm.cameras_changed.connect(self._on_cameras_changed)
 
-        self._camera_service = camera_service
+        self._camera_gateway = camera_gateway
         self._capture_orchestrator = capture_orchestrator
 
         self._grid_columns = 2
@@ -80,7 +79,7 @@ class CamerasScreen(Screen[CamerasPayload]):
 
     @QtCore.Slot()
     def _on_button_clicked(self) -> None:
-        dialog = SelectCameraDialog(self._camera_service, parent=self)
+        dialog = SelectCameraDialog(self._camera_gateway, parent=self)
         result = dialog.exec()
 
         if result == QtWidgets.QDialog.DialogCode.Accepted:
@@ -94,7 +93,7 @@ class CamerasScreen(Screen[CamerasPayload]):
                 )
 
     @QtCore.Slot(list)
-    def _on_cameras_changed(self, cameras: list[CameraInfo]) -> None:
+    def _on_cameras_changed(self, cameras: list[CameraDescriptor]) -> None:
         keyed = [(self._vm.camera_key(c), c) for c in cameras]
         active_keys = {key for key, _ in keyed}
 
@@ -111,9 +110,8 @@ class CamerasScreen(Screen[CamerasPayload]):
         self._rebuild_grid(cameras)
         self._sync_empty_state_visibility()
 
-    def _create_preview(self, camera_info: CameraInfo) -> CameraCaptureView:
+    def _create_preview(self, camera_info: CameraDescriptor) -> CameraCaptureView:
         preview = CameraCaptureView(
-            camera_service=self._camera_service,
             capture_orchestrator=self._capture_orchestrator,
             camera_info=camera_info,
             parent=self,
@@ -129,7 +127,7 @@ class CamerasScreen(Screen[CamerasPayload]):
     def _clear_previews(self) -> None:
         self._vm.clear_cameras()
 
-    def _rebuild_grid(self, cameras: list[CameraInfo]) -> None:
+    def _rebuild_grid(self, cameras: list[CameraDescriptor]) -> None:
         while self._grid.count() > 0:
             item = self._grid.takeAt(0)
             if item is None:
