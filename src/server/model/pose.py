@@ -1,5 +1,7 @@
 from typing import NamedTuple, Tuple
 
+from analyzer.pose.skeleton_transformer.skeleton import Angle
+
 
 class Pose(NamedTuple):
     """
@@ -44,17 +46,17 @@ class Pose(NamedTuple):
             self.right_knee_angle,
         ]
 
-    def get_angle_ranges(self) -> dict[str, Tuple[float, float]]:
+    def get_angle_ranges(self) -> dict[Angle, Tuple[float, float]]:
         """
         Возвращает словарь с диапазонами допустимых значений углов.
 
         Returns:
-            Dict[str, Tuple[float, float]]: словарь с диапазонами углов
+            Dict[Angle, Tuple[float, float]]: словарь с диапазонами углов
         """
         ranges = {}
 
-        for name, angle in self.angles.items():
-            ranges[name] = (angle - self.threshold, angle + self.threshold)
+        for angle, angle_value in self.angles.items():
+            ranges[angle] = (angle_value - self.threshold, angle_value + self.threshold)
 
         return ranges
 
@@ -72,12 +74,12 @@ class Pose(NamedTuple):
         return True
 
     @property
-    def angles(self) -> dict[str, float]:
+    def angles(self) -> dict[Angle, float]:
         return {
-            "left_shoulder_angle": self.left_shoulder_angle,
-            "right_shoulder_angle": self.right_shoulder_angle,
-            "left_elbow_angle": self.left_elbow_angle,
-            "right_elbow_angle": self.right_elbow_angle,
-            "left_knee_angle": self.left_knee_angle,
-            "right_knee_angle": self.right_knee_angle,
+            Angle.LEFT_SHOULDER: self.left_shoulder_angle,
+            Angle.RIGHT_SHOULDER: self.right_shoulder_angle,
+            Angle.LEFT_ELBOW: self.left_elbow_angle,
+            Angle.RIGHT_ELBOW: self.right_elbow_angle,
+            Angle.LEFT_KNEE: self.left_knee_angle,
+            Angle.RIGHT_KNEE: self.right_knee_angle,
         }

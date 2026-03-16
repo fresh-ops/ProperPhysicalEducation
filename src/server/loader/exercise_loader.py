@@ -1,14 +1,25 @@
 import json
 from pathlib import Path
 from typing import TypedDict, cast
+from analyzer.pose.skeleton_transformer.skeleton import Angle
 from loader.pose_loader import PoseLoader
 from model.exercise import Exercise
+from model.rule import Rule
+
+
+class SerializedRule(TypedDict):
+    pose_name: str
+    feature: str
+    operator: str
+    value: float
+    message: str
 
 
 class SerializedExercise(TypedDict):
     id: int
     name: str
     poses: list[int]
+    rules: list[SerializedRule]
 
 
 class ExerciseLoader:
@@ -76,8 +87,27 @@ class ExerciseLoader:
             self.pose_loader.load_pose(id) for id in serialized_exercise["poses"]
         ]
 
+        rules = self.__deserialize_rules(serialized_exercise["rules"])
+
         return Exercise(
             id=serialized_exercise["id"],
             name=serialized_exercise["name"],
             poses=loaded_poses,
+            rules=rules,
         )
+
+    def __deserialize_rules(self, serialized_rules: list[SerializedRule]) -> list[Rule]:
+        rules = []
+
+        for rule in serialized_rules:
+            rules.append(
+                Rule(
+                    pose_name=rule["pose_name"],
+                    feature=Angle[rule["feature"]],
+                    operator=rule["operator"],
+                    value=rule["value"],
+                    message=rule["message"],
+                )
+            )
+
+        return rules
