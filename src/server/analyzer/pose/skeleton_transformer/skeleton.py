@@ -60,7 +60,7 @@ class Landmark(Enum):
     RIGHT_FOOT_INDEX = 32
 
     @property
-    def index(self):
+    def index(self) -> int:
         return self.value
 
 
@@ -79,13 +79,13 @@ class Angle(Enum):
     RIGHT_KNEE = (Landmark.RIGHT_HIP, Landmark.RIGHT_KNEE, Landmark.RIGHT_ANKLE)
 
     @property
-    def vertex(self):
+    def vertex(self) -> Landmark:
         return self.value[1]
 
     @property
-    def side_a(self):
+    def side_a(self) -> Landmark:
         return self.value[0]
 
     @property
-    def side_b(self):
+    def side_b(self) -> Landmark:
         return self.value[2]

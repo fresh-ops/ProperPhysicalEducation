@@ -1,7 +1,14 @@
 import json
 from pathlib import Path
+from typing import TypedDict, cast
 from loader.pose_loader import PoseLoader
 from model.exercise import Exercise
+
+
+class SerializedExercise(TypedDict):
+    id: int
+    name: str
+    poses: list[int]
 
 
 class ExerciseLoader:
@@ -41,7 +48,7 @@ class ExerciseLoader:
         for json_file in self.directory.glob("*.json"):
             try:
                 with open(json_file, 'r', encoding='utf-8') as f:
-                    serialized_exercise = json.load(f)
+                    serialized_exercise = cast(SerializedExercise, json.load(f))
                     if serialized_exercise["id"] == exercise_id:
                         return self.__deserialize_exercise(serialized_exercise)
                     
@@ -54,7 +61,7 @@ class ExerciseLoader:
         raise ValueError(f"Exercise with id {exercise_id} not found in directory '{self.directory}'")
     
 
-    def __deserialize_exercise(self, serialized_exercise: dict) -> Exercise:
+    def __deserialize_exercise(self, serialized_exercise: SerializedExercise) -> Exercise:
         """
         Десериализует упражнение из словаря, загруженного из JSON.
 

@@ -29,7 +29,7 @@ test_data = [
 ]
 
 @pytest.mark.parametrize("exercise, pose_sequence, expected_results", test_data)
-def test_analyze(exercise: Exercise, pose_sequence: list[Pose], expected_results: list[int]):
+def test_analyze(exercise: Exercise, pose_sequence: list[Pose], expected_results: list[int]) -> None:
     analyzer = ExerciseAnalyzer(exercise=exercise)
 
     for pose, expected in zip(pose_sequence, expected_results):
