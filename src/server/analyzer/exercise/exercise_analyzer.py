@@ -1,20 +1,20 @@
-from analyzer.pose.pose_matcher import PoseMatcher
+from analyzer.pose.pose_matcher.pose_matcher import PoseMatcher
 from model.pose import Pose
 from model.exercise import Exercise
 
 
 class ExerciseAnalyzer:
-    def __init__(self, exercise: Exercise):
+    def __init__(self, exercise: Exercise, pose_matcher: PoseMatcher):
         self.poses = exercise.poses
         self.current_pose_index = 0
-        self.pose_detector = PoseMatcher(self.poses)
+        self.pose_detector = pose_matcher
 
     def analyze(self, current_pose: Pose) -> int:
         current_reference_pose: Pose = self.poses[self.current_pose_index]
         next_pose_index: int = (self.current_pose_index + 1) % len(self.poses)
 
         match_result = self.pose_detector.match(current_pose)
-        closest_reference_pose = match_result.reference_pose
+        closest_reference_pose = match_result.pose
         if closest_reference_pose.id == current_reference_pose.id:
             if current_pose == current_reference_pose:
                 self.current_pose_index = next_pose_index
