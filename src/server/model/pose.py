@@ -1,20 +1,22 @@
 from typing import NamedTuple, Tuple
 
+
 class Pose(NamedTuple):
     """
-        Класс эталлонной позы. Содержит в себе информацию об эталонных углах в конечностях для конкретной позы, а также допустимое отклонение.
+    Класс эталлонной позы. Содержит в себе информацию об эталонных углах в конечностях для конкретной позы, а также допустимое отклонение.
 
-        Fields:
-            id (int): идентификатор позы
-            name (str): имя позы
-            threshold (float): допустимое отклонение
-            left_shoulder_angle (float): угол в левом плече
-            right_shoulder_angle (float): угол в правом плече
-            left_elbow_angle (float): угол в левом локте
-            right_elbow_angle (float): угол в правом локте
-            left_knee_angle (float): угол в левом колене
-            right_knee_angle (float): угол в правом колене
+    Fields:
+        id (int): идентификатор позы
+        name (str): имя позы
+        threshold (float): допустимое отклонение
+        left_shoulder_angle (float): угол в левом плече
+        right_shoulder_angle (float): угол в правом плече
+        left_elbow_angle (float): угол в левом локте
+        right_elbow_angle (float): угол в правом локте
+        left_knee_angle (float): угол в левом колене
+        right_knee_angle (float): угол в правом колене
     """
+
     id: int
     name: str
     threshold: float
@@ -26,13 +28,12 @@ class Pose(NamedTuple):
     left_knee_angle: float
     right_knee_angle: float
 
-
     def get_angles_list(self) -> list[float]:
         """
-            Возвращает кортеж углов в конечностях
+        Возвращает кортеж углов в конечностях
 
-            Returns:
-                List[float]: список позиционных углов в конечностях
+        Returns:
+            List[float]: список позиционных углов в конечностях
         """
         return [
             self.left_shoulder_angle,
@@ -42,7 +43,6 @@ class Pose(NamedTuple):
             self.left_knee_angle,
             self.right_knee_angle,
         ]
-    
 
     def get_angle_ranges(self) -> dict[str, Tuple[float, float]]:
         """
@@ -54,26 +54,22 @@ class Pose(NamedTuple):
         ranges = {}
 
         for name, angle in self.angles.items():
-          
-            ranges[name] = (
-                angle - self.threshold,
-                angle + self.threshold
-            )
+            ranges[name] = (angle - self.threshold, angle + self.threshold)
 
         return ranges
-
 
     def __eq__(self, other: object) -> bool:
         if not isinstance(other, Pose):
             return False
 
         threshold = self.threshold + other.threshold
-        for first_angle, second_angle in zip(self.get_angles_list(), other.get_angles_list()):
+        for first_angle, second_angle in zip(
+            self.get_angles_list(), other.get_angles_list()
+        ):
             if abs(first_angle - second_angle) > threshold:
                 return False
 
         return True
-    
 
     @property
     def angles(self) -> dict[str, float]:
@@ -83,6 +79,5 @@ class Pose(NamedTuple):
             "left_elbow_angle": self.left_elbow_angle,
             "right_elbow_angle": self.right_elbow_angle,
             "left_knee_angle": self.left_knee_angle,
-            "right_knee_angle": self.right_knee_angle
+            "right_knee_angle": self.right_knee_angle,
         }
-

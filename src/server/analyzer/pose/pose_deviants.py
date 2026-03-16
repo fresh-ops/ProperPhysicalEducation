@@ -2,7 +2,9 @@ from model.pose import Pose
 from analyzer.pose.skeleton_transformer.skeleton import Angle
 
 
-def calculate_deviations(current_pose: Pose, reference_pose: Pose) -> dict[Angle, float]:
+def calculate_deviations(
+    current_pose: Pose, reference_pose: Pose
+) -> dict[Angle, float]:
     """
     Вычисляет отклонения между текущей позой и эталонной позой.
     Args:

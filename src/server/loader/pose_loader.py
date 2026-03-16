@@ -8,8 +8,7 @@ class PoseLoader:
     Загрузчик поз из JSON файлов
     """
 
-
-    def __init__(self, directory_path: str = '.'):
+    def __init__(self, directory_path: str = "."):
         """
         Инициализирует загрузчик поз.
 
@@ -22,7 +21,6 @@ class PoseLoader:
         self.directory = Path(directory_path)
         if not self.directory.is_dir():
             raise ValueError(f"'{directory_path}' is not a valid directory.")
-
 
     def load_pose(self, pose_id: int) -> Pose:
         """
@@ -37,7 +35,7 @@ class PoseLoader:
 
         for json_file in self.directory.glob("*.json"):
             try:
-                with open(json_file, 'r', encoding='utf-8') as f:
+                with open(json_file, "r", encoding="utf-8") as f:
                     serialized_pose = json.load(f)
                     if serialized_pose["id"] == pose_id:
                         return Pose(**serialized_pose)
@@ -49,4 +47,6 @@ class PoseLoader:
             except Exception as e:
                 print(f"Error reading {json_file}: {e}")
 
-        raise ValueError(f"Pose with id {pose_id} not found in directory '{self.directory}'")
+        raise ValueError(
+            f"Pose with id {pose_id} not found in directory '{self.directory}'"
+        )

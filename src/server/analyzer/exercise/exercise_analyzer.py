@@ -9,7 +9,6 @@ class ExerciseAnalyzer:
         self.current_pose_index = 0
         self.pose_detector = PoseMatcher(self.poses)
 
-    
     def analyze(self, current_pose: Pose) -> int:
         current_reference_pose: Pose = self.poses[self.current_pose_index]
         next_pose_index: int = (self.current_pose_index + 1) % len(self.poses)
