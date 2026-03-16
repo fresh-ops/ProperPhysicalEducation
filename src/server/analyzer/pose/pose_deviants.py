@@ -1,26 +1,21 @@
-from typing import Dict, List
 from model.pose import Pose
+from analyzer.pose.skeleton_transformer.skeleton import Angle
 
 
-def calculate_deviations(current_pose: Pose, reference_poses: List[Pose]) -> Dict[Pose, List[float]]:
+def calculate_deviations(current_pose: Pose, reference_pose: Pose) -> dict[Angle, float]:
     """
-    Вычисляет отклонения между текущей позой и эталонными позами.
-    
+    Вычисляет отклонения между текущей позой и эталонной позой.
+    Args:
+        current_pose (Pose): текущая поза
+        reference_pose (Pose): эталонная поза
     Returns:
-        Dict[Pose, List[float]]: словарь, где ключ - эталонная поза,
-                                значение - массив отклонений по каждому углу
-                                [left_shoulder, right_shoulder, left_elbow, 
-                                 right_elbow, left_knee, right_knee]
+        Dict[Angle, float]: словарь, где ключ - угол, значение - отклонение
     """
-    deviations = {}
-    
-    for reference_pose in reference_poses:
-        current_angles = current_pose.get_angles_list()
-        reference_angles = reference_pose.get_angles_list()
-        
-        deviations[reference_pose] = [
-            abs(curr_angle - ref_angle)
-            for curr_angle, ref_angle in zip(current_angles, reference_angles)
-        ]
-    
-    return deviations
+    return {
+        angle: abs(current_angle - reference_angle)
+        for angle, current_angle, reference_angle in zip(
+            Angle,
+            current_pose.get_angles_list(),
+            reference_pose.get_angles_list(),
+        )
+    }
