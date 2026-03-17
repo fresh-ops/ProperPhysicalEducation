@@ -1,3 +1,3 @@
-from . import capturing, ports
+from . import cameras, capturing, ports
 
-__all__ = ["capturing", "ports"]
+__all__ = ["cameras", "capturing", "ports"]
