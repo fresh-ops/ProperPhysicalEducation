@@ -1,16 +1,18 @@
+from collections.abc import Callable
 from typing import Protocol
 
-from ppe_client.application.cameras import Frame
+from ..cameras.frame import Frame
 
 
 class CameraSession(Protocol):
-    def start(self) -> None:
-        """Start capturing."""
+    def attach(self, callback: Callable[[Frame], None]) -> None:
+        """Attach the callback to the frame reading."""
         ...
 
-    def stop(self) -> None:
-        """Stop capturing."""
+    def detach(self, callback: Callable[[Frame], None]) -> None:
+        """Dettach the callback from the frame reading."""
         ...
 
-    def read(self) -> Frame | None:
-        """Read a frame from the camera."""
+    def terminate(self) -> bool:
+        """Terminate this session."""
+        ...

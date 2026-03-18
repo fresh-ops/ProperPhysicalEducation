@@ -1,7 +1,9 @@
 from typing import Protocol
 
-from ppe_client.application.ports import CameraSession, CameraSessionFactory
 from ppe_client.domain import CameraDescriptor
+
+from .camera_session import CameraSession
+from .camera_session_factory import CameraSessionFactory
 
 
 class CameraSessionStorage(Protocol):

@@ -13,5 +13,6 @@ class Frame:
     """DTO that transfers raw data from camera."""
 
     raw: bytes
+    shape: tuple[int, int, int]
     timestamp_ms: int
     origin: FrameOrigin
