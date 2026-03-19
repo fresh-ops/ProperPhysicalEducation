@@ -1,3 +1,5 @@
+from functools import partial
+
 from PySide6 import QtCore
 
 from ppe_client.application.ports import CameraSession
@@ -50,8 +52,8 @@ class SessionTerminator(QtCore.QObject):
                     self._qobject_refs.append(session)
                     session.setParent(self)
                     session.destroyed.connect(
-                        lambda: self._qobject_refs.remove(session)
-                        )
+                        partial(self._qobject_refs.remove, session)
+                    )
                     session.deleteLater()
                 self._sessions_to_terminate.remove(session)
         finally:
