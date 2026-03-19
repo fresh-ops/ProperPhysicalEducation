@@ -1,6 +1,6 @@
 from PySide6 import QtCore, QtWidgets
 
-from ppe_client.application.ports import CameraGateway
+from ppe_client.application.ports import CameraEnumerator
 from ppe_client.domain import CameraDescriptor
 
 from .select_camera_view_model import SelectCameraViewModel
@@ -17,20 +17,20 @@ class SelectCameraDialog(QtWidgets.QDialog):
 
     def __init__(
         self,
-        camera_gateway: CameraGateway,
+        enumerator: CameraEnumerator,
         parent: QtWidgets.QWidget | None = None,
     ) -> None:
         """Initialize dialog widgets and connect them to the view model.
 
         Args:
-            camera_gateway (CameraGateway): Port for retrieving camera data.
+            enumerator (CameraEnumerator): Port for retrieving camera data.
             parent (QtWidgets.QWidget | None): Optional parent widget for Qt ownership
                 and modality.
         """
         super().__init__(parent)
         self.setWindowTitle("Select Camera")
 
-        self._vm = SelectCameraViewModel(camera_gateway)
+        self._vm = SelectCameraViewModel(enumerator)
         self._vm.available_cameras_updated.connect(self._on_available_cameras_updated)
 
         layout = QtWidgets.QVBoxLayout()

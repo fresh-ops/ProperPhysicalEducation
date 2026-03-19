@@ -39,6 +39,3 @@ class CamerasViewModel(QtCore.QObject):
 
     def get_cameras(self) -> list[CameraDescriptor]:
         return list(self._cameras_by_key.values())
-
-    def camera_key(self, camera_info: CameraDescriptor) -> CameraIdentity:
-        return camera_info.identity

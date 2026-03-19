@@ -2,8 +2,8 @@ from typing import override
 
 from PySide6 import QtCore, QtWidgets
 
-from ppe_client.application.capturing import PoseCaptureOrchestrator
-from ppe_client.application.ports import CameraGateway
+from ppe_client.application.cameras import CameraSessionService
+from ppe_client.application.ports import CameraEnumerator
 from ppe_client.domain import CameraDescriptor, CameraIdentity
 from ppe_client.presentation.dialogs.select_camera_dialog import SelectCameraDialog
 from ppe_client.presentation.routing import Screen
@@ -15,21 +15,21 @@ from .cameras_view_model import CamerasViewModel
 
 class CamerasScreen(Screen[CamerasPayload]):
     _vm: CamerasViewModel
-    _camera_gateway: CameraGateway
-    _capture_orchestrator: PoseCaptureOrchestrator
+    _camera_enumerator: CameraEnumerator
+    _session_service: CameraSessionService
 
     def __init__(
         self,
-        camera_gateway: CameraGateway,
-        capture_orchestrator: PoseCaptureOrchestrator,
+        camera_enumerator: CameraEnumerator,
+        session_service: CameraSessionService,
     ) -> None:
         super().__init__()
 
         self._vm = CamerasViewModel()
         self._vm.cameras_changed.connect(self._on_cameras_changed)
 
-        self._camera_gateway = camera_gateway
-        self._capture_orchestrator = capture_orchestrator
+        self._camera_enumerator = camera_enumerator
+        self._session_service = session_service
 
         self._grid_columns = 2
         self._previews_by_camera: dict[CameraIdentity, CameraCaptureView] = {}
@@ -79,7 +79,7 @@ class CamerasScreen(Screen[CamerasPayload]):
 
     @QtCore.Slot()
     def _on_button_clicked(self) -> None:
-        dialog = SelectCameraDialog(self._camera_gateway, parent=self)
+        dialog = SelectCameraDialog(self._camera_enumerator, parent=self)
         result = dialog.exec()
 
         if result == QtWidgets.QDialog.DialogCode.Accepted:
@@ -94,7 +94,7 @@ class CamerasScreen(Screen[CamerasPayload]):
 
     @QtCore.Slot(list)
     def _on_cameras_changed(self, cameras: list[CameraDescriptor]) -> None:
-        keyed = [(self._vm.camera_key(c), c) for c in cameras]
+        keyed = [(c.identity, c) for c in cameras]
         active_keys = {key for key, _ in keyed}
 
         for key in list(self._previews_by_camera):
@@ -112,8 +112,8 @@ class CamerasScreen(Screen[CamerasPayload]):
 
     def _create_preview(self, camera_info: CameraDescriptor) -> CameraCaptureView:
         preview = CameraCaptureView(
-            capture_orchestrator=self._capture_orchestrator,
-            camera_info=camera_info,
+            session=self._session_service,
+            camera=camera_info,
             parent=self,
         )
         preview.setMinimumHeight(240)
@@ -138,7 +138,7 @@ class CamerasScreen(Screen[CamerasPayload]):
                 widget.setParent(None)
 
         for index, camera in enumerate(cameras):
-            key = self._vm.camera_key(camera)
+            key = camera.identity
             preview = self._previews_by_camera[key]
             row, col = divmod(index, self._grid_columns)
             self._grid.addWidget(preview, row, col)

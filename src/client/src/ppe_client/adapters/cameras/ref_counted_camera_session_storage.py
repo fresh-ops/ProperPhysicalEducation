@@ -36,9 +36,9 @@ class RefCountedCameraSessionStorage:
             if entry is None:
                 session = session_factory.create_for(camera)
                 entry = _SessionConnectionCounter(session, 0)
+                self._sessions[key] = entry
 
             entry.connections += 1
-            print(f"Everything is OK: {entry}")
             return entry.session
         finally:
             self._lock.unlock()

@@ -24,12 +24,10 @@ class OpenCVCameraSession(QtCore.QObject):
         self._start(camera)
 
     def attach(self, callback: Callable[[Frame], None]) -> None:
-        print("Attach")
         if callback not in self._callbacks:
             self._callbacks.append(callback)
 
     def detach(self, callback: Callable[[Frame], None]) -> None:
-        print("Detach")
         try:
             self._callbacks.remove(callback)
         except ValueError:

@@ -1,6 +1,6 @@
 from PySide6 import QtCore
 
-from ppe_client.application.ports import CameraGateway
+from ppe_client.application.ports import CameraEnumerator
 from ppe_client.domain import CameraDescriptor
 
 
@@ -16,23 +16,23 @@ class SelectCameraViewModel(QtCore.QObject):
 
     _selected_camera_index: int = 0
     _cameras_list: list[CameraDescriptor]
-    _camera_gateway: CameraGateway
+    _camera_enumerator: CameraEnumerator
 
     def __init__(
         self,
-        camera_gateway: CameraGateway,
+        camera_enumerator: CameraEnumerator,
         parent: QtCore.QObject | None = None,
     ) -> None:
         """Initialize view model state and optionally set parent for Qt ownership.
 
         Args:
-            camera_gateway (CameraGateway): Port for retrieving camera data.
+            camera_enumerator (CameraEnumerator): Port for retrieving camera data.
             parent (QtCore.QObject | None): Optional parent QObject for ownership and
                 signal propagation.
         """
         super().__init__(parent)
         self._cameras_list = []
-        self._camera_gateway = camera_gateway
+        self._camera_enumerator = camera_enumerator
 
     def update_available_cameras(self) -> None:
         """Refresh available camera names and notify observers.
@@ -41,7 +41,7 @@ class SelectCameraViewModel(QtCore.QObject):
             Current implementation uses mock values and should later be
             replaced with real camera discovery.
         """
-        self._cameras_list = self._camera_gateway.get_cameras()
+        self._cameras_list = self._camera_enumerator.get_cameras()
         names = [camera.name for camera in self._cameras_list]
         self.available_cameras_updated.emit(names)
 

@@ -2,9 +2,15 @@ from typing import override
 
 from PySide6 import QtGui, QtWidgets
 
-from ppe_client.adapters.cameras import CameraService
-from ppe_client.adapters.ml import create_video_pose_landmarker
-from ppe_client.application.capturing import PoseCaptureOrchestrator
+from ppe_client.adapters.cameras import (
+    RefCountedCameraSessionStorage,
+    SessionTerminator,
+)
+from ppe_client.adapters.cameras.open_cv import (
+    OpenCVCameraEnumerator,
+    OpenCVCameraSessionFactory,
+)
+from ppe_client.application.cameras import CameraSessionService
 
 from .routing import Route
 from .routing.router import Router
@@ -37,8 +43,8 @@ class MainWindow(QtWidgets.QMainWindow):
                 Route.HOME: (MyScreen, MyScreenPayload),
                 Route.CAMERAS: (
                     lambda **kwargs: CamerasScreen(
-                        camera_gateway=self._camera_service,
-                        capture_orchestrator=self._pose_capture_orchestrator,
+                        camera_enumerator=self._camera_enumerator,
+                        session_service=self._camera_session_service,
                         **kwargs,
                     ),
                     CamerasPayload,
@@ -50,15 +56,14 @@ class MainWindow(QtWidgets.QMainWindow):
         self._router.navigate_to(Route.CAMERAS, CamerasPayload())
 
     def _setup_services(self) -> None:
-        self._camera_service = CameraService()
-        self._pose_capture_orchestrator = PoseCaptureOrchestrator(
-            camera_service=self._camera_service,
-            pose_landmarker_factory=create_video_pose_landmarker,
-            parent=self,
+        self._camera_enumerator = OpenCVCameraEnumerator()
+        self._session_terminator = SessionTerminator()
+        self._camera_session_service = CameraSessionService(
+            RefCountedCameraSessionStorage(self._session_terminator),
+            OpenCVCameraSessionFactory(),
         )
 
     @override
     def closeEvent(self, event: QtGui.QCloseEvent) -> None:
         """Stop all capture sessions before window closes."""
-        self._pose_capture_orchestrator.shutdown()
         super().closeEvent(event)

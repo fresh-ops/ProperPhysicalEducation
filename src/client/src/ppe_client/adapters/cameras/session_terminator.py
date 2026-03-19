@@ -5,12 +5,14 @@ from ppe_client.application.ports import CameraSession
 
 class SessionTerminator(QtCore.QObject):
     _sessions_to_terminate: list[CameraSession]
+    _qobject_refs: list[QtCore.QObject | CameraSession]
     _lock: QtCore.QMutex
     _timer: QtCore.QTimer
 
     def __init__(self, interval_ms: int = 1000) -> None:
         super().__init__()
         self._sessions_to_terminate: list[CameraSession] = []
+        self._qobject_refs = []
         self._lock = QtCore.QMutex()
 
         self._timer = QtCore.QTimer(self)
@@ -43,8 +45,14 @@ class SessionTerminator(QtCore.QObject):
 
         self._lock.lock()
         try:
-            self._sessions_to_terminate = [
-                s for s in self._sessions_to_terminate if s not in terminated
-            ]
+            for session in terminated:
+                if isinstance(session, QtCore.QObject):
+                    self._qobject_refs.append(session)
+                    session.setParent(self)
+                    session.destroyed.connect(
+                        lambda: self._qobject_refs.remove(session)
+                        )
+                    session.deleteLater()
+                self._sessions_to_terminate.remove(session)
         finally:
             self._lock.unlock()

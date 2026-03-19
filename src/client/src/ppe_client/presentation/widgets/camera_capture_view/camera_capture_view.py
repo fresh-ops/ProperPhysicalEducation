@@ -2,7 +2,7 @@ from typing import override
 
 from PySide6 import QtCore, QtGui, QtWidgets
 
-from ppe_client.application.capturing import PoseCaptureOrchestrator
+from ppe_client.application.cameras import CameraSessionService
 from ppe_client.domain import CameraDescriptor
 
 from .camera_capture_view_model import CameraCaptureViewModel
@@ -19,16 +19,16 @@ class CameraCaptureView(QtWidgets.QWidget):
 
     def __init__(
         self,
-        capture_orchestrator: PoseCaptureOrchestrator,
-        camera_info: CameraDescriptor | None = None,
+        session: CameraSessionService,
+        camera: CameraDescriptor | None = None,
         parent: QtWidgets.QWidget | None = None,
     ) -> None:
         """Initialize preview UI and bind it to the camera capture view model.
 
         Args:
-            capture_orchestrator (PoseCaptureOrchestrator): Shared coordinator
-                for camera capture sessions lifecycle.
-            camera_info (CameraDescriptor | None): Optional camera used as initial
+            camera_service (CameraSessionService): Shared coordinator for camera
+                capture sessions lifecycle.
+            camera (CameraDescriptor | None): Optional camera used as initial
                 capture source. If not provided, the first available camera is used.
             parent (QtWidgets.QWidget | None): Optional parent widget for Qt
                 ownership.
@@ -36,8 +36,8 @@ class CameraCaptureView(QtWidgets.QWidget):
         super().__init__(parent)
 
         self._vm = CameraCaptureViewModel(
-            capture_orchestrator=capture_orchestrator,
-            camera_info=camera_info,
+            session_service=session,
+            camera=camera,
             parent=self,
         )
         self._vm.frame_ready.connect(self._on_frame_ready)
@@ -51,14 +51,13 @@ class CameraCaptureView(QtWidgets.QWidget):
         layout.addWidget(self._preview_label)
         self.setLayout(layout)
 
-    @QtCore.Slot(QtGui.QImage)
-    def _on_frame_ready(self, qimg: QtGui.QImage) -> None:
+    @QtCore.Slot(QtGui.QPixmap)
+    def _on_frame_ready(self, pixmap: QtGui.QPixmap) -> None:
         """Render the latest frame received from the view model.
 
         Args:
-            qimg (QtGui.QImage): Frame image prepared by camera worker.
+            pixmap (QtGui.QPixmap): Frame image from the camera.
         """
-        pixmap = QtGui.QPixmap.fromImage(qimg)
         self._preview_label.setPixmap(pixmap)
 
     @override
@@ -79,11 +78,11 @@ class CameraCaptureView(QtWidgets.QWidget):
         """Ensure camera capture is stopped for this preview."""
         self._vm.stop_capture()
 
-    def update_camera_info(self, camera_info: CameraDescriptor) -> None:
+    def update_camera(self, camera: CameraDescriptor) -> None:
         """Switch preview to another camera.
 
         Args:
-            camera_info (CameraDescriptor): Camera metadata for the new capture source.
+            camera (CameraDescriptor): Camera metadata for the new capture source.
         """
-        self._vm.update_camera_info(camera_info)
+        self._vm.update_camera(camera)
         self._preview_label.setText("Select a camera to start capturing")
