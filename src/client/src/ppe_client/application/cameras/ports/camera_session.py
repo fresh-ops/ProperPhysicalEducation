@@ -1,7 +1,7 @@
 from collections.abc import Callable
 from typing import Protocol
 
-from ..cameras.frame import Frame
+from ..frame import Frame
 
 
 class CameraSession(Protocol):

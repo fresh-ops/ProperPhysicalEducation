@@ -1,9 +1,10 @@
-from ppe_client.application.ports import (
+from ppe_client.domain import CameraDescriptor
+
+from .ports import (
     CameraSession,
     CameraSessionFactory,
     CameraSessionStorage,
 )
-from ppe_client.domain import CameraDescriptor
 
 
 class CameraSessionService:

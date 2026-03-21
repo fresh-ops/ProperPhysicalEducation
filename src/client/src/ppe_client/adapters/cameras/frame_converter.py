@@ -1,3 +1,4 @@
+import numpy as np
 from PySide6 import QtGui
 
 from ppe_client.application.cameras import Frame
@@ -16,3 +17,7 @@ class FrameConverter:
         )
 
         return QtGui.QPixmap.fromImage(image)
+
+    @classmethod
+    def to_ndarray(cls, frame: Frame) -> np.ndarray:
+        return np.frombuffer(frame.raw, np.uint8).reshape(frame.shape)

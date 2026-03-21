@@ -1,6 +1,6 @@
 from PySide6 import QtCore, QtWidgets
 
-from ppe_client.application.ports import CameraEnumerator
+from ppe_client.application.cameras.ports import CameraEnumerator
 from ppe_client.domain import CameraDescriptor
 
 from .select_camera_view_model import SelectCameraViewModel

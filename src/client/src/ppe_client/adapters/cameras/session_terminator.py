@@ -2,7 +2,7 @@ from functools import partial
 
 from PySide6 import QtCore
 
-from ppe_client.application.ports import CameraSession
+from ppe_client.application.cameras.ports import CameraSession
 
 
 class SessionTerminator(QtCore.QObject):

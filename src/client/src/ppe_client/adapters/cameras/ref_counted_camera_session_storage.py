@@ -2,7 +2,7 @@ from dataclasses import dataclass
 
 from PySide6 import QtCore
 
-from ppe_client.application.ports import CameraSession, CameraSessionFactory
+from ppe_client.application.cameras.ports import CameraSession, CameraSessionFactory
 from ppe_client.domain import CameraDescriptor, CameraIdentity
 
 from .session_terminator import SessionTerminator

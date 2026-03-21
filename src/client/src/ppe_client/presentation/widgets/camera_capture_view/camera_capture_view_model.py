@@ -2,7 +2,7 @@ from PySide6 import QtCore, QtGui
 
 from ppe_client.adapters.cameras import FrameConverter
 from ppe_client.application.cameras import CameraSessionService, Frame
-from ppe_client.application.ports import CameraSession
+from ppe_client.application.cameras.ports import CameraSession
 from ppe_client.domain import CameraDescriptor
 
 

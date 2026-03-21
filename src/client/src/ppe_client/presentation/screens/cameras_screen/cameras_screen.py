@@ -3,7 +3,7 @@ from typing import override
 from PySide6 import QtCore, QtWidgets
 
 from ppe_client.application.cameras import CameraSessionService
-from ppe_client.application.ports import CameraEnumerator
+from ppe_client.application.cameras.ports import CameraEnumerator
 from ppe_client.domain import CameraDescriptor, CameraIdentity
 from ppe_client.presentation.dialogs.select_camera_dialog import SelectCameraDialog
 from ppe_client.presentation.routing import Screen
