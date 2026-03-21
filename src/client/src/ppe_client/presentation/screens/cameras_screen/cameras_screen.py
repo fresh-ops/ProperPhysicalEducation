@@ -4,6 +4,7 @@ from PySide6 import QtCore, QtWidgets
 
 from ppe_client.application.cameras import CameraSessionService
 from ppe_client.application.cameras.ports import CameraEnumerator
+from ppe_client.application.poses import PoseService
 from ppe_client.domain import CameraDescriptor, CameraIdentity
 from ppe_client.presentation.dialogs.select_camera_dialog import SelectCameraDialog
 from ppe_client.presentation.routing import Screen
@@ -17,11 +18,13 @@ class CamerasScreen(Screen[CamerasPayload]):
     _vm: CamerasViewModel
     _camera_enumerator: CameraEnumerator
     _session_service: CameraSessionService
+    _pose_service: PoseService
 
     def __init__(
         self,
         camera_enumerator: CameraEnumerator,
         session_service: CameraSessionService,
+        pose_service: PoseService,
     ) -> None:
         super().__init__()
 
@@ -30,6 +33,7 @@ class CamerasScreen(Screen[CamerasPayload]):
 
         self._camera_enumerator = camera_enumerator
         self._session_service = session_service
+        self._pose_service = pose_service
 
         self._grid_columns = 2
         self._previews_by_camera: dict[CameraIdentity, CameraCaptureView] = {}
@@ -113,6 +117,7 @@ class CamerasScreen(Screen[CamerasPayload]):
     def _create_preview(self, camera_info: CameraDescriptor) -> CameraCaptureView:
         preview = CameraCaptureView(
             session=self._session_service,
+            pose_service=self._pose_service,
             camera=camera_info,
             parent=self,
         )

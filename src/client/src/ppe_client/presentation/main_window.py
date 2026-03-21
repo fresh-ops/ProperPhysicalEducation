@@ -10,7 +10,9 @@ from ppe_client.adapters.cameras.open_cv import (
     OpenCVCameraEnumerator,
     OpenCVCameraSessionFactory,
 )
+from ppe_client.adapters.poses import DummyReciever, MediaPipePoseDetectorFactory
 from ppe_client.application.cameras import CameraSessionService
+from ppe_client.application.poses import PoseService
 
 from .routing import Route
 from .routing.router import Router
@@ -44,6 +46,7 @@ class MainWindow(QtWidgets.QMainWindow):
                 Route.CAMERAS: (
                     lambda **kwargs: CamerasScreen(
                         camera_enumerator=self._camera_enumerator,
+                        pose_service=self._pose_service,
                         session_service=self._camera_session_service,
                         **kwargs,
                     ),
@@ -62,6 +65,8 @@ class MainWindow(QtWidgets.QMainWindow):
             RefCountedCameraSessionStorage(self._session_terminator),
             OpenCVCameraSessionFactory(),
         )
+        self._detector_factory = MediaPipePoseDetectorFactory()
+        self._pose_service = PoseService(self._detector_factory, DummyReciever())
 
     @override
     def closeEvent(self, event: QtGui.QCloseEvent) -> None:

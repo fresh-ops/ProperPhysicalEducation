@@ -1,8 +1,10 @@
 from PySide6 import QtCore, QtGui
 
 from ppe_client.adapters.cameras import FrameConverter
+from ppe_client.adapters.poses import LandmarksDrawer
 from ppe_client.application.cameras import CameraSessionService, Frame
 from ppe_client.application.cameras.ports import CameraSession
+from ppe_client.application.poses import PoseService
 from ppe_client.domain import CameraDescriptor
 
 
@@ -17,12 +19,14 @@ class CameraCaptureViewModel(QtCore.QObject):
     frame_ready = QtCore.Signal(QtGui.QPixmap)
 
     _session_service: CameraSessionService
+    _pose_service: PoseService
     _camera: CameraDescriptor | None
     _session: CameraSession | None
 
     def __init__(
         self,
         session_service: CameraSessionService,
+        pose_service: PoseService,
         camera: CameraDescriptor | None = None,
         parent: QtCore.QObject | None = None,
     ) -> None:
@@ -37,6 +41,7 @@ class CameraCaptureViewModel(QtCore.QObject):
         """
         super().__init__(parent)
         self._session_service = session_service
+        self._pose_service = pose_service
         self._camera = camera
         self._session = None
 
@@ -76,6 +81,11 @@ class CameraCaptureViewModel(QtCore.QObject):
 
     @QtCore.Slot(object)
     def _draw_frame(self, frame: Frame) -> None:
+        if self._camera is None:
+            return
+        pose = self._pose_service.detect(self._camera, frame)
+        if pose is not None:
+            frame = LandmarksDrawer().draw(pose, frame)
         pixmap = FrameConverter.to_pixel_map(frame)
 
         self.frame_ready.emit(pixmap)

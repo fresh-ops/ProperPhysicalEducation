@@ -3,6 +3,7 @@ from typing import override
 from PySide6 import QtCore, QtGui, QtWidgets
 
 from ppe_client.application.cameras import CameraSessionService
+from ppe_client.application.poses import PoseService
 from ppe_client.domain import CameraDescriptor
 
 from .camera_capture_view_model import CameraCaptureViewModel
@@ -20,6 +21,7 @@ class CameraCaptureView(QtWidgets.QWidget):
     def __init__(
         self,
         session: CameraSessionService,
+        pose_service: PoseService,
         camera: CameraDescriptor | None = None,
         parent: QtWidgets.QWidget | None = None,
     ) -> None:
@@ -37,6 +39,7 @@ class CameraCaptureView(QtWidgets.QWidget):
 
         self._vm = CameraCaptureViewModel(
             session_service=session,
+            pose_service=pose_service,
             camera=camera,
             parent=self,
         )
