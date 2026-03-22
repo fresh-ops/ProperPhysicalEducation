@@ -2,6 +2,7 @@ from typing import override
 
 from PySide6 import QtCore, QtWidgets
 
+from ppe_client.adapters.network import ExerciseSession
 from ppe_client.application.cameras import CameraSessionService
 from ppe_client.application.cameras.ports import CameraEnumerator
 from ppe_client.application.poses import PoseService
@@ -25,10 +26,11 @@ class CamerasScreen(Screen[CamerasPayload]):
         camera_enumerator: CameraEnumerator,
         session_service: CameraSessionService,
         pose_service: PoseService,
+        exercise_session: ExerciseSession,
     ) -> None:
         super().__init__()
 
-        self._vm = CamerasViewModel()
+        self._vm = CamerasViewModel(exercise_session)
         self._vm.cameras_changed.connect(self._on_cameras_changed)
 
         self._camera_enumerator = camera_enumerator
@@ -78,6 +80,7 @@ class CamerasScreen(Screen[CamerasPayload]):
 
     @override
     def on_leave(self) -> None:
+        self._vm.stop()
         for preview in self._previews_by_camera.values():
             preview.stop_capture()
 

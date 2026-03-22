@@ -1,6 +1,6 @@
 from typing import override
 
-from PySide6 import QtGui, QtWidgets
+from PySide6 import QtCore, QtGui, QtWidgets
 
 from ppe_client.adapters.cameras import (
     RefCountedCameraSessionStorage,
@@ -10,7 +10,8 @@ from ppe_client.adapters.cameras.open_cv import (
     OpenCVCameraEnumerator,
     OpenCVCameraSessionFactory,
 )
-from ppe_client.adapters.poses import DummyReciever, MediaPipePoseDetectorFactory
+from ppe_client.adapters.network import ExerciseSession
+from ppe_client.adapters.poses import MediaPipePoseDetectorFactory
 from ppe_client.adapters.poses.restoration import PoseRestorer
 from ppe_client.application.cameras import CameraSessionService
 from ppe_client.application.poses import PoseService
@@ -29,8 +30,6 @@ class MainWindow(QtWidgets.QMainWindow):
         super().__init__(parent)
         self.setWindowTitle("PPE")
 
-        self._setup_services()
-
         self._stack_widget = QtWidgets.QStackedWidget()
 
         container = QtWidgets.QWidget()
@@ -39,7 +38,9 @@ class MainWindow(QtWidgets.QMainWindow):
         layout.addWidget(self._stack_widget)
 
         self.setCentralWidget(container)
+        QtCore.QTimer.singleShot(100, self._setup_services)
 
+    def _initialize_routing(self) -> None:
         self._router = Router(
             stacked_widget=self._stack_widget,
             scheme={
@@ -49,6 +50,7 @@ class MainWindow(QtWidgets.QMainWindow):
                         camera_enumerator=self._camera_enumerator,
                         pose_service=self._pose_service,
                         session_service=self._camera_session_service,
+                        exercise_session=self._exercise_session,
                         **kwargs,
                     ),
                     CamerasPayload,
@@ -57,7 +59,7 @@ class MainWindow(QtWidgets.QMainWindow):
             parent=self,
         )
 
-        self._router.navigate_to(Route.CAMERAS, CamerasPayload())
+        self._router.navigate_to(Route.CAMERAS, CamerasPayload(exercise_id=1))
 
     def _setup_services(self) -> None:
         self._camera_enumerator = OpenCVCameraEnumerator()
@@ -67,9 +69,11 @@ class MainWindow(QtWidgets.QMainWindow):
             OpenCVCameraSessionFactory(),
         )
         self._detector_factory = MediaPipePoseDetectorFactory()
+        self._exercise_session = ExerciseSession()
         self._pose_service = PoseService(
-            self._detector_factory, PoseRestorer(DummyReciever(), parent=self)
+            self._detector_factory, PoseRestorer(self._exercise_session, parent=self)
         )
+        self._initialize_routing()
 
     @override
     def closeEvent(self, event: QtGui.QCloseEvent) -> None:

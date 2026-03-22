@@ -54,3 +54,7 @@ class PoseConverter:
         ]
 
         return Pose(landmarks=landmarks, timestamp_ms=timestamp_ms)
+
+    @classmethod
+    def to_list(cls, pose: Pose) -> list[list[float]]:
+        return [[landmark.x, landmark.y, landmark.z] for landmark in pose.landmarks]
