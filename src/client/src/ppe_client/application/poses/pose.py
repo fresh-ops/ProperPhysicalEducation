@@ -3,9 +3,9 @@ from dataclasses import dataclass
 
 @dataclass(frozen=True, slots=True)
 class Landmark:
-    x: float | None = None
-    y: float | None = None
-    z: float | None = None
+    x: float
+    y: float
+    z: float
     visibility: float | None = None
     presence: float | None = None
 

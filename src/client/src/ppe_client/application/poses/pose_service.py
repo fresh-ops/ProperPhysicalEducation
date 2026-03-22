@@ -1,4 +1,4 @@
-from ppe_client.domain import CameraDescriptor
+from ppe_client.domain import CameraDescriptor, CameraIdentity
 
 from ..cameras.frame import Frame
 from ..poses.pose import Pose
@@ -8,19 +8,28 @@ from .ports.pose_reciever import PoseReciever
 
 
 class PoseService:
-    _detector: PoseDetector
+    _detector_factory: PoseDetectorFactory
+    _detectors: dict[CameraIdentity, PoseDetector]
     _reciever: PoseReciever
 
     def __init__(
         self, detector_factory: PoseDetectorFactory, reciever: PoseReciever
     ) -> None:
         self._detector = detector_factory.create()
+        self._detector_factory = detector_factory
+        self._detectors = {}
         self._reciever = reciever
 
     def detect(self, camera: CameraDescriptor, frame: Frame) -> Pose | None:
-        pose = self._detector.detect(frame)
+        detector = self._get_detector_for(camera)
+        pose = detector.detect(frame)
         if pose is None:
             return None
 
-        self._reciever.recieve(camera, pose)
+        self._reciever.recieve(pose, camera)
         return pose
+
+    def _get_detector_for(self, camera: CameraDescriptor) -> PoseDetector:
+        if camera.identity not in self._detectors:
+            self._detectors[camera.identity] = self._detector_factory.create()
+        return self._detectors[camera.identity]

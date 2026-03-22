@@ -3,5 +3,5 @@ from ppe_client.domain import CameraDescriptor
 
 
 class DummyReciever:
-    def recieve(self, camera: CameraDescriptor, pose: Pose) -> None:
+    def recieve(self, pose: Pose, camera: CameraDescriptor | None = None) -> None:
         pass

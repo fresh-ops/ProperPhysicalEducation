@@ -11,6 +11,7 @@ from ppe_client.adapters.cameras.open_cv import (
     OpenCVCameraSessionFactory,
 )
 from ppe_client.adapters.poses import DummyReciever, MediaPipePoseDetectorFactory
+from ppe_client.adapters.poses.restoration import PoseRestorer
 from ppe_client.application.cameras import CameraSessionService
 from ppe_client.application.poses import PoseService
 
@@ -66,7 +67,9 @@ class MainWindow(QtWidgets.QMainWindow):
             OpenCVCameraSessionFactory(),
         )
         self._detector_factory = MediaPipePoseDetectorFactory()
-        self._pose_service = PoseService(self._detector_factory, DummyReciever())
+        self._pose_service = PoseService(
+            self._detector_factory, PoseRestorer(DummyReciever(), parent=self)
+        )
 
     @override
     def closeEvent(self, event: QtGui.QCloseEvent) -> None:
