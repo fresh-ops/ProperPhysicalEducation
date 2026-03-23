@@ -2,6 +2,8 @@ from typing import override
 
 from PySide6 import QtCore, QtWidgets
 
+from ppe_client.adapters.network import ExerciseSession
+
 from ...routing import Route, Screen
 from ..cameras_screen.cameras_payload import CamerasPayload
 from .choose_exercise_payload import ChooseExercisePayload
@@ -9,9 +11,11 @@ from .choose_exercise_view_model import ChooseExerciseViewModel
 
 
 class ChooseExerciseScreen(Screen[ChooseExercisePayload]):
-    def __init__(self, parent: QtWidgets.QWidget | None = None) -> None:
+    def __init__(
+        self, exercise_session: ExerciseSession, parent: QtWidgets.QWidget | None = None
+    ) -> None:
         super().__init__(parent=parent)
-        self._vm = ChooseExerciseViewModel()
+        self._vm = ChooseExerciseViewModel(exercise_session)
         self._vm.exercises_updated.connect(self._on_exercise_options_updated)
 
         self._label = QtWidgets.QLabel("Welcome to PPE")
@@ -19,7 +23,7 @@ class ChooseExerciseScreen(Screen[ChooseExercisePayload]):
         self._label.setStyleSheet("font-size: 24px;font-weight: bold;color: #333;")
 
         self._exercise_options = QtWidgets.QComboBox()
-        self._exercise_options.addItems(["Hello", "World"])
+        self._exercise_options.currentIndexChanged.connect(self._on_exercise_selected)
 
         self._start_exercise_button = QtWidgets.QPushButton("Start")
         self._start_exercise_button.clicked.connect(self._on_start_button_clicked)

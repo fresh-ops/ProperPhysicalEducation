@@ -45,7 +45,10 @@ class MainWindow(QtWidgets.QMainWindow):
         self._router = Router(
             stacked_widget=self._stack_widget,
             scheme={
-                Route.HOME: (ChooseExerciseScreen, ChooseExercisePayload),
+                Route.HOME: (
+                    lambda: ChooseExerciseScreen(self._exercise_session),
+                    ChooseExercisePayload,
+                ),
                 Route.CAMERAS: (
                     lambda **kwargs: CamerasScreen(
                         camera_enumerator=self._camera_enumerator,
