@@ -38,6 +38,7 @@ class MainWindow(QtWidgets.QMainWindow):
         layout.addWidget(self._stack_widget)
 
         self.setCentralWidget(container)
+        self.resize(800, 600)
         QtCore.QTimer.singleShot(100, self._setup_services)
 
     def _initialize_routing(self) -> None:
