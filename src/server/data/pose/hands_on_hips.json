@@ -1,0 +1,12 @@
+{
+    "name": "hands_on_hips",
+    "threshold": 15.0,
+    "left_hip_angle": 165.0,
+    "right_hip_angle": 165.0,
+    "left_shoulder_angle": 40.0,
+    "right_shoulder_angle": 40.0,
+    "left_elbow_angle": 90.0,
+    "right_elbow_angle": 90.0,
+    "left_knee_angle": 180.0,
+    "right_knee_angle": 180.0
+}
