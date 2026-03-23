@@ -4,7 +4,7 @@ from ppe_client.adapters.cameras import FrameConverter
 from ppe_client.adapters.poses import LandmarksDrawer
 from ppe_client.application.cameras import CameraSessionService, Frame
 from ppe_client.application.cameras.ports import CameraSession
-from ppe_client.application.poses import PoseService
+from ppe_client.application.poses import Pose, PoseService
 from ppe_client.domain import CameraDescriptor
 
 
@@ -55,7 +55,7 @@ class CameraCaptureViewModel(QtCore.QObject):
             self.stop_capture()
 
         self._session = self._session_service.connect(self._camera)
-        self._session.attach(self._draw_frame)
+        self._session.attach(self._on_frame_ready)
 
     @QtCore.Slot()
     def stop_capture(self) -> None:
@@ -63,7 +63,7 @@ class CameraCaptureViewModel(QtCore.QObject):
         if self._session is None:
             return
 
-        self._session.detach(self._draw_frame)
+        self._session.detach(self._on_frame_ready)
         if self._camera is not None:
             self._session_service.disconnect(self._camera)
         self._session = None
@@ -80,10 +80,13 @@ class CameraCaptureViewModel(QtCore.QObject):
         self.start_capture()
 
     @QtCore.Slot(object)
-    def _draw_frame(self, frame: Frame) -> None:
+    def _on_frame_ready(self, frame: Frame) -> None:
         if self._camera is None:
             return
-        pose = self._pose_service.detect(self._camera, frame)
+        self._pose_service.detect(self._camera, frame, self._on_pose_ready)
+
+    @QtCore.Slot(object, object)
+    def _on_pose_ready(self, pose: Pose | None, frame: Frame) -> None:
         if pose is not None:
             frame = LandmarksDrawer().draw(pose, frame)
         pixmap = FrameConverter.to_pixel_map(frame)
