@@ -3,12 +3,14 @@ from model.pose import Pose
 
 
 class ExerciseStateMachine:
-    def __init__(self, poses: list[Pose], frame_tolerance: int):
+    def __init__(
+        self, exercise_state: ExerciseState, poses: list[Pose], frame_tolerance: int
+    ):
         self.poses = poses
         self.frame_tolerance = frame_tolerance
-        self.exercise_state = ExerciseState()
+        self.exercise_state = exercise_state
 
-    def update(self, matched_pose: Pose) -> ExerciseState:
+    def update(self, matched_pose: Pose, current_pose: Pose) -> ExerciseState:
         current_reference_pose: Pose = self.poses[
             self.exercise_state.current_pose_index
         ]
@@ -17,11 +19,10 @@ class ExerciseStateMachine:
         )
 
         if matched_pose.id == current_reference_pose.id:
-            self.exercise_state.hold_frame_count += 1
-            if self.exercise_state.hold_frame_count >= self.frame_tolerance:
-                self.exercise_state.current_pose_index = next_pose_index
-                self.exercise_state.hold_frame_count = 0
-        else:
-            self.exercise_state.hold_frame_count = 0
+            self.exercise_state.frame_tolerance_counter += 1
+            if self.exercise_state.frame_tolerance_counter >= self.frame_tolerance:
+                if current_pose == current_reference_pose:
+                    self.exercise_state.current_pose_index = next_pose_index
+                self.exercise_state.frame_tolerance_counter = 0
 
         return self.exercise_state

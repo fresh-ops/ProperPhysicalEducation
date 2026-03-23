@@ -17,6 +17,8 @@ class Pose(NamedTuple):
         right_elbow_angle (float): угол в правом локте
         left_knee_angle (float): угол в левом колене
         right_knee_angle (float): угол в правом колене
+        left_hip_angle (float): угол в левом бедре
+        right_hip_angle (float): угол в правом бедре
     """
 
     id: int
@@ -29,6 +31,8 @@ class Pose(NamedTuple):
     right_elbow_angle: float
     left_knee_angle: float
     right_knee_angle: float
+    left_hip_angle: float | None = None
+    right_hip_angle: float | None = None
 
     def get_angles_list(self) -> list[float]:
         """
@@ -44,6 +48,8 @@ class Pose(NamedTuple):
             self.right_elbow_angle,
             self.left_knee_angle,
             self.right_knee_angle,
+            self.left_hip_angle,
+            self.right_hip_angle,
         ]
 
     def get_angle_ranges(self) -> dict[Angle, Tuple[float, float]]:
@@ -82,4 +88,6 @@ class Pose(NamedTuple):
             Angle.RIGHT_ELBOW: self.right_elbow_angle,
             Angle.LEFT_KNEE: self.left_knee_angle,
             Angle.RIGHT_KNEE: self.right_knee_angle,
+            Angle.LEFT_HIP: self.left_hip_angle,
+            Angle.RIGHT_HIP: self.right_hip_angle,
         }

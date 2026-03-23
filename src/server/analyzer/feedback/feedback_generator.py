@@ -18,7 +18,4 @@ class FeedbackGenerator:
         if pose_match_result.pose.name != expected_pose.name:
             feedbacks.append(f"Сейчас нужно перейти в позу '{expected_pose.name}'")
 
-        if len(feedbacks) == 0:
-            feedbacks.append("Отличная работа! Продолжайте в том же духе!")
-
         return feedbacks[:2]
