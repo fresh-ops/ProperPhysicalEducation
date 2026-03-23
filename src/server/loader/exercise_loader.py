@@ -71,6 +71,24 @@ class ExerciseLoader:
             f"Exercise with id {exercise_id} not found in directory '{self.directory}'"
         )
 
+    def get_exercises(self) -> list[Exercise]:
+        exercises: list[Exercise] = []
+
+        for json_file in self.directory.glob("*.json"):
+            try:
+                with open(json_file, "r", encoding="utf-8") as f:
+                    serialized_exercise = cast(SerializedExercise, json.load(f))
+                    exercise = self.__deserialize_exercise(serialized_exercise)
+                    exercises.append(exercise)
+            except TypeError as e:
+                print(f"Field mismatch in {json_file}: {e}")
+            except json.JSONDecodeError as e:
+                print(f"Invalid JSON in {json_file}: {e}")
+            except Exception as e:
+                print(f"Error reading {json_file}: {e}")
+
+        return exercises
+
     def __deserialize_exercise(
         self, serialized_exercise: SerializedExercise
     ) -> Exercise:

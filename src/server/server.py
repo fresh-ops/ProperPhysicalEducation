@@ -12,6 +12,7 @@ from loader.exercise_loader import ExerciseLoader
 from loader.pose_loader import PoseLoader
 from schemas.error import ErrorResponse
 from schemas.exercise import ExerciseRequest
+from schemas.exercises import ExercisesResponse, ExerciseItem
 from analyzer.pose.skeleton_transformer.skeleton_transformer import landmarks_to_pose
 from schemas.landmarks import LandmarksRequest
 from schemas.feedback import FeedbackResponse, FeedbackItem
@@ -40,6 +41,13 @@ def start(request: ExerciseRequest) -> SessionResponse:
     analyzer = analyzer_factory.create(request.id)
     sessions[session_id] = analyzer
     return SessionResponse(session_id=session_id)
+
+
+@app.get("/exercises", response_model=ExercisesResponse)
+def exercises() -> ExercisesResponse:
+    exercises_list = exercise_loader.get_exercises()
+    exercise_items = [ExerciseItem(id=ex.id, name=ex.name) for ex in exercises_list]
+    return ExercisesResponse(exercises=exercise_items)
 
 
 @app.websocket("/analyze/{session_id}")
