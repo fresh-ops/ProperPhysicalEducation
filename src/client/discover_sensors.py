@@ -1,17 +1,30 @@
+# test_mock.py
 import asyncio
+import sys
+import os
 
-from ppe_client.adapters.sensors import BleakSensorEnumerator
+src_path = os.path.join(os.path.dirname(__file__), 'src')
+sys.path.insert(0, src_path)
+
 from ppe_client.domain import SensorDescriptor
 
+class MockBleakSensorEnumerator:
+    def __init__(self, target_name: str = "PPE Sensor"):
+        self._target_name = target_name
+    
+    async def discover(self, timeout_s: float = 2.0):
+        print(f"Mock discovery: looking for '{self._target_name}'")
+        return [
+            SensorDescriptor(name="PPE Sensor", address="AA:BB:CC:DD:EE:FF"),
+            SensorDescriptor(name="PPE Sensor", address="11:22:33:44:55:66"),
+        ]
 
-async def main() -> None:
-    enumerator = BleakSensorEnumerator(target_name="PPE Sensor")
-    sensors: list[SensorDescriptor] = await enumerator.discover(timeout_s=3.0)
-
-    print(f"FOUND {len(sensors)} sensors")
-    for i, s in enumerate(sensors, start=1):
-        print(f"{i}. {s.name} | {s.address}")
-
+async def main():
+    enumerator = MockBleakSensorEnumerator()
+    devices = await enumerator.discover()
+    print(f"\nFound {len(devices)} devices:")
+    for device in devices:
+        print(f"  - {device.name}: {device.address}")
 
 if __name__ == "__main__":
     asyncio.run(main())
