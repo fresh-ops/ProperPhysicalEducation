@@ -63,4 +63,6 @@ def landmarks_to_pose(skeleton: List[List[float]]) -> Pose:
         right_elbow_angle=calculate_angle_xy(skeleton, Angle.RIGHT_ELBOW),
         left_knee_angle=calculate_angle_xy(skeleton, Angle.LEFT_KNEE),
         right_knee_angle=calculate_angle_xy(skeleton, Angle.RIGHT_KNEE),
+        left_hip_angle=calculate_angle_xy(skeleton, Angle.LEFT_HIP),
+        right_hip_angle=calculate_angle_xy(skeleton, Angle.RIGHT_HIP),
     )

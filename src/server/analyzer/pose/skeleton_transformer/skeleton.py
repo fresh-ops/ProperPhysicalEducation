@@ -80,6 +80,9 @@ class Angle(Enum):
     LEFT_KNEE = (Landmark.LEFT_HIP, Landmark.LEFT_KNEE, Landmark.LEFT_ANKLE)
     RIGHT_KNEE = (Landmark.RIGHT_HIP, Landmark.RIGHT_KNEE, Landmark.RIGHT_ANKLE)
 
+    LEFT_HIP = (Landmark.LEFT_SHOULDER, Landmark.LEFT_HIP, Landmark.LEFT_KNEE)
+    RIGHT_HIP = (Landmark.RIGHT_SHOULDER, Landmark.RIGHT_HIP, Landmark.RIGHT_KNEE)
+
     @property
     def vertex(self) -> Landmark:
         return self.value[1]
