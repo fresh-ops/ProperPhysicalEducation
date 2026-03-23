@@ -19,7 +19,7 @@ from ppe_client.application.poses import PoseService
 from .routing import Route
 from .routing.router import Router
 from .screens.cameras_screen import CamerasPayload, CamerasScreen
-from .screens.my_screen import MyScreen, MyScreenPayload
+from .screens.choose_exercise_screen import ChooseExercisePayload, ChooseExerciseScreen
 
 
 class MainWindow(QtWidgets.QMainWindow):
@@ -45,7 +45,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self._router = Router(
             stacked_widget=self._stack_widget,
             scheme={
-                Route.HOME: (MyScreen, MyScreenPayload),
+                Route.HOME: (ChooseExerciseScreen, ChooseExercisePayload),
                 Route.CAMERAS: (
                     lambda **kwargs: CamerasScreen(
                         camera_enumerator=self._camera_enumerator,
@@ -60,7 +60,7 @@ class MainWindow(QtWidgets.QMainWindow):
             parent=self,
         )
 
-        self._router.navigate_to(Route.CAMERAS, CamerasPayload(exercise_id=1))
+        self._router.navigate_to(Route.HOME, ChooseExercisePayload())
 
     def _setup_services(self) -> None:
         self._camera_enumerator = OpenCVCameraEnumerator()
