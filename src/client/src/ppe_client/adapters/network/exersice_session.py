@@ -1,0 +1,77 @@
+import asyncio
+import json
+from collections.abc import Callable
+
+import httpx
+import websockets
+from websockets.asyncio.client import ClientConnection
+
+from ppe_client.application.poses import Pose
+from ppe_client.domain import CameraDescriptor
+
+from ..poses.pose_converter import PoseConverter
+from .schemas.error import ErrorResponse
+from .schemas.exercise import ExerciseRequest
+from .schemas.feedback import FeedbackResponse
+from .schemas.landmarks import LandmarksRequest
+from .schemas.session import SessionResponse
+
+
+class ExerciseSession:
+    _SERVER = "192.168.3.124"
+    _START_EXCERCISE_ENDPOINT = f"http://{_SERVER}:8000/start"
+    _ANALYZE_ENDPOINT = f"ws://{_SERVER}:8000/analyze/"
+    _callback: Callable[[FeedbackResponse], None] | None = None
+
+    def __init__(self) -> None:
+        self.websocket: ClientConnection | None = None
+
+    def recieve(self, pose: Pose, camera: CameraDescriptor | None = None) -> None:
+        try:
+            loop = asyncio.get_running_loop()
+        except RuntimeError:
+            loop = asyncio.get_event_loop()
+        loop.create_task(self.receive_feedbacks(PoseConverter.to_list(pose)))  # noqa: RUF006
+
+    async def start(
+        self, exercise_id: int, callback: Callable[[FeedbackResponse], None]
+    ) -> None:
+        self._callback = callback
+        async with httpx.AsyncClient() as client:
+            response = await client.post(
+                f"{self._START_EXCERCISE_ENDPOINT}",
+                json=ExerciseRequest(id=exercise_id).model_dump(),
+            )
+            response.raise_for_status()
+            data = response.json()
+            session_id = SessionResponse(**data).session_id
+            await self.__connect(session_id)
+
+    async def __connect(self, session_id: str) -> None:
+        self.websocket = await websockets.connect(
+            f"{self._ANALYZE_ENDPOINT}{session_id}"
+        )
+
+    async def receive_feedbacks(
+        self, landmarks: list[list[float]]
+    ) -> FeedbackResponse | ErrorResponse:
+        if not self.websocket:
+            raise RuntimeError("WebSocket connection not established")
+        try:
+            request = LandmarksRequest(landmarks=landmarks)
+            await self.websocket.send(json.dumps(request.model_dump()))
+            response = await self.websocket.recv()
+            data = json.loads(response)
+            if "error" in data:
+                return ErrorResponse(**data)
+            else:
+                feedback = FeedbackResponse(**data)
+                if self._callback is not None:
+                    self._callback(feedback)
+                return feedback
+        except Exception:
+            raise
+
+    async def close(self) -> None:
+        if self.websocket:
+            await self.websocket.close()
