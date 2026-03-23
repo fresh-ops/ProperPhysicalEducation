@@ -32,6 +32,7 @@ class CamerasScreen(Screen[CamerasPayload]):
 
         self._vm = CamerasViewModel(exercise_session)
         self._vm.cameras_changed.connect(self._on_cameras_changed)
+        self._vm.feedback_ready.connect(self._on_feedback_ready)
 
         self._camera_enumerator = camera_enumerator
         self._session_service = session_service
@@ -39,6 +40,8 @@ class CamerasScreen(Screen[CamerasPayload]):
 
         self._grid_columns = 2
         self._previews_by_camera: dict[CameraIdentity, CameraCaptureView] = {}
+
+        self._feedback_message = QtWidgets.QLabel("")
 
         self._add_camera_button = QtWidgets.QPushButton("Add Camera")
         self._add_camera_button.clicked.connect(self._on_button_clicked)
@@ -65,6 +68,7 @@ class CamerasScreen(Screen[CamerasPayload]):
         controls.addStretch(1)
 
         layout = QtWidgets.QVBoxLayout(self)
+        layout.addWidget(self._feedback_message)
         layout.addWidget(self._scroll)
         layout.addWidget(self._empty_state)
         layout.addLayout(controls)
@@ -74,6 +78,7 @@ class CamerasScreen(Screen[CamerasPayload]):
 
     @override
     def on_enter(self, payload: CamerasPayload | None = None) -> None:
+        self._feedback_message.setText("")
         self._vm.bind_model(payload)
         for preview in self._previews_by_camera.values():
             preview.start_capture()
@@ -150,6 +155,10 @@ class CamerasScreen(Screen[CamerasPayload]):
             preview = self._previews_by_camera[key]
             row, col = divmod(index, self._grid_columns)
             self._grid.addWidget(preview, row, col)
+
+    @QtCore.Slot(str)
+    def _on_feedback_ready(self, feedback: str) -> None:
+        self._feedback_message.setText(feedback)
 
     def _sync_empty_state_visibility(self) -> None:
         self._empty_state.setVisible(not self._vm.has_cameras())

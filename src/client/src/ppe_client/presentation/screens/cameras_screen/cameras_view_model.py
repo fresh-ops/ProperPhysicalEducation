@@ -11,6 +11,7 @@ from .cameras_payload import CamerasPayload
 
 class CamerasViewModel(QtCore.QObject):
     cameras_changed = QtCore.Signal(list)
+    feedback_ready = QtCore.Signal(str)
 
     _cameras_by_key: dict[CameraIdentity, CameraDescriptor]
     _exercise_session: ExerciseSession
@@ -57,5 +58,5 @@ class CamerasViewModel(QtCore.QObject):
         return list(self._cameras_by_key.values())
 
     def _show_feedback(self, feedback: FeedbackResponse) -> None:
-        for message in feedback.feedbacks:
-            print(message)
+        if feedback.feedbacks:
+            self.feedback_ready.emit(feedback.feedbacks[0].message)
