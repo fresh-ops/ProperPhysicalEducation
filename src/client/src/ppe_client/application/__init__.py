@@ -1,3 +1,3 @@
 from . import cameras, poses
 
-__all__ = ["cameras", "poses"]
+__all__ = ["cameras", "poses", "sensors"]
