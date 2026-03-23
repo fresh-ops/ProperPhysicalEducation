@@ -1,5 +1,4 @@
 from typing import Protocol
-
 from ppe_client.domain import SensorDescriptor
 
 class SensorEnumerator(Protocol):
