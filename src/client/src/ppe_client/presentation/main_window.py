@@ -39,7 +39,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
         self.setCentralWidget(container)
         self.resize(800, 600)
-        QtCore.QTimer.singleShot(100, self._setup_services)
+        QtCore.QTimer.singleShot(0, self._setup_services)
 
     def _initialize_routing(self) -> None:
         self._router = Router(
