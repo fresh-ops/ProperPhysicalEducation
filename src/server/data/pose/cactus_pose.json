@@ -1,4 +1,5 @@
 {
+    "id": 3,
     "name": "cactus_pose",
     "threshold": 15.0,
     "left_hip_angle": 165.0,
