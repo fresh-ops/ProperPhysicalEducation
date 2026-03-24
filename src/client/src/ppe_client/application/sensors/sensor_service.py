@@ -1,4 +1,8 @@
-from ppe_client.application.sensors.ports import SensorConnector, SensorEnumerator
+from ppe_client.application.sensors.ports import (
+    SensorConnector,
+    SensorEnumerator,
+    SensorSession,
+)
 from ppe_client.domain import SensorDescriptor
 
 
@@ -34,6 +38,9 @@ class SensorService:
 
     def get_connected_sensors(self) -> list[SensorDescriptor]:
         return list(self._connected_sensors.values())
+
+    def get_session(self, descriptor: SensorDescriptor) -> SensorSession | None:
+        return self._connector.get_session(descriptor)
 
     async def cleanup(self) -> None:
         await self.disconnect_all()
