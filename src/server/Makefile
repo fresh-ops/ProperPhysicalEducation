@@ -42,4 +42,4 @@ fix:
 ci: check
 
 run:
-	uv run python -m server
+	uv run uvicorn server:app

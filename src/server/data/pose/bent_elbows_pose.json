@@ -1,4 +1,5 @@
 {
+	"id": 4,
 	"name": "bent_elbows",
 	"threshold": 15.0,
 	"left_hip_angle": 165.0,

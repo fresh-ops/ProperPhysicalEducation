@@ -16,13 +16,16 @@ class ExerciseAnalyzer:
         self.poses = exercise.poses
         self.pose_matcher = pose_matcher
         self.exercise_state_machine = exercise_state_machine
+        self.exercise_state = exercise_state_machine.exercise_state
         self.feedback_generator = feedback_generator
 
     def analyze(self, current_pose: Pose) -> list[str]:
         matched_pose = self.pose_matcher.match(current_pose)
-        exercise_state = self.exercise_state_machine.update(matched_pose.pose)
-        expected_pose = self.poses[exercise_state.current_pose_index]
+        expected_pose = self.poses[self.exercise_state.current_pose_index]
         feedbacks = self.feedback_generator.generate(
             matched_pose, current_pose, expected_pose
+        )
+        self.exercise_state = self.exercise_state_machine.update(
+            matched_pose.pose, current_pose
         )
         return feedbacks

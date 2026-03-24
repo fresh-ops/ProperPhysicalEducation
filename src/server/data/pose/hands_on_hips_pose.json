@@ -1,4 +1,5 @@
 {
+    "id": 5,
     "name": "hands_on_hips",
     "threshold": 15.0,
     "left_hip_angle": 165.0,
