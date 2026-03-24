@@ -42,6 +42,7 @@ class CamerasScreen(Screen[CamerasPayload]):
         self._previews_by_camera: dict[CameraIdentity, CameraCaptureView] = {}
 
         self._feedback_message = QtWidgets.QLabel("")
+        self._feedback_message.setStyleSheet("font-size: 24px")
 
         self._add_camera_button = QtWidgets.QPushButton("Add Camera")
         self._add_camera_button.clicked.connect(self._on_button_clicked)

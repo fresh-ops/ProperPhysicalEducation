@@ -59,4 +59,5 @@ class CamerasViewModel(QtCore.QObject):
 
     def _show_feedback(self, feedback: FeedbackResponse) -> None:
         if feedback.feedbacks:
-            self.feedback_ready.emit(feedback.feedbacks[0].message)
+            message = "; ".join([f.message for f in feedback.feedbacks])
+            self.feedback_ready.emit(message)
