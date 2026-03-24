@@ -22,7 +22,7 @@ from .schemas import (
 
 
 class ExerciseSession:
-    _SERVER = "192.168.0.131"
+    _SERVER = "172.20.10.2"
     _START_EXCERCISE_ENDPOINT = f"http://{_SERVER}:8000/start"
     _ANALYZE_ENDPOINT = f"ws://{_SERVER}:8000/analyze/"
     _EXERCISES_ENDPOINT = f"http://{_SERVER}:8000/exercises"
