@@ -4,14 +4,22 @@ from collections.abc import Callable
 from bleak import BleakClient
 
 from ppe_client.domain import SensorDescriptor
+from ppe_client.application.sensors.ports.signal_filter import SignalFilter
 
 from .bleak_sensor_reader import BleakSensorReader
+from .ema_signal_filter import EMASignalFilter 
 
 
 class BleakSensorSession:
     
-    def __init__(self, client: BleakClient, descriptor: SensorDescriptor) -> None:
+    def __init__(
+        self, 
+        client: BleakClient, 
+        descriptor: SensorDescriptor,
+        signal_filter: SignalFilter | None = None
+    ) -> None:
         self._reader = BleakSensorReader(client)
+        self._signal_filter = signal_filter or EMASignalFilter()
         self._callbacks: set[Callable[[float], None]] = set()
         self._reading_task: asyncio.Task | None = None
         self._should_stop = False
@@ -43,11 +51,12 @@ class BleakSensorSession:
             self._reading_task.cancel()
 
     async def _read_loop(self) -> None:
-
         try:
             while not self._should_stop:
                 try:
                     emg_value = await self._reader.read()
+
+                    emg_value = self._signal_filter.filter(emg_value)
                     
                     for callback in self._callbacks:
                         callback(emg_value)
