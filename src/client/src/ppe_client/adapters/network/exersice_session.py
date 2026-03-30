@@ -30,6 +30,7 @@ class ExerciseSession:
 
     def __init__(self) -> None:
         self.websocket: ClientConnection | None = None
+        self._recv_lock = asyncio.Lock()
 
     def recieve(self, pose: Pose, camera: CameraDescriptor | None = None) -> None:
         try:
@@ -74,7 +75,8 @@ class ExerciseSession:
         try:
             request = LandmarksRequest(landmarks=landmarks)
             await self.websocket.send(json.dumps(request.model_dump()))
-            response = await self.websocket.recv()
+            async with self._recv_lock:
+                response = await self.websocket.recv()
             data = json.loads(response)
             if "error" in data:
                 return ErrorResponse(**data)
