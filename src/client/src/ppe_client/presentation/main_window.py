@@ -1,5 +1,7 @@
 from PySide6 import QtCore, QtWidgets
 
+from .routing import Router
+
 
 class MainWindow(QtWidgets.QMainWindow):
     """
@@ -16,3 +18,5 @@ class MainWindow(QtWidgets.QMainWindow):
         """Initializes the UI."""
         self._stacked_widget = QtWidgets.QStackedWidget()
         self.setCentralWidget(self._stacked_widget)
+
+        self._router = Router(self._stacked_widget, self)
