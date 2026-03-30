@@ -1,37 +1,37 @@
 {
-    "id": 2,
+    "id": "exercise_2",
 
     "name": "cactus_exercise",
 
     "poses": [
-        3, 
-        4
+        "pose_3", 
+        "pose_4"
     ],
 
     "rules": [
         {
-            "pose_name": "cactus_pose",
+            "pose_id": "pose_3",
             "feature": "LEFT_SHOULDER",
             "operator": "<",
             "value": 75.0,
             "message": "Поднимите левую руку выше"
         },
         {
-            "pose_name": "cactus_pose",
+            "pose_id": "pose_3",
             "feature": "RIGHT_SHOULDER",
             "operator": "<",
             "value": 75.0,
             "message": "Поднимите правую руку выше"
         },
         {
-            "pose_name": "cactus_pose",
+            "pose_id": "pose_3",
             "feature": "LEFT_ELBOW",
             "operator": ">",
             "value": 100.0,
             "message": "Согните левую руку сильнее"
         },
         {
-            "pose_name": "cactus_pose",
+            "pose_id": "pose_3",
             "feature": "RIGHT_ELBOW",
             "operator": ">",
             "value": 100.0,

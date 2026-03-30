@@ -1,6 +1,6 @@
 {
-	"id": 4,
-	"name": "bent_elbows",
+	"id": "pose_4",
+	"name": "bent_elbows_pose",
 	"threshold": 15.0,
 	"left_hip_angle": 165.0,
 	"right_hip_angle": 165.0,

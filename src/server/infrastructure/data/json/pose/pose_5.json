@@ -1,6 +1,6 @@
 {
-    "id": 5,
-    "name": "hands_on_hips",
+    "id": "pose_5",
+    "name": "hands_on_hips_pose",
     "threshold": 15.0,
     "left_hip_angle": 165.0,
     "right_hip_angle": 165.0,

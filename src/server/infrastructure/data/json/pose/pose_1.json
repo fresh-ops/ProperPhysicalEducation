@@ -1,6 +1,6 @@
 {
-    "id": 1,
-    "name": "arms_down",
+    "id": "pose_1",
+    "name": "arms_down_pose",
     "threshold": 10.0,
     "left_hip_angle": 165.0,
     "right_hip_angle": 165.0,

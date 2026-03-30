@@ -5,7 +5,7 @@ from domain.model.angle import Angle
 
 @dataclass
 class Rule:
-    pose_name: str
+    pose_id: str
     feature: Angle
     operator: str
     value: float
