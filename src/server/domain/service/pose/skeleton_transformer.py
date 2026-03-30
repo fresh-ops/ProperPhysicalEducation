@@ -2,6 +2,7 @@ import math
 from typing import List
 from domain.model.pose import Pose
 from domain.model.angle import Angle
+from domain.model.pose_id import PoseId
 
 
 def calculate_angle_xy(skeleton: List[List[float]], angle: Angle) -> float:
@@ -54,7 +55,7 @@ def landmarks_to_pose(skeleton: List[List[float]]) -> Pose:
         Pose: объект позы с вычисленными углами, пустым именем и нулевым порогом
     """
     return Pose(
-        id="",
+        id=PoseId(""),
         name="",
         threshold=0.0,
         left_shoulder_angle=calculate_angle_xy(skeleton, Angle.LEFT_SHOULDER_ANGLE),

@@ -2,6 +2,7 @@ from dataclasses import dataclass
 from typing import Tuple
 
 from domain.model.angle import Angle
+from domain.model.pose_id import PoseId
 
 
 @dataclass(frozen=True)
@@ -10,7 +11,7 @@ class Pose:
     Класс эталлонной позы. Содержит в себе информацию об эталонных углах в конечностях для конкретной позы, а также допустимое отклонение.
 
     Fields:
-        id (str): идентификатор позы
+        id (PoseId): идентификатор позы
         name (str): имя позы
         threshold (float): допустимое отклонение
         left_shoulder_angle (float): угол в левом плече
@@ -23,7 +24,7 @@ class Pose:
         right_hip_angle (float): угол в правом бедре
     """
 
-    id: str
+    id: PoseId
     name: str
     threshold: float
 
@@ -86,8 +87,8 @@ class Pose:
         }
 
     def _validate_id(self) -> None:
-        if not isinstance(self.id, str):
-            raise TypeError(f"id must be str, got {type(self.id).__name__}")
+        if not isinstance(self.id, PoseId):
+            raise TypeError(f"id must be PoseId, got {type(self.id).__name__}")
 
     def _validate_name(self) -> None:
         if not isinstance(self.name, str):

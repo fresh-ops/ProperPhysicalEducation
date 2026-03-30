@@ -96,7 +96,7 @@ def test_get_by_id_valid(
 
     pose = pose_repository.get_by_id(pose_id)
 
-    assert pose.id == pose_id.id
+    assert pose.id == pose_id
     assert pose.name == valid_pose_data["name"]
     assert pose.threshold == valid_pose_data["threshold"]
     assert pose.left_hip_angle == valid_pose_data["left_hip_angle"]

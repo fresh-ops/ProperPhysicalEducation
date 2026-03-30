@@ -45,8 +45,16 @@ def valid_exercise_data() -> dict[str, object]:
     return {
         "id": TEST_EXERCISE_ID,
         "name": TEST_EXERCISE_NAME,
-        "poses": [],
-        "rules": [],
+        "poses": ["pose_3"],
+        "rules": [
+            {
+                "pose_id": "pose_3",
+                "feature": "LEFT_SHOULDER",
+                "operator": "<",
+                "value": 75.0,
+                "message": "Поднимите левую руку выше",
+            }
+        ],
     }
 
 
@@ -71,7 +79,7 @@ def test_get_by_id_valid(
         json.dump(valid_exercise_data, f)
 
     exercise = exercise_repository.get_by_id(exercise_id)
-    assert exercise.id == TEST_EXERCISE_ID
+    assert exercise.id == exercise_id
     assert exercise.name == TEST_EXERCISE_NAME
 
 

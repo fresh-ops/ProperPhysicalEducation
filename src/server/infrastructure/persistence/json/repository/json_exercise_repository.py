@@ -2,6 +2,8 @@ from pathlib import Path
 
 from domain.model.exercise import Exercise
 from domain.model.exercise_id import ExerciseId
+from domain.model.pose_id import PoseId
+from domain.model.rule import Rule
 from domain.ports.errors import EntityNotFoundError
 from domain.ports.exercise_repository import ExerciseRepository
 import json
@@ -34,7 +36,21 @@ class JsonExerciseRepository(ExerciseRepository):
             raise JsonReadError(str(exercise_path), e)
 
         try:
-            exercise = Exercise(**serialized_exercise)
+            exercise = Exercise(
+                id=ExerciseId(serialized_exercise["id"]),
+                name=serialized_exercise["name"],
+                poses=[PoseId(p) for p in serialized_exercise["poses"]],
+                rules=[
+                    Rule(
+                        pose_id=PoseId(r["pose_id"]),
+                        feature=r["feature"],
+                        operator=r["operator"],
+                        value=r["value"],
+                        message=r["message"],
+                    )
+                    for r in serialized_exercise.get("rules", [])
+                ],
+            )
             self._cache[exercise_id] = exercise
             return exercise
         except (KeyError, TypeError, ValueError) as e:

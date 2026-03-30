@@ -34,6 +34,7 @@ class JsonPoseRepository(PoseRepository):
             raise JsonReadError(str(pose_path), e)
 
         try:
+            serialized_pose["id"] = PoseId(serialized_pose["id"])
             pose = Pose(**serialized_pose)
             self._cache[pose_id] = pose
             return pose
