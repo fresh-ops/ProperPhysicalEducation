@@ -1,6 +1,6 @@
 from typing import NamedTuple, Tuple
 
-from analyzer.pose.skeleton_transformer.skeleton import Angle
+from domain.model.angle import Angle
 
 
 class Pose(NamedTuple):

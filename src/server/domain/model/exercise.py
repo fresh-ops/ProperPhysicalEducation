@@ -1,6 +1,6 @@
 from typing import NamedTuple
-from model.pose import Pose
-from model.rule import Rule
+from domain.model.pose import Pose
+from domain.model.rule import Rule
 
 
 class Exercise(NamedTuple):

@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 
-from analyzer.pose.skeleton_transformer.skeleton import Angle
+from domain.model.angle import Angle
 
 
 @dataclass
