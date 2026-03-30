@@ -1,14 +1,16 @@
-from typing import NamedTuple, Tuple
+from dataclasses import dataclass
+from typing import Tuple
 
 from domain.model.angle import Angle
 
 
-class Pose(NamedTuple):
+@dataclass(frozen=True)
+class Pose:
     """
     Класс эталлонной позы. Содержит в себе информацию об эталонных углах в конечностях для конкретной позы, а также допустимое отклонение.
 
     Fields:
-        id (int): идентификатор позы
+        id (str): идентификатор позы
         name (str): имя позы
         threshold (float): допустимое отклонение
         left_shoulder_angle (float): угол в левом плече
@@ -21,7 +23,7 @@ class Pose(NamedTuple):
         right_hip_angle (float): угол в правом бедре
     """
 
-    id: int
+    id: str
     name: str
     threshold: float
 
@@ -31,26 +33,23 @@ class Pose(NamedTuple):
     right_elbow_angle: float
     left_knee_angle: float
     right_knee_angle: float
-    left_hip_angle: float | None = None
-    right_hip_angle: float | None = None
+    left_hip_angle: float
+    right_hip_angle: float
+
+    def __post_init__(self) -> None:
+        self._validate_id()
+        self._validate_name()
+        self._validate_threshold()
+        self._validate_angles()
 
     def get_angles_list(self) -> list[float]:
         """
-        Возвращает кортеж углов в конечностях
+        Возвращает список углов в конечностях
 
         Returns:
             List[float]: список позиционных углов в конечностях
         """
-        return [
-            self.left_shoulder_angle,
-            self.right_shoulder_angle,
-            self.left_elbow_angle,
-            self.right_elbow_angle,
-            self.left_knee_angle,
-            self.right_knee_angle,
-            self.left_hip_angle,
-            self.right_hip_angle,
-        ]
+        return list(self.angles.values())
 
     def get_angle_ranges(self) -> dict[Angle, Tuple[float, float]]:
         """
@@ -82,12 +81,34 @@ class Pose(NamedTuple):
     @property
     def angles(self) -> dict[Angle, float]:
         return {
-            Angle.LEFT_SHOULDER: self.left_shoulder_angle,
-            Angle.RIGHT_SHOULDER: self.right_shoulder_angle,
-            Angle.LEFT_ELBOW: self.left_elbow_angle,
-            Angle.RIGHT_ELBOW: self.right_elbow_angle,
-            Angle.LEFT_KNEE: self.left_knee_angle,
-            Angle.RIGHT_KNEE: self.right_knee_angle,
-            Angle.LEFT_HIP: self.left_hip_angle,
-            Angle.RIGHT_HIP: self.right_hip_angle,
+            angle_member: getattr(self, angle_member.field_name)
+            for angle_member in Angle
         }
+
+    def _validate_id(self) -> None:
+        if not isinstance(self.id, str):
+            raise TypeError(f"id must be str, got {type(self.id).__name__}")
+
+    def _validate_name(self) -> None:
+        if not isinstance(self.name, str):
+            raise TypeError(f"name must be str, got {type(self.name).__name__}")
+
+    def _validate_threshold(self) -> None:
+        if not isinstance(self.threshold, (int, float)):
+            raise TypeError(
+                f"threshold must be numeric, got {type(self.threshold).__name__}"
+            )
+        if self.threshold < 0:
+            raise ValueError("threshold must be non-negative")
+
+    def _validate_angles(self) -> None:
+        for angle_name in Angle.get_all_field_names():
+            value = getattr(self, angle_name)
+            if value is None:
+                continue
+            if not isinstance(value, (int, float)):
+                raise TypeError(
+                    f"{angle_name} must be numeric, got {type(value).__name__}"
+                )
+            if not (0 <= value <= 180):
+                raise ValueError(f"{angle_name} must be in range [0, 180], got {value}")

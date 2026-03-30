@@ -1,5 +1,6 @@
-from typing import NamedTuple
+from dataclasses import dataclass
 
 
-class ExerciseId(NamedTuple):
+@dataclass(frozen=True)
+class ExerciseId:
     id: str

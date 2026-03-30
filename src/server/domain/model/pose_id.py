@@ -1,5 +1,6 @@
-from typing import NamedTuple
+from dataclasses import dataclass
 
 
-class PoseId(NamedTuple):
+@dataclass(frozen=True)
+class PoseId:
     id: str
