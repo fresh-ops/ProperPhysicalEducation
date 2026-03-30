@@ -1,7 +1,7 @@
 from wireup import SyncContainer
 
 from .core.payload import Payload
-from .core.route import Route
+from .core.route import RouteDescriptor
 from .core.screen import Screen
 from .core.view_model import ViewModel
 
@@ -17,7 +17,7 @@ class ScreenFactory:
         self._services = services
 
     def create[P: Payload](
-        self, route: Route[P]
+        self, route: RouteDescriptor[P]
     ) -> tuple[Screen[ViewModel[P]], ViewModel[P]]:
         """
         Creates a new screen with it's viewmodel based on the given route.

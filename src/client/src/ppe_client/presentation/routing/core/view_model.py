@@ -6,7 +6,7 @@ from wireup import SyncContainer
 from .payload import Payload
 
 if TYPE_CHECKING:
-    from .route import Route
+    from .route import RouteName
 
 
 class ViewModel[P: Payload](QtCore.QObject):
@@ -29,7 +29,7 @@ class ViewModel[P: Payload](QtCore.QObject):
         """
         pass
 
-    def request_navigation[R: Payload](self, route: "Route[R]", payload: R) -> None:
+    def request_navigation(self, route: "RouteName", payload: Payload) -> None:
         """
         Request navigation to the specified route.
         """

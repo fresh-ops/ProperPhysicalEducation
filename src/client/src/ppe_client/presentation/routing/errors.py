@@ -1,8 +1,13 @@
-from .core import Payload
+from .core import Payload, RouteName
 
 
 class RouterError(Exception):
     pass
+
+
+class RouteNotFoundError(RouterError):
+    def __init__(self, route: RouteName) -> None:
+        super().__init__(f"Route '{route}' not found")
 
 
 class InvalidPayloadError(RouterError):

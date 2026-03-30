@@ -24,4 +24,9 @@ class MainWindow(QtWidgets.QMainWindow):
         self.setCentralWidget(self._stacked_widget)
 
         screen_factory = ScreenFactory(self._services)
-        self._router = Router(self._stacked_widget, screen_factory, self)
+        self._router = Router(
+            self._stacked_widget,
+            screen_factory,
+            {},
+            self,
+        )
