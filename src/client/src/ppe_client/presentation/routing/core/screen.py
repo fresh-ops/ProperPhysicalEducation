@@ -1,10 +1,11 @@
+from typing import Any
+
 from PySide6 import QtWidgets
 
-from .payload import Payload
 from .view_model import ViewModel
 
 
-class Screen[P: Payload, VM: ViewModel](QtWidgets.QWidget):
+class Screen[VM: ViewModel[Any]](QtWidgets.QWidget):
     """
     Base screen class.
     """
@@ -21,7 +22,7 @@ class Screen[P: Payload, VM: ViewModel](QtWidgets.QWidget):
         """
         pass
 
-    def on_enter(self, payload: P | None = None) -> None:
+    def on_enter(self) -> None:
         """
         Lifecycle method called everytime the screen becomes visible to the user.
         """
