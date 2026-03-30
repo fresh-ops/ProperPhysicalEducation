@@ -1,10 +1,8 @@
 from dataclasses import dataclass
-from typing import TYPE_CHECKING
 
-if TYPE_CHECKING:
-    from .payload import Payload
-    from .screen import Screen
-    from .view_model import ViewModel
+from .payload import Payload
+from .screen import Screen
+from .view_model import ViewModel
 
 
 @dataclass(frozen=True, slots=True)

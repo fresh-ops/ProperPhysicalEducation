@@ -1,7 +1,12 @@
+from typing import TYPE_CHECKING
+
 from PySide6 import QtCore
+from wireup import SyncContainer
 
 from .payload import Payload
-from .route import Route
+
+if TYPE_CHECKING:
+    from .route import Route
 
 
 class ViewModel[P: Payload](QtCore.QObject):
@@ -11,11 +16,21 @@ class ViewModel[P: Payload](QtCore.QObject):
 
     navigation_requested = QtCore.Signal(object, object)
 
+    @classmethod
+    def _injected(cls, services: SyncContainer) -> "ViewModel[P]":
+        """
+        Factory method for creating a new viewmodel with injected services.
+        """
+        return cls()
+
     def on_enter(self, payload: P | None = None) -> None:
         """
         Lifecycle method called every time the router navigates to this view model.
         """
         pass
 
-    def request_navigation[R: Payload](self, route: Route[R], payload: R) -> None:
+    def request_navigation[R: Payload](self, route: "Route[R]", payload: R) -> None:
+        """
+        Request navigation to the specified route.
+        """
         self.navigation_requested.emit(route, payload)
