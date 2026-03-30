@@ -6,7 +6,7 @@ from domain.model.pose_id import PoseId
 
 class PoseRepository(ABC):
     @abstractmethod
-    def get_by_id(pose_id: PoseId) -> Pose:
+    def get_by_id(self, pose_id: PoseId) -> Pose:
         """
         Абстрактный метод для получения позы по ее идентификатору.
 

@@ -54,15 +54,15 @@ def landmarks_to_pose(skeleton: List[List[float]]) -> Pose:
         Pose: объект позы с вычисленными углами, пустым именем и нулевым порогом
     """
     return Pose(
-        id=0,
+        id="",
         name="",
         threshold=0.0,
-        left_shoulder_angle=calculate_angle_xy(skeleton, Angle.LEFT_SHOULDER),
-        right_shoulder_angle=calculate_angle_xy(skeleton, Angle.RIGHT_SHOULDER),
-        left_elbow_angle=calculate_angle_xy(skeleton, Angle.LEFT_ELBOW),
-        right_elbow_angle=calculate_angle_xy(skeleton, Angle.RIGHT_ELBOW),
-        left_knee_angle=calculate_angle_xy(skeleton, Angle.LEFT_KNEE),
-        right_knee_angle=calculate_angle_xy(skeleton, Angle.RIGHT_KNEE),
-        left_hip_angle=calculate_angle_xy(skeleton, Angle.LEFT_HIP),
-        right_hip_angle=calculate_angle_xy(skeleton, Angle.RIGHT_HIP),
+        left_shoulder_angle=calculate_angle_xy(skeleton, Angle.LEFT_SHOULDER_ANGLE),
+        right_shoulder_angle=calculate_angle_xy(skeleton, Angle.RIGHT_SHOULDER_ANGLE),
+        left_elbow_angle=calculate_angle_xy(skeleton, Angle.LEFT_ELBOW_ANGLE),
+        right_elbow_angle=calculate_angle_xy(skeleton, Angle.RIGHT_ELBOW_ANGLE),
+        left_knee_angle=calculate_angle_xy(skeleton, Angle.LEFT_KNEE_ANGLE),
+        right_knee_angle=calculate_angle_xy(skeleton, Angle.RIGHT_KNEE_ANGLE),
+        left_hip_angle=calculate_angle_xy(skeleton, Angle.LEFT_HIP_ANGLE),
+        right_hip_angle=calculate_angle_xy(skeleton, Angle.RIGHT_HIP_ANGLE),
     )

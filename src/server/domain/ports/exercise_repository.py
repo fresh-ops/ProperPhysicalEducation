@@ -6,7 +6,7 @@ from domain.model.exercise_id import ExerciseId
 
 class ExerciseRepository(ABC):
     @abstractmethod
-    def get_by_id(exercise_id: ExerciseId) -> Exercise:
+    def get_by_id(self, exercise_id: ExerciseId) -> Exercise:
         """
         Абстрактный метод для получения упражнения по его идентификатору.
 
