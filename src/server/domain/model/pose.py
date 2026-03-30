@@ -110,5 +110,3 @@ class Pose:
                 raise TypeError(
                     f"{angle_name} must be numeric, got {type(value).__name__}"
                 )
-            if not (0 <= value <= 180):
-                raise ValueError(f"{angle_name} must be in range [0, 180], got {value}")
