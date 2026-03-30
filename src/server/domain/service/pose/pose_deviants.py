@@ -1,5 +1,5 @@
-from model.pose import Pose
-from analyzer.pose.skeleton_transformer.skeleton import Angle
+from domain.model.pose import Pose
+from domain.model.angle import Angle
 
 
 def calculate_deviations(

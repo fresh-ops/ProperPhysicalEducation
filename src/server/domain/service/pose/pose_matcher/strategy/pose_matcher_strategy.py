@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 
-from model.pose import Pose
-from model.pose_match_result import PoseMatchResult
+from domain.model.pose import Pose
+from domain.model.pose_match_result import PoseMatchResult
 
 
 class PoseMatcherStrategy(ABC):

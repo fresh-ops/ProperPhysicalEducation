@@ -1,7 +1,7 @@
 import math
 from typing import List
-from model.pose import Pose
-from analyzer.pose.skeleton_transformer.skeleton import Angle
+from domain.model.pose import Pose
+from domain.model.angle import Angle
 
 
 def calculate_angle_xy(skeleton: List[List[float]], angle: Angle) -> float:

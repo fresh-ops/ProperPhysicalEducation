@@ -1,9 +1,9 @@
-from analyzer.pose.pose_matcher.strategy.pose_matcher_strategy import (
+from domain.service.pose.pose_matcher.strategy.pose_matcher_strategy import (
     PoseMatcherStrategy,
 )
-from model.pose import Pose
-from model.pose_match_result import PoseMatchResult
-from analyzer.pose.pose_deviants import calculate_deviations_with_threshold
+from domain.model.pose import Pose
+from domain.model.pose_match_result import PoseMatchResult
+from domain.service.pose.pose_deviants import calculate_deviations_with_threshold
 
 
 class PenaltyStrategy(PoseMatcherStrategy):
