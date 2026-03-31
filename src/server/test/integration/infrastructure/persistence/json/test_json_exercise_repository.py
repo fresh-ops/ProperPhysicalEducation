@@ -46,9 +46,10 @@ def valid_exercise_data() -> dict[str, object]:
         "id": TEST_EXERCISE_ID,
         "name": TEST_EXERCISE_NAME,
         "poses": ["pose_3"],
-        "rules": [
+        "pose_rules": [
             {
-                "pose_id": "pose_3",
+                "id": "pose_3",
+                "type": "POSE",
                 "feature": "LEFT_SHOULDER",
                 "operator": "<",
                 "value": 75.0,
@@ -64,7 +65,7 @@ def invalid_exercise_data() -> dict[str, object]:
         "id": INVALID_EXERCISE_DATA_ID,
         "name": INVALID_EXERCISE_DATA_NAME,
         "poses": [],
-        "rules": INVALID_EXERCISE_RULES_VALUE,
+        "pose_rules": INVALID_EXERCISE_RULES_VALUE,
     }
 
 

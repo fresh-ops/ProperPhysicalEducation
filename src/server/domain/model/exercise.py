@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 from domain.model.exercise_id import ExerciseId
 from domain.model.pose_id import PoseId
-from domain.model.rule import Rule
+from domain.model.pose_rule import PoseRule
 
 
 @dataclass(frozen=True)
@@ -13,19 +13,19 @@ class Exercise:
         id (ExerciseId): идентификатор упражнения
         name (str): имя упражнения
         poses (list[PoseId]): список эталонных поз для этого упражнения
-        rules (list[Rule]): список правил для этого упражнения
+        pose_rules (list[PoseRule]): список правил для этого упражнения
     """
 
     id: ExerciseId
     name: str
     poses: list[PoseId]
-    rules: list[Rule]
+    pose_rules: list[PoseRule]
 
     def __post_init__(self) -> None:
         self._validate_id()
         self._validate_name()
         self._validate_poses()
-        self._validate_rules()
+        self._validate_pose_rules()
 
     def _validate_id(self) -> None:
         if not isinstance(self.id, ExerciseId):
@@ -44,15 +44,17 @@ class Exercise:
                     f"Each pose must be an instance of PoseId, got {type(pose).__name__}"
                 )
 
-    def _validate_rules(self) -> None:
-        if not isinstance(self.rules, list):
-            raise TypeError(f"rules must be a list, got {type(self.rules).__name__}")
-        for rule in self.rules:
-            if not isinstance(rule, Rule):
+    def _validate_pose_rules(self) -> None:
+        if not isinstance(self.pose_rules, list):
+            raise TypeError(
+                f"pose_rules must be a list, got {type(self.pose_rules).__name__}"
+            )
+        for rule in self.pose_rules:
+            if not isinstance(rule, PoseRule):
                 raise TypeError(
-                    f"Each rule must be an instance of Rule, got {type(rule).__name__}"
+                    f"Each rule must be an instance of PoseRule, got {type(rule).__name__}"
                 )
-            if rule.pose_id not in self.poses:
+            if rule.id not in self.poses:
                 raise ValueError(
-                    f"Rule references pose '{rule.pose_id}' not in exercise poses"
+                    f"Rule references pose '{rule.id}' not in exercise poses"
                 )

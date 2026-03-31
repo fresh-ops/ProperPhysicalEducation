@@ -3,7 +3,7 @@ from pathlib import Path
 from domain.model.exercise import Exercise
 from domain.model.exercise_id import ExerciseId
 from domain.model.pose_id import PoseId
-from domain.model.rule import Rule
+from domain.model.pose_rule import PoseRule
 from domain.ports.errors import EntityNotFoundError
 from domain.ports.exercise_repository import ExerciseRepository
 import json
@@ -40,15 +40,15 @@ class JsonExerciseRepository(ExerciseRepository):
                 id=ExerciseId(serialized_exercise["id"]),
                 name=serialized_exercise["name"],
                 poses=[PoseId(p) for p in serialized_exercise["poses"]],
-                rules=[
-                    Rule(
-                        pose_id=PoseId(r["pose_id"]),
+                pose_rules=[
+                    PoseRule(
+                        id=PoseId(r["id"]),
                         feature=r["feature"],
                         operator=r["operator"],
                         value=r["value"],
                         message=r["message"],
                     )
-                    for r in serialized_exercise.get("rules", [])
+                    for r in serialized_exercise.get("pose_rules", [])
                 ],
             )
             self._cache[exercise_id] = exercise
