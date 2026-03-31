@@ -2,7 +2,7 @@ from pydantic import BaseModel
 
 
 class ExerciseItem(BaseModel):
-    id: int
+    exercise_id: str
     name: str
 
 
