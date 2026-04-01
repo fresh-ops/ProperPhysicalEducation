@@ -57,6 +57,7 @@ class Router(QtCore.QObject):
         self._stack.setCurrentWidget(screen)
         if previous_widget is not None:
             self._stack.removeWidget(previous_widget)
+            previous_widget.close()
             previous_widget.deleteLater()
 
     def _validate_payload[P: Payload, Q: Payload](
