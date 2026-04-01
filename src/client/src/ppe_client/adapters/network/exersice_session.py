@@ -39,14 +39,16 @@ class ExerciseSession:
             loop = asyncio.get_event_loop()
         loop.create_task(self.receive_feedbacks(PoseConverter.to_list(pose)))  # noqa: RUF006
 
-    async def get_exercises(
-        self, callback: Callable[[list[ExerciseItem]], None]
-    ) -> None:
+    async def get_exercises(self) -> list[ExerciseItem]:
         async with httpx.AsyncClient() as client:
-            response = await client.get(self._EXERCISES_ENDPOINT)
+            try:
+                response = await client.get(self._EXERCISES_ENDPOINT)
+            except httpx.ConnectTimeout:
+                return []
+
             response.raise_for_status()
             data = response.json()
-            callback(ExercisesResponse(**data).exercises)
+            return ExercisesResponse(**data).exercises
 
     async def start(
         self, exercise_id: int, callback: Callable[[FeedbackResponse], None]
