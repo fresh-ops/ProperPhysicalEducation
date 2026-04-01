@@ -1,5 +1,5 @@
 from PySide6 import QtCore, QtWidgets
-from wireup import SyncContainer
+from wireup.ioc.container.sync_container import ScopedSyncContainer 
 
 from .routing import Router, Routes, ScreenFactory
 from .screens.choose_exercise import (
@@ -13,10 +13,10 @@ class MainWindow(QtWidgets.QMainWindow):
     Main application window for PPE client.
     """
 
-    _container: SyncContainer
+    _container: ScopedSyncContainer
 
     def __init__(
-        self, container: SyncContainer, parent: QtWidgets.QWidget | None = None
+        self, container: ScopedSyncContainer, parent: QtWidgets.QWidget | None = None
     ) -> None:
         super().__init__(parent)
         self.setWindowTitle("PPE")

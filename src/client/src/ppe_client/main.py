@@ -15,11 +15,12 @@ def main() -> None:
 
     container = create_container()
 
-    window = MainWindow(container=container)
-    window.show()
+    with container.enter_scope() as scope:
+        window = MainWindow(container=scope)
+        window.show()
 
-    with loop:
-        loop.run_forever()
+        with loop:
+            loop.run_forever()
 
 
 if __name__ == "__main__":

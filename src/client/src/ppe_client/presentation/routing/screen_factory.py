@@ -1,4 +1,4 @@
-from wireup import SyncContainer
+from wireup.ioc.container.sync_container import ScopedSyncContainer 
 
 from .core.payload import Payload
 from .core.route import RouteDescriptor
@@ -11,9 +11,9 @@ class ScreenFactory:
     Factory for creating screens.
     """
 
-    _container: SyncContainer
+    _container: ScopedSyncContainer
 
-    def __init__(self, container: SyncContainer) -> None:
+    def __init__(self, container: ScopedSyncContainer) -> None:
         self._container = container
 
     def create[P: Payload](
