@@ -40,6 +40,9 @@ class ChooseExerciseScreen(Screen[ChooseExerciseViewModel]):
     @override
     def on_destroy(self) -> None:
         self._view_model.exercises_updated.disconnect(self.on_exercises_updated)
+        self._view_model.start_button_disabled_set.disconnect(
+            self.on_start_button_disabled_set
+        )
 
     @QtCore.Slot(list)
     def on_exercises_updated(self, exercises: list[str]) -> None:
