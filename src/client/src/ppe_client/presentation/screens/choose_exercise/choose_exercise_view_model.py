@@ -26,9 +26,6 @@ class ChooseExerciseViewModel(ViewModel[ChooseExercisePayload]):
     @override
     async def on_enter(self, payload: ChooseExercisePayload | None = None) -> None:
         self.start_button_disabled_set.emit(True)
-        if not payload:
-            return
-
         self._exercises = await self._exercise_session.get_exercises()
         exercise_names = [e.name for e in self._exercises]
         self.exercises_updated.emit(exercise_names)
