@@ -1,7 +1,6 @@
 from typing import TYPE_CHECKING
 
 from PySide6 import QtCore
-from wireup import SyncContainer
 
 from .payload import Payload
 
@@ -15,13 +14,6 @@ class ViewModel[P: Payload](QtCore.QObject):
     """
 
     navigation_requested = QtCore.Signal(object, object)
-
-    @classmethod
-    def _injected(cls, services: SyncContainer) -> "ViewModel[P]":
-        """
-        Factory method for creating a new viewmodel with injected services.
-        """
-        return cls()
 
     def on_enter(self, payload: P | None = None) -> None:
         """

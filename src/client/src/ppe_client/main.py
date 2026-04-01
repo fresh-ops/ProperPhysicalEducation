@@ -5,13 +5,17 @@ from qasync import QEventLoop
 
 from ppe_client.presentation import MainWindow
 
+from .di import create_container
+
 
 def main() -> None:
     app = QtWidgets.QApplication([])
     loop = QEventLoop(app)
     asyncio.set_event_loop(loop)
 
-    window = MainWindow()
+    container = create_container()
+
+    window = MainWindow(container=container)
     window.show()
 
     with loop:

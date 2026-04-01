@@ -11,10 +11,10 @@ class ScreenFactory:
     Factory for creating screens.
     """
 
-    _services: SyncContainer
+    _container: SyncContainer
 
-    def __init__(self, services: SyncContainer) -> None:
-        self._services = services
+    def __init__(self, container: SyncContainer) -> None:
+        self._container = container
 
     def create[P: Payload](
         self, route: RouteDescriptor[P]
@@ -22,7 +22,7 @@ class ScreenFactory:
         """
         Creates a new screen with it's viewmodel based on the given route.
         """
-        view_model = route.view_model._injected(services=self._services)
+        view_model = self._container.get(route.view_model)
         screen = route.screen(view_model=view_model)
 
         return screen, view_model
