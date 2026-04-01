@@ -43,7 +43,7 @@ class ExerciseSession:
         async with httpx.AsyncClient() as client:
             try:
                 response = await client.get(self._EXERCISES_ENDPOINT)
-            except httpx.ConnectTimeout:
+            except (httpx.ConnectTimeout, httpx.ConnectError):
                 return []
 
             response.raise_for_status()
