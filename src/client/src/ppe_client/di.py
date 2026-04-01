@@ -1,9 +1,7 @@
 from wireup import SyncContainer, create_sync_container, injectable
 
+from ppe_client import presentation
 from ppe_client.adapters.network import ExerciseSession
-from ppe_client.presentation.screens.choose_exercise.choose_exercise_view_model import (
-    ChooseExerciseViewModel,
-)
 
 
 @injectable
@@ -20,6 +18,6 @@ def create_container() -> SyncContainer:
             # Services
             make_exercise_session,
             # ViewModels
-            ChooseExerciseViewModel,
+            presentation,
         ]
     )
