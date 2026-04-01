@@ -1,4 +1,5 @@
 from PySide6 import QtCore, QtWidgets
+from qasync import asyncSlot
 from wireup import SyncContainer
 
 from .routing import Router, ScreenFactory
@@ -20,7 +21,8 @@ class MainWindow(QtWidgets.QMainWindow):
         self._container = container
         QtCore.QTimer.singleShot(0, self._setup_ui)
 
-    def _setup_ui(self) -> None:
+    @asyncSlot()  # type: ignore[untyped-decorator]
+    async def _setup_ui(self) -> None:
         """Initializes the UI."""
         self._stacked_widget = QtWidgets.QStackedWidget()
         self.setCentralWidget(self._stacked_widget)

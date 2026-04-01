@@ -15,7 +15,7 @@ class ViewModel[P: Payload](QtCore.QObject):
 
     navigation_requested = QtCore.Signal(object, object)
 
-    def on_enter(self, payload: P | None = None) -> None:
+    async def on_enter(self, payload: P | None = None) -> None:
         """
         Lifecycle method called every time the router navigates to this view model.
         """

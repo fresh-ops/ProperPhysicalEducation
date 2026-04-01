@@ -1,6 +1,7 @@
 from typing import Any
 
 from PySide6 import QtCore, QtWidgets
+from qasync import asyncSlot
 
 from .core import Payload, RouteDescriptor, RouteName, Screen, ViewModel
 from .errors import InvalidPayloadError, RouteNotFoundError
@@ -29,14 +30,16 @@ class Router(QtCore.QObject):
         self._screen_factory = screen_factory
         self._scheme = scheme
 
-    @QtCore.Slot(object, object)
-    def navigate_by_name(self, route_name: RouteName, payload: Payload) -> None:
+    @asyncSlot(object, object)  # type: ignore[untyped-decorator]
+    async def navigate_by_name(self, route_name: RouteName, payload: Payload) -> None:
         if route_name not in self._scheme:
             raise RouteNotFoundError(route_name)
-        self.navigate_to(self._scheme[route_name], payload)
+        await self.navigate_to(self._scheme[route_name], payload)
 
-    @QtCore.Slot(object, object)
-    def navigate_to[P: Payload](self, route: RouteDescriptor[P], payload: P) -> None:
+    @asyncSlot(object, object)  # type: ignore[untyped-decorator]
+    async def navigate_to[P: Payload](
+        self, route: RouteDescriptor[P], payload: P
+    ) -> None:
         """
         Navigate to the specified route.
         """
@@ -44,7 +47,7 @@ class Router(QtCore.QObject):
         screen, view_model = self._screen_factory.create(route)
         self._bind_navigation(view_model)
 
-        view_model.on_enter(payload=payload)
+        await view_model.on_enter(payload=payload)
         screen.setParent(self._stack)
 
         previous_widget = self._stack.currentWidget()
