@@ -1,7 +1,11 @@
 from PySide6 import QtCore, QtWidgets
 from wireup import SyncContainer
 
-from .routing import Router, ScreenFactory
+from .routing import Router, Routes, ScreenFactory
+from .screens.choose_exercise import (
+    ChooseExercisePayload,
+    choose_exercise_route_descriptor,
+)
 
 
 class MainWindow(QtWidgets.QMainWindow):
@@ -30,6 +34,10 @@ class MainWindow(QtWidgets.QMainWindow):
         self._router = Router(
             self._stacked_widget,
             screen_factory,
-            {},
+            {
+                Routes.CHOOSE_EXERCISE: choose_exercise_route_descriptor,
+            },
             self,
         )
+
+        self._router.navigate_by_name(Routes.CHOOSE_EXERCISE, ChooseExercisePayload())

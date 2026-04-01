@@ -3,4 +3,4 @@ from dataclasses import dataclass
 
 @dataclass(frozen=True, slots=True)
 class Routes:
-    pass
+    CHOOSE_EXERCISE = "choose_exercise"
