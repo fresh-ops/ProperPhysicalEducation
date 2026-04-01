@@ -1,5 +1,5 @@
 from PySide6 import QtCore, QtWidgets
-from wireup.ioc.container.sync_container import ScopedSyncContainer 
+from wireup.ioc.container.sync_container import ScopedSyncContainer
 
 from .routing import Router, Routes, ScreenFactory
 from .screens.choose_exercise import (
