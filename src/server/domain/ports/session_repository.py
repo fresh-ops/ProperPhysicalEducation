@@ -6,13 +6,17 @@ from domain.model.session_id import SessionId
 
 class SessionRepository(ABC):
     @abstractmethod
-    def save(self, session: Session) -> SessionId:
+    async def create(self, session: Session) -> SessionId:
         pass
 
     @abstractmethod
-    def get(self, session_id: SessionId) -> Session:
+    async def update(self, session: Session) -> SessionId:
         pass
 
     @abstractmethod
-    def delete(self, session_id: SessionId) -> None:
+    async def get(self, session_id: SessionId) -> Session:
+        pass
+
+    @abstractmethod
+    async def delete(self, session_id: SessionId) -> None:
         pass

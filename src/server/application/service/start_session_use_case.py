@@ -19,7 +19,7 @@ class StartSessionUseCase:
         self.session_repository = session_repository
         self.exercise_repository = exercise_repository
 
-    def execute(self, request: StartSessionRequestDto) -> StartSessionResponseDto:
+    async def execute(self, request: StartSessionRequestDto) -> StartSessionResponseDto:
         try:
             self.exercise_repository.get_by_id(ExerciseId(request.exercise_id))
         except EntityNotFoundError:
@@ -30,5 +30,5 @@ class StartSessionUseCase:
             exercise_id=ExerciseId(request.exercise_id),
             exercise_state=ExerciseState(),
         )
-        self.session_repository.save(session)
+        await self.session_repository.create(session)
         return StartSessionResponseDto(session_id=session_id)

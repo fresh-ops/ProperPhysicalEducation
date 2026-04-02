@@ -4,7 +4,6 @@ from application.dto.feedback import FeedbackItemDto, FeedbackResponseDto
 from application.dto.process import ProcessRequestDto
 from application.processor.sensor_processor import SensorProcessor
 from domain.model.session_id import SessionId
-from domain.ports.errors import EntityNotFoundError
 from domain.ports.session_repository import SessionRepository
 
 
@@ -17,17 +16,17 @@ class EvaluateExerciseUseCase:
         self._session_repository = session_repository
         self._processors = processors
 
-    def execute(
+    async def execute(
         self, session_id: SessionId, data: ProcessRequestDto
     ) -> FeedbackResponseDto:
-        session = self._session_repository.get(session_id)
-        if session is None:
-            raise EntityNotFoundError(f"Session with id {session_id} not found")
+        session = await self._session_repository.get(session_id)
         feedbacks = []
         for processor in self._processors:
             feedback, new_state = processor.process(data, session.exercise_state)
-            session.update(new_state=new_state)
+            session = session.update(new_state=new_state)
             feedbacks.extend(feedback)
+
+        await self._session_repository.update(session)
 
         return FeedbackResponseDto(
             feedbacks=[
