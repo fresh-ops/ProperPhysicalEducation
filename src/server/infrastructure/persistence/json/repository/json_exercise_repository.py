@@ -55,3 +55,16 @@ class JsonExerciseRepository(ExerciseRepository):
             return exercise
         except (KeyError, TypeError, ValueError) as e:
             raise JsonParseError(str(exercise_path), e)
+
+    def get_all(self) -> list[Exercise]:
+        exercises = []
+        for file in self._directory_path.glob("*.json"):
+            try:
+                exercise_id = ExerciseId(file.stem)
+                exercise = self.get_by_id(exercise_id)
+                exercises.append(exercise)
+            except json.JSONDecodeError as e:
+                raise JsonReadError(str(file), e)
+            except (KeyError, TypeError, ValueError) as e:
+                raise JsonParseError(str(file), e)
+        return exercises

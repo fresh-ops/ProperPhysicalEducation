@@ -17,3 +17,13 @@ class ExerciseRepository(ABC):
             Exercise: объект упражнения, соответствующий заданному идентификатору
         """
         pass
+
+    @abstractmethod
+    def get_all(self) -> list[Exercise]:
+        """
+        Абстрактный метод для получения всех упражнений.
+
+        Returns:
+            list[Exercise]: список всех упражнений
+        """
+        pass
