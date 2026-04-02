@@ -1,5 +1,6 @@
 from typing import Tuple
 
+from application.processor.process_context import ProcessContext
 from domain.model.exercise_state import ExerciseState
 from domain.service.exercise_state_machine import ExerciseStateMachine
 from application.processor.sensor_processor import SensorProcessor
@@ -9,7 +10,7 @@ from domain.service.pose.pose_matcher.pose_matcher import PoseMatcher
 from domain.service.rule.rule_validator import RuleValidator
 
 
-class CameraPoseProcessor(SensorProcessor[Pose]):
+class CameraPoseProcessor(SensorProcessor):
     def __init__(
         self,
         poses: list[Pose],
@@ -23,9 +24,9 @@ class CameraPoseProcessor(SensorProcessor[Pose]):
         self._state_machine = state_machine
 
     def process(
-        self, data: Pose, state: ExerciseState
+        self, context: ProcessContext, state: ExerciseState
     ) -> Tuple[list[Feedback], ExerciseState]:
-        match_result = self._pose_matcher.match(data)
+        match_result = self._pose_matcher.match(context.pose)
         expected_pose = self._poses[state.current_pose_index]
         is_pose_matched = match_result.pose.id == expected_pose.id
         if not is_pose_matched:

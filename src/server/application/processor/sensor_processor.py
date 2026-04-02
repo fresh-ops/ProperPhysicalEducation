@@ -1,13 +1,14 @@
 from abc import ABC, abstractmethod
 from typing import Tuple
 
+from application.processor.process_context import ProcessContext
 from domain.model.exercise_state import ExerciseState
 from domain.model.feedback import Feedback
 
 
-class SensorProcessor[T](ABC):
+class SensorProcessor(ABC):
     @abstractmethod
     def process(
-        self, data: T, state: ExerciseState
+        self, context: ProcessContext, state: ExerciseState
     ) -> Tuple[list[Feedback], ExerciseState]:
         pass
