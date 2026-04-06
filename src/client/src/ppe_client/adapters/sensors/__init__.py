@@ -7,7 +7,5 @@ from .ema_signal_filter import EmaSignalFilter
 __all__ = [
     "BleakSensorEnumerator",
     "BleakSensorConnector",
-    "BleakSensorReader",
     "BleakSensorSession",
-    "EmaSignalFilter"
 ]
