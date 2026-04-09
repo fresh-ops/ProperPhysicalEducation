@@ -1,4 +1,4 @@
-from wireup.ioc.container.sync_container import ScopedSyncContainer 
+from wireup.ioc.container.sync_container import ScopedSyncContainer
 
 from .core.payload import Payload
 from .core.route import RouteDescriptor

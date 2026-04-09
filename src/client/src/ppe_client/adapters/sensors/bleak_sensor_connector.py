@@ -1,3 +1,5 @@
+from wireup import injectable
+
 import asyncio
 
 from bleak import BleakClient
@@ -8,6 +10,7 @@ from ppe_client.domain import SensorDescriptor
 from .bleak_sensor_session import BleakSensorSession
 
 
+@injectable
 class BleakSensorConnector(SensorConnector):
     DEVICE_UUID = "0000503e-0000-1000-8000-00805f9b34fb"
 
@@ -39,7 +42,7 @@ class BleakSensorConnector(SensorConnector):
             session = self._sessions.pop(descriptor.identity, None)
             if session:
                 session.terminate()
-            
+
             client = self._clients.pop(descriptor.identity, None)
             if client and client.is_connected:
                 await client.disconnect()
@@ -56,7 +59,7 @@ class BleakSensorConnector(SensorConnector):
             for session in self._sessions.values():
                 session.terminate()
             self._sessions.clear()
-            
+
             for client in self._clients.values():
                 if client.is_connected:
                     await client.disconnect()

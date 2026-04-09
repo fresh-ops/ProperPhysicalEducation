@@ -2,16 +2,28 @@ from typing import Protocol
 
 from ppe_client.domain import SensorDescriptor
 
+from .sensor_session import SensorSession
+
 
 class SensorConnector(Protocol):
+    """Protocol for connecting to sensors."""
+
     async def connect(self, descriptor: SensorDescriptor) -> bool:
-        """Connect to sensor. Return True if successful."""
+        """Connect to a sensor."""
         ...
 
     async def disconnect(self, descriptor: SensorDescriptor) -> None:
-        """Disconnect from sensor."""
+        """Disconnect from a sensor."""
         ...
 
     def is_connected(self, descriptor: SensorDescriptor) -> bool:
-        """Check if sensor is currently connected."""
+        """Check if sensor is connected."""
+        ...
+
+    def get_session(self, descriptor: SensorDescriptor) -> SensorSession | None:
+        """Get session for connected sensor."""
+        ...
+
+    async def cleanup(self) -> None:
+        """Cleanup all connections."""
         ...

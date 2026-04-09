@@ -1,16 +1,17 @@
+from wireup import injectable
+
 from bleak import BleakScanner
 
 from ppe_client.application.sensors.ports import SensorEnumerator
 from ppe_client.domain import SensorDescriptor
 
 
+@injectable
 class BleakSensorEnumerator(SensorEnumerator):
     def __init__(self, target_name: str = "PPE Sensor") -> None:
         self._target_name = target_name
 
-    async def discover(
-        self, timeout_s: float = 2.0
-    ) -> list[SensorDescriptor]:
+    async def discover(self, timeout_s: float = 2.0) -> list[SensorDescriptor]:
         devices = await BleakScanner.discover(timeout=timeout_s)
 
         result: list[SensorDescriptor] = []

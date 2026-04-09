@@ -2,6 +2,7 @@ from dataclasses import dataclass
 
 SensorIdentity = str
 
+
 @dataclass(frozen=True, slots=True)
 class SensorDescriptor:
     name: str

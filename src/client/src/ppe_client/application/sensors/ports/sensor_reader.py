@@ -2,8 +2,8 @@ from typing import Protocol
 
 
 class SensorReader(Protocol):
-    """Протокол для чтения данных с датчика."""
-    
+    """Protocol for reading sensor data."""
+
     async def read(self) -> float:
-        """Read one value from sensor."""
+        """Read one sensor value."""
         ...

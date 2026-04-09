@@ -1,18 +1,18 @@
-from typing import Protocol
 from collections.abc import Callable
+from typing import Protocol
 
 
 class SensorSession(Protocol):
-    """Протокол для работы с подключённым датчиком."""
-    
+    """Protocol for working with connected sensor."""
+
     def attach(self, callback: Callable[[float], None]) -> None:
-        """Attach callback to receive sensor readings."""
+        """Attach callback for sensor data."""
         ...
 
     def detach(self, callback: Callable[[float], None]) -> None:
-        """Detach callback from sensor readings."""
+        """Detach callback from sensor data."""
         ...
 
     def terminate(self) -> bool:
-        """Terminate this session."""
+        """Terminate the session."""
         ...

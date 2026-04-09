@@ -1,10 +1,14 @@
 from PySide6 import QtCore, QtWidgets
-from wireup.ioc.container.sync_container import ScopedSyncContainer 
+from wireup.ioc.container.sync_container import ScopedSyncContainer
 
 from .routing import Router, Routes, ScreenFactory
 from .screens.choose_exercise import (
     ChooseExercisePayload,
     choose_exercise_route_descriptor,
+)
+from .screens.sensor_discovery import (
+    SensorDiscoveryPayload,
+    sensor_discovery_route_descriptor,
 )
 
 
@@ -36,8 +40,9 @@ class MainWindow(QtWidgets.QMainWindow):
             screen_factory,
             {
                 Routes.CHOOSE_EXERCISE: choose_exercise_route_descriptor,
+                Routes.SENSOR_DISCOVERY: sensor_discovery_route_descriptor,
             },
             self,
         )
 
-        self._router.navigate_by_name(Routes.CHOOSE_EXERCISE, ChooseExercisePayload())
+        self._router.navigate_by_name(Routes.SENSOR_DISCOVERY, SensorDiscoveryPayload())
