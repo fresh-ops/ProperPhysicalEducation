@@ -1,8 +1,7 @@
-from wireup import injectable
-
 import asyncio
 
 from bleak import BleakClient
+from wireup import injectable
 
 from ppe_client.application.sensors.ports import SensorConnector
 from ppe_client.domain import SensorDescriptor

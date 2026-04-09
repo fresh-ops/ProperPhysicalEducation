@@ -3,8 +3,10 @@ from wireup.ioc.container.sync_container import ScopedSyncContainer
 
 from .routing import Router, Routes, ScreenFactory
 from .screens.choose_exercise import (
-    ChooseExercisePayload,
     choose_exercise_route_descriptor,
+)
+from .screens.sensor_connection import (
+    sensor_connection_route_descriptor,
 )
 from .screens.sensor_discovery import (
     SensorDiscoveryPayload,
@@ -41,6 +43,7 @@ class MainWindow(QtWidgets.QMainWindow):
             {
                 Routes.CHOOSE_EXERCISE: choose_exercise_route_descriptor,
                 Routes.SENSOR_DISCOVERY: sensor_discovery_route_descriptor,
+                Routes.SENSOR_CONNECTION: sensor_connection_route_descriptor,
             },
             self,
         )

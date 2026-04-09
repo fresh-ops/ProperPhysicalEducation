@@ -1,12 +1,11 @@
-from typing import override
 from wireup import injectable
 
 from ppe_client.adapters.sensors.bleak_sensor_connector import BleakSensorConnector
 from ppe_client.adapters.sensors.bleak_sensor_enumerator import BleakSensorEnumerator
+from ppe_client.application.sensors.ports import SensorSession
 from ppe_client.domain import SensorDescriptor
 
 from .ports.sensor_repository import SensorRepository
-from ppe_client.application.sensors.ports import SensorSession
 
 
 @injectable

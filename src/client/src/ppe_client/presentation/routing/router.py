@@ -16,6 +16,7 @@ class Router(QtCore.QObject):
     _stack: QtWidgets.QStackedWidget
     _screen_factory: ScreenFactory
     _scheme: dict[RouteName, RouteDescriptor[Any]]
+    _view_models: dict[type[ViewModel[Any]], ViewModel[Any]]
 
     def __init__(
         self,
@@ -29,6 +30,7 @@ class Router(QtCore.QObject):
         self._stack = stack
         self._screen_factory = screen_factory
         self._scheme = scheme
+        self._view_models = {}
 
     @QtCore.Slot(object, object)
     def navigate_by_name(self, route_name: RouteName, payload: Payload) -> None:
@@ -42,7 +44,16 @@ class Router(QtCore.QObject):
         Navigate to the specified route.
         """
         self._validate_payload(route.payload, payload)
-        screen, view_model = self._screen_factory.create(route)
+        
+        # Reuse viewmodel if it exists, otherwise create new one
+        if route.view_model in self._view_models:
+            view_model = self._view_models[route.view_model]
+        else:
+            view_model = self._screen_factory._container.get(route.view_model)
+            self._view_models[route.view_model] = view_model
+        
+        # Create new screen with existing viewmodel
+        screen = route.screen(view_model=view_model)
         self._bind_navigation(view_model)
 
         loop = asyncio.get_running_loop()
@@ -52,6 +63,8 @@ class Router(QtCore.QObject):
         previous_widget = self._stack.currentWidget()
         if isinstance(previous_widget, Screen):
             self._unbind_navigation(previous_widget._view_model)
+            # Detach viewmodel from previous screen before deletion
+            previous_widget._view_model.setParent(None)
 
         self._stack.addWidget(screen)
         self._stack.setCurrentWidget(screen)

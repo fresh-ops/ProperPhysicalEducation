@@ -1,4 +1,3 @@
-# File: sensor_discovery_view_model.py
 import asyncio
 from typing import override
 
@@ -9,6 +8,7 @@ from ppe_client.application.sensors.sensor_service import SensorService
 from ppe_client.domain import SensorDescriptor
 
 from ...routing.core import ViewModel
+from ..sensor_connection import SensorConnectionPayload
 from .sensor_discovery_payload import SensorDiscoveryPayload
 
 
@@ -54,17 +54,17 @@ class SensorDiscoveryViewModel(ViewModel[SensorDiscoveryPayload]):
             )
             if not self._discovered_sensors:
                 self.error_occurred.emit(
-                    "Вблизи датчиков, требуемых для Proper Physical Education, не найдено"
+                    "No sensors required for Proper Physical Education found nearby"
                 )
             else:
-                sensor_names = [
+                display_list = [f"Found {len(self._discovered_sensors)} sensor(s)"] + [
                     f"{s.name} ({s.address})" for s in self._discovered_sensors
                 ]
-                self.sensors_updated.emit(sensor_names)
+                self.sensors_updated.emit(display_list)
                 self.error_occurred.emit("")
-        except Exception as e:
+        except Exception:
             self.error_occurred.emit(
-                "Ошибка при сканировании датчиков. Убедитесь, что Bluetooth включен."
+                "Error scanning for sensors. Make sure Bluetooth is enabled."
             )
         finally:
             self._is_scanning = False
@@ -72,9 +72,10 @@ class SensorDiscoveryViewModel(ViewModel[SensorDiscoveryPayload]):
 
     @QtCore.Slot(int)
     def on_sensor_selected(self, index: int) -> None:
-        if 0 <= index < len(self._discovered_sensors):
-            selected_sensor = self._discovered_sensors[index]
-            from .sensor_connection_payload import SensorConnectionPayload
-
+        """Handle sensor selection from combo box."""
+        if index <= 0:
+            return
+        if (index - 1) < len(self._discovered_sensors):
+            selected_sensor = self._discovered_sensors[index - 1]
             payload = SensorConnectionPayload(descriptor=selected_sensor)
             self.request_navigation("sensor_connection", payload)
