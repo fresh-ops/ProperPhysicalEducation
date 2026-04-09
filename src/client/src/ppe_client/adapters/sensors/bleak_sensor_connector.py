@@ -1,4 +1,5 @@
 import asyncio
+import os
 
 from bleak import BleakClient
 from wireup import injectable
@@ -22,6 +23,12 @@ class BleakSensorConnector(SensorConnector):
         async with self._lock:
             if descriptor.identity in self._clients:
                 return self._clients[descriptor.identity].is_connected
+
+            if os.getenv("PPE_TEST_MODE") == "1":
+                self._sessions[descriptor.identity] = BleakSensorSession(
+                    None, descriptor  # type: ignore
+                )
+                return True
 
             try:
                 client = BleakClient(descriptor.address)
@@ -47,8 +54,7 @@ class BleakSensorConnector(SensorConnector):
                 await client.disconnect()
 
     def is_connected(self, descriptor: SensorDescriptor) -> bool:
-        client = self._clients.get(descriptor.identity)
-        return client is not None and client.is_connected
+        return descriptor.identity in self._sessions
 
     def get_session(self, descriptor: SensorDescriptor) -> BleakSensorSession | None:
         return self._sessions.get(descriptor.identity)
@@ -60,6 +66,6 @@ class BleakSensorConnector(SensorConnector):
             self._sessions.clear()
 
             for client in self._clients.values():
-                if client.is_connected:
+                if client and client.is_connected:
                     await client.disconnect()
             self._clients.clear()

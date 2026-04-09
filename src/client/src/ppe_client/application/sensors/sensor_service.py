@@ -2,6 +2,7 @@ from wireup import injectable
 
 from ppe_client.adapters.sensors.bleak_sensor_connector import BleakSensorConnector
 from ppe_client.adapters.sensors.bleak_sensor_enumerator import BleakSensorEnumerator
+from ppe_client.application.sensors.ports.sensor_calibrator import CalibrationData
 from ppe_client.application.sensors.ports import SensorSession
 from ppe_client.domain import SensorDescriptor
 
@@ -10,44 +11,69 @@ from .ports.sensor_repository import SensorRepository
 
 @injectable
 class SensorService:
-    """Service for managing sensor discovery and connection."""
-
     def __init__(
         self, enumerator: BleakSensorEnumerator, connector: BleakSensorConnector
     ) -> None:
         self._enumerator = enumerator
         self._connector = connector
         self._repository: SensorRepository = SensorRepository()
+        self._calibration_data: dict[str, CalibrationData] = {}
+        self._calibrator = None
+
+    def _get_calibrator(self):
+        if self._calibrator is None:
+            from ppe_client.adapters.sensors.bleak_sensor_calibrator import (
+                BleakSensorCalibrator,
+            )
+
+            self._calibrator = BleakSensorCalibrator(self)
+        return self._calibrator
 
     async def discover(self, timeout_s: float = 2.0) -> list[SensorDescriptor]:
-        """Discover available sensors."""
         return await self._enumerator.discover(timeout_s)
 
     async def connect(self, descriptor: SensorDescriptor) -> bool:
-        """Connect to a sensor."""
         success = await self._connector.connect(descriptor)
         if success:
             self._repository.add(descriptor)
         return success
 
     async def disconnect(self, descriptor: SensorDescriptor) -> None:
-        """Disconnect from a sensor."""
         await self._connector.disconnect(descriptor)
         self._repository.remove(descriptor)
+        if descriptor.identity in self._calibration_data:
+            del self._calibration_data[descriptor.identity]
 
     def is_connected(self, descriptor: SensorDescriptor) -> bool:
-        """Check if sensor is connected."""
         return self._connector.is_connected(descriptor)
 
     def get_session(self, descriptor: SensorDescriptor) -> SensorSession | None:
-        """Get session for connected sensor."""
         return self._connector.get_session(descriptor)
 
     def get_all_connected(self) -> list[SensorDescriptor]:
-        """Get all connected sensors."""
         return self._repository.get_all()
 
+    async def calibrate(
+        self, descriptor: SensorDescriptor, duration_s: float = 5.0
+    ) -> CalibrationData:
+        calibrator = self._get_calibrator()
+        data = await calibrator.calibrate(descriptor, duration_s)
+        self._calibration_data[descriptor.identity] = data
+        return data
+
+    def get_calibration_data(
+        self, descriptor: SensorDescriptor
+    ) -> CalibrationData | None:
+        return self._calibration_data.get(descriptor.identity)
+
+    def get_zone(self, descriptor: SensorDescriptor, value: float) -> str:
+        data = self.get_calibration_data(descriptor)
+        if not data:
+            return "unknown"
+        calibrator = self._get_calibrator()
+        return calibrator.get_zone(value, data)
+
     async def cleanup(self) -> None:
-        """Cleanup all connections."""
         await self._connector.cleanup()
         self._repository.clear()
+        self._calibration_data.clear()

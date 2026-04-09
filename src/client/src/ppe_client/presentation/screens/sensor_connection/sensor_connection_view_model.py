@@ -1,5 +1,8 @@
+import asyncio
+import os
 from collections import deque
 from collections.abc import Callable
+from random import random
 from typing import override
 
 from PySide6 import QtCore
@@ -24,6 +27,7 @@ class SensorConnectionViewModel(ViewModel[SensorConnectionPayload]):
     _data_buffer: deque[float]
     _callback_registered: bool
     _callback: Callable[[float], None] | None
+    _test_task: asyncio.Task[None] | None
 
     def __init__(self, sensor_service: SensorService) -> None:
         super().__init__()
@@ -32,6 +36,7 @@ class SensorConnectionViewModel(ViewModel[SensorConnectionPayload]):
         self._data_buffer = deque(maxlen=self.MAX_DATA_POINTS)
         self._callback_registered = False
         self._callback = None
+        self._test_task = None
 
     @override
     async def on_enter(self, payload: SensorConnectionPayload | None = None) -> None:
@@ -59,6 +64,21 @@ class SensorConnectionViewModel(ViewModel[SensorConnectionPayload]):
     def _attach_callback(self) -> None:
         if self._descriptor is None:
             return
+
+        if os.getenv("PPE_TEST_MODE") == "1":
+            descriptor = self._descriptor
+
+            async def generate_test_data() -> None:
+                base_value = 100.0 if "1" in descriptor.name else 200.0
+                while self._callback_registered:
+                    value = base_value + random() * 50 - 25
+                    self._on_sensor_data(value)
+                    await asyncio.sleep(0.1)
+
+            self._callback_registered = True
+            self._test_task = asyncio.create_task(generate_test_data())
+            return
+
         session = self._sensor_service.get_session(self._descriptor)
         if session and not self._callback_registered:
 
@@ -80,10 +100,15 @@ class SensorConnectionViewModel(ViewModel[SensorConnectionPayload]):
         if self._descriptor is None:
             return
 
+        self._callback_registered = False
+
+        if self._test_task is not None:
+            self._test_task.cancel()
+            self._test_task = None
+
         session = self._sensor_service.get_session(self._descriptor)
-        if session and self._callback_registered and self._callback is not None:
+        if session and self._callback is not None:
             session.detach(self._callback)
-            self._callback_registered = False
 
         await self._sensor_service.disconnect(self._descriptor)
         self.connection_status_changed.emit("disconnected")

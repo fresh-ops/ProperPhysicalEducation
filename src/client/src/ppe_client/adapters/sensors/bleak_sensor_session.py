@@ -13,11 +13,12 @@ from .ema_signal_filter import EMASignalFilter
 class BleakSensorSession:
     def __init__(
         self,
-        client: BleakClient,
+        client: BleakClient | None,
         descriptor: SensorDescriptor,
         signal_filter: SignalFilter | None = None,
     ) -> None:
-        self._reader = BleakSensorReader(client)
+        self._client = client
+        self._reader = BleakSensorReader(client) if client else None
         self._signal_filter = signal_filter or EMASignalFilter()
         self._callbacks: set[Callable[[float], None]] = set()
         self._reading_task: asyncio.Task[None] | None = None
@@ -53,7 +54,12 @@ class BleakSensorSession:
         try:
             while not self._should_stop:
                 try:
-                    emg_value = await self._reader.read()
+                    if self._reader:
+                        emg_value = await self._reader.read()
+                    else:
+                        from random import random
+
+                        emg_value = 100.0 + random() * 50 - 25
 
                     emg_value = self._signal_filter.filter(emg_value)
 
@@ -65,3 +71,15 @@ class BleakSensorSession:
                     await asyncio.sleep(0.1)
         except asyncio.CancelledError:
             pass
+
+    async def collect_data(self, duration_s: float) -> list[float]:
+        values = []
+
+        def on_data(value: float) -> None:
+            values.append(value)
+
+        self.attach(on_data)
+        await asyncio.sleep(duration_s)
+        self.detach(on_data)
+
+        return values

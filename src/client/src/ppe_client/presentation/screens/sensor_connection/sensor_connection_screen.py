@@ -15,7 +15,7 @@ class SensorConnectionScreen(Screen[SensorConnectionViewModel]):
 
     @override
     def on_create(self) -> None:
-        self._title_label = QtWidgets.QLabel("Connection to Sensor")
+        self._title_label = QtWidgets.QLabel("Connected to Sensor")
         self._title_label.setAlignment(QtCore.Qt.AlignmentFlag.AlignHCenter)
         self._title_label.setStyleSheet(
             "font-size: 20px; font-weight: bold; color: #333;"
@@ -40,6 +40,11 @@ class SensorConnectionScreen(Screen[SensorConnectionViewModel]):
         self._current_value_label.setStyleSheet("font-size: 14px; color: #555;")
 
         self._buttons_container = QtWidgets.QHBoxLayout()
+
+        self._calibrate_button = QtWidgets.QPushButton("Calibrate")
+        self._calibrate_button.clicked.connect(self._on_calibrate_clicked)
+        self._calibrate_button.setVisible(False)
+        self._buttons_container.addWidget(self._calibrate_button)
 
         self._disconnect_button = QtWidgets.QPushButton("Disconnect")
         self._disconnect_button.clicked.connect(self._on_disconnect_clicked)
@@ -81,18 +86,25 @@ class SensorConnectionScreen(Screen[SensorConnectionViewModel]):
         if status == "connected":
             self._status_label.setText("✓ Connected")
             self._status_label.setStyleSheet("color: #4caf50; font-weight: bold;")
+            self._calibrate_button.setVisible(True)
             self._disconnect_button.setVisible(True)
             self._exit_button.setVisible(False)
         elif status == "disconnected":
             self._status_label.setText("✗ Disconnected")
             self._status_label.setStyleSheet("color: #f44336; font-weight: bold;")
+            self._calibrate_button.setVisible(False)
             self._disconnect_button.setVisible(False)
             self._exit_button.setVisible(True)
         else:
             self._status_label.setText("✗ Connection Error")
             self._status_label.setStyleSheet("color: #f44336; font-weight: bold;")
+            self._calibrate_button.setVisible(False)
             self._disconnect_button.setVisible(False)
             self._exit_button.setVisible(True)
+
+    @QtCore.Slot()
+    def _on_calibrate_clicked(self) -> None:
+        pass
 
     @QtCore.Slot()
     def _on_disconnect_clicked(self) -> None:
