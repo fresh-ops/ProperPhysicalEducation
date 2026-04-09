@@ -26,7 +26,7 @@ class BleakSensorConnector(SensorConnector):
 
             if os.getenv("PPE_TEST_MODE") == "1":
                 self._sessions[descriptor.identity] = BleakSensorSession(
-                    None, descriptor  # type: ignore
+                    None, descriptor
                 )
                 return True
 

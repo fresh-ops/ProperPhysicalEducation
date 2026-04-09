@@ -17,6 +17,7 @@ class Router(QtCore.QObject):
     _screen_factory: ScreenFactory
     _scheme: dict[RouteName, RouteDescriptor[Any]]
     _view_models: dict[type[ViewModel[Any]], ViewModel[Any]]
+    _enter_task: asyncio.Task[None] | None = None
 
     def __init__(
         self,
@@ -45,25 +46,22 @@ class Router(QtCore.QObject):
         """
         self._validate_payload(route.payload, payload)
 
-        # Reuse viewmodel if it exists, otherwise create new one
         if route.view_model in self._view_models:
             view_model = self._view_models[route.view_model]
         else:
             view_model = self._screen_factory._container.get(route.view_model)
             self._view_models[route.view_model] = view_model
 
-        # Create new screen with existing viewmodel
         screen = route.screen(view_model=view_model)
         self._bind_navigation(view_model)
 
         loop = asyncio.get_running_loop()
-        loop.create_task(view_model.on_enter(payload=payload))  # noqa: RUF006
+        self._enter_task = loop.create_task(view_model.on_enter(payload=payload))
         screen.setParent(self._stack)
 
         previous_widget = self._stack.currentWidget()
         if isinstance(previous_widget, Screen):
             self._unbind_navigation(previous_widget._view_model)
-            # Detach viewmodel from previous screen before deletion
             previous_widget._view_model.setParent(None)
 
         self._stack.addWidget(screen)

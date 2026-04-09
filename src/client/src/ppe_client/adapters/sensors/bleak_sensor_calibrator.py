@@ -1,5 +1,5 @@
 import asyncio
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 from ppe_client.application.sensors.ports.sensor_calibrator import (
     CalibrationData,
@@ -29,17 +29,15 @@ class BleakSensorCalibrator(SensorCalibrator):
         self.calculate_thresholds(data)
         return data
 
-    async def _collect_data(
-        self, session: object, duration_s: float
-    ) -> list[float]:
+    async def _collect_data(self, session: Any, duration_s: float) -> list[float]:
         values: list[float] = []
 
         def on_data(value: float) -> None:
             values.append(value)
 
-        session.attach(on_data)  
+        session.attach(on_data)
         await asyncio.sleep(duration_s)
-        session.detach(on_data)  
+        session.detach(on_data)
 
         return values
 

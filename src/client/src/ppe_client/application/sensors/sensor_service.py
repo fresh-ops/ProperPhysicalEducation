@@ -1,12 +1,19 @@
+from typing import TYPE_CHECKING
+
 from wireup import injectable
 
 from ppe_client.adapters.sensors.bleak_sensor_connector import BleakSensorConnector
 from ppe_client.adapters.sensors.bleak_sensor_enumerator import BleakSensorEnumerator
-from ppe_client.application.sensors.ports.sensor_calibrator import CalibrationData
 from ppe_client.application.sensors.ports import SensorSession
+from ppe_client.application.sensors.ports.sensor_calibrator import CalibrationData
 from ppe_client.domain import SensorDescriptor
 
 from .ports.sensor_repository import SensorRepository
+
+if TYPE_CHECKING:
+    from ppe_client.adapters.sensors.bleak_sensor_calibrator import (
+        BleakSensorCalibrator,
+    )
 
 
 @injectable
@@ -18,9 +25,9 @@ class SensorService:
         self._connector = connector
         self._repository: SensorRepository = SensorRepository()
         self._calibration_data: dict[str, CalibrationData] = {}
-        self._calibrator = None
+        self._calibrator: BleakSensorCalibrator | None = None
 
-    def _get_calibrator(self):
+    def _get_calibrator(self) -> "BleakSensorCalibrator":
         if self._calibrator is None:
             from ppe_client.adapters.sensors.bleak_sensor_calibrator import (
                 BleakSensorCalibrator,
