@@ -44,14 +44,14 @@ class Router(QtCore.QObject):
         Navigate to the specified route.
         """
         self._validate_payload(route.payload, payload)
-        
+
         # Reuse viewmodel if it exists, otherwise create new one
         if route.view_model in self._view_models:
             view_model = self._view_models[route.view_model]
         else:
             view_model = self._screen_factory._container.get(route.view_model)
             self._view_models[route.view_model] = view_model
-        
+
         # Create new screen with existing viewmodel
         screen = route.screen(view_model=view_model)
         self._bind_navigation(view_model)

@@ -15,7 +15,7 @@ class SensorConnectionScreen(Screen[SensorConnectionViewModel]):
 
     @override
     def on_create(self) -> None:
-        self._title_label = QtWidgets.QLabel("Connected to Sensor")
+        self._title_label = QtWidgets.QLabel("Connection to Sensor")
         self._title_label.setAlignment(QtCore.Qt.AlignmentFlag.AlignHCenter)
         self._title_label.setStyleSheet(
             "font-size: 20px; font-weight: bold; color: #333;"
@@ -65,9 +65,7 @@ class SensorConnectionScreen(Screen[SensorConnectionViewModel]):
     @override
     def on_destroy(self) -> None:
         self._view_model.data_received.disconnect(self._on_data_received)
-        self._view_model.connection_status_changed.disconnect(
-            self._on_status_changed
-        )
+        self._view_model.connection_status_changed.disconnect(self._on_status_changed)
 
     @QtCore.Slot(float)
     def _on_data_received(self, value: float) -> None:

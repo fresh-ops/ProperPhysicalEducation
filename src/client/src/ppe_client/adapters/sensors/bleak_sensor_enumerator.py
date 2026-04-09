@@ -1,7 +1,7 @@
 import os
-from wireup import injectable
 
 from bleak import BleakScanner
+from wireup import injectable
 
 from ppe_client.application.sensors.ports import SensorEnumerator
 from ppe_client.domain import SensorDescriptor

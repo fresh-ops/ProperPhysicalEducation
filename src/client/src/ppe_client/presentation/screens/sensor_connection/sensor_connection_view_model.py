@@ -1,5 +1,6 @@
 from collections import deque
-from typing import Callable, override
+from collections.abc import Callable
+from typing import override
 
 from PySide6 import QtCore
 from wireup import injectable
