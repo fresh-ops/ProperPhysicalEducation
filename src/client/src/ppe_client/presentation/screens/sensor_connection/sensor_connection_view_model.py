@@ -8,6 +8,7 @@ from typing import override
 from PySide6 import QtCore
 from wireup import injectable
 
+from ppe_client.application.sensors.ports.sensor_calibrator import CalibrationData
 from ppe_client.application.sensors.sensor_service import SensorService
 from ppe_client.domain import SensorDescriptor
 
@@ -19,6 +20,7 @@ from .sensor_connection_payload import SensorConnectionPayload
 class SensorConnectionViewModel(ViewModel[SensorConnectionPayload]):
     data_received = QtCore.Signal(float)
     connection_status_changed = QtCore.Signal(str)
+    calibration_updated = QtCore.Signal()
 
     MAX_DATA_POINTS = 500
 
@@ -66,13 +68,19 @@ class SensorConnectionViewModel(ViewModel[SensorConnectionPayload]):
             return
 
         if os.getenv("PPE_TEST_MODE") == "1":
+            from ppe_client.adapters.sensors.ema_signal_filter import (
+                EMASignalFilter,
+            )
+
             descriptor = self._descriptor
+            signal_filter = EMASignalFilter()
 
             async def generate_test_data() -> None:
                 base_value = 100.0 if "1" in descriptor.name else 200.0
                 while self._callback_registered:
-                    value = base_value + random() * 50 - 25
-                    self._on_sensor_data(value)
+                    raw_value = base_value + random() * 50 - 25
+                    filtered_value = signal_filter.filter(raw_value)
+                    self._on_sensor_data(filtered_value)
                     await asyncio.sleep(0.1)
 
             self._callback_registered = True
@@ -95,6 +103,19 @@ class SensorConnectionViewModel(ViewModel[SensorConnectionPayload]):
 
     def get_data_buffer(self) -> deque[float]:
         return self._data_buffer
+
+    def get_zone(self, value: float) -> str:
+        if self._descriptor is None:
+            return "unknown"
+        return self._sensor_service.get_zone(self._descriptor, value)
+
+    def get_calibration_data(self) -> CalibrationData | None:
+        if self._descriptor is None:
+            return None
+        return self._sensor_service.get_calibration_data(self._descriptor)
+
+    def notify_calibration_updated(self) -> None:
+        self.calibration_updated.emit()
 
     async def disconnect_sensor(self) -> None:
         if self._descriptor is None:

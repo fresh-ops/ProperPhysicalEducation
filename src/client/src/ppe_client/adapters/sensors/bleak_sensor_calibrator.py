@@ -48,13 +48,15 @@ class BleakSensorCalibrator(SensorCalibrator):
         relaxed_avg = sum(data.relaxed_values) / len(data.relaxed_values)
         tensed_avg = sum(data.tensed_values) / len(data.tensed_values)
 
-        range_size = tensed_avg - relaxed_avg
+        min_val = min(relaxed_avg, tensed_avg)
+        max_val = max(relaxed_avg, tensed_avg)
+        range_size = max_val - min_val
 
-        data.low_threshold = relaxed_avg + range_size * 0.15
-        
-        data.mid_threshold = relaxed_avg + range_size * 0.85
-        
-        data.high_threshold = tensed_avg
+        data.low_threshold = min_val + range_size * 0.15
+
+        data.mid_threshold = min_val + range_size * 0.85
+
+        data.high_threshold = max_val
 
     def get_zone(self, value: float, data: CalibrationData) -> str:
         if value < data.low_threshold:

@@ -21,38 +21,39 @@ class BleakSensorSession:
         self._reader = BleakSensorReader(client) if client else None
         self._signal_filter = signal_filter or EMASignalFilter()
         self._callbacks: set[Callable[[float], None]] = set()
+        self._raw_callbacks: set[Callable[[float], None]] = set()
         self._reading_task: asyncio.Task[None] | None = None
-        self._should_stop = False
 
     def attach(self, callback: Callable[[float], None]) -> None:
         self._callbacks.add(callback)
         if self._reading_task is None or self._reading_task.done():
             self._start_reading()
 
+    def attach_raw(self, callback: Callable[[float], None]) -> None:
+        self._raw_callbacks.add(callback)
+        if self._reading_task is None or self._reading_task.done():
+            self._start_reading()
+
     def detach(self, callback: Callable[[float], None]) -> None:
         self._callbacks.discard(callback)
-        if not self._callbacks:
-            self._stop_reading()
+
+    def detach_raw(self, callback: Callable[[float], None]) -> None:
+        self._raw_callbacks.discard(callback)
 
     def terminate(self) -> bool:
-        self._stop_reading()
+        if self._reading_task and not self._reading_task.done():
+            self._reading_task.cancel()
         return True
 
     def _start_reading(self) -> None:
         if self._reading_task is not None and not self._reading_task.done():
             return
 
-        self._should_stop = False
         self._reading_task = asyncio.create_task(self._read_loop())
-
-    def _stop_reading(self) -> None:
-        self._should_stop = True
-        if self._reading_task and not self._reading_task.done():
-            self._reading_task.cancel()
 
     async def _read_loop(self) -> None:
         try:
-            while not self._should_stop:
+            while True:
                 try:
                     if self._reader:
                         emg_value = await self._reader.read()
@@ -60,6 +61,9 @@ class BleakSensorSession:
                         from random import random
 
                         emg_value = 100.0 + random() * 50 - 25
+
+                    for raw_callback in self._raw_callbacks:
+                        raw_callback(emg_value)
 
                     emg_value = self._signal_filter.filter(emg_value)
 

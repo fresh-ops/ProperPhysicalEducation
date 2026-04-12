@@ -4,16 +4,14 @@ from wireup import injectable
 
 from ppe_client.adapters.sensors.bleak_sensor_connector import BleakSensorConnector
 from ppe_client.adapters.sensors.bleak_sensor_enumerator import BleakSensorEnumerator
-from ppe_client.application.sensors.ports import SensorSession
 from ppe_client.application.sensors.ports.sensor_calibrator import CalibrationData
 from ppe_client.domain import SensorDescriptor
-
-from .ports.sensor_repository import SensorRepository
 
 if TYPE_CHECKING:
     from ppe_client.adapters.sensors.bleak_sensor_calibrator import (
         BleakSensorCalibrator,
     )
+    from ppe_client.application.sensors.ports.sensor_session import SensorSession
 
 
 @injectable
@@ -23,7 +21,7 @@ class SensorService:
     ) -> None:
         self._enumerator = enumerator
         self._connector = connector
-        self._repository: SensorRepository = SensorRepository()
+        self._connected_sensors: dict[str, SensorDescriptor] = {}
         self._calibration_data: dict[str, CalibrationData] = {}
         self._calibrator: BleakSensorCalibrator | None = None
 
@@ -42,23 +40,23 @@ class SensorService:
     async def connect(self, descriptor: SensorDescriptor) -> bool:
         success = await self._connector.connect(descriptor)
         if success:
-            self._repository.add(descriptor)
+            self._connected_sensors[descriptor.identity] = descriptor
         return success
 
     async def disconnect(self, descriptor: SensorDescriptor) -> None:
         await self._connector.disconnect(descriptor)
-        self._repository.remove(descriptor)
+        self._connected_sensors.pop(descriptor.identity, None)
         if descriptor.identity in self._calibration_data:
             del self._calibration_data[descriptor.identity]
 
     def is_connected(self, descriptor: SensorDescriptor) -> bool:
         return self._connector.is_connected(descriptor)
 
-    def get_session(self, descriptor: SensorDescriptor) -> SensorSession | None:
+    def get_session(self, descriptor: SensorDescriptor) -> "SensorSession | None":
         return self._connector.get_session(descriptor)
 
     def get_all_connected(self) -> list[SensorDescriptor]:
-        return self._repository.get_all()
+        return list(self._connected_sensors.values())
 
     async def calibrate(
         self, descriptor: SensorDescriptor, duration_s: float = 5.0
@@ -82,5 +80,5 @@ class SensorService:
 
     async def cleanup(self) -> None:
         await self._connector.cleanup()
-        self._repository.clear()
+        self._connected_sensors.clear()
         self._calibration_data.clear()

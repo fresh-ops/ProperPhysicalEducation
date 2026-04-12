@@ -7,6 +7,9 @@ from ppe_client.application.sensors.sensor_service import SensorService
 from ppe_client.presentation.screens.choose_exercise.choose_exercise_view_model import (
     ChooseExerciseViewModel,
 )
+from ppe_client.presentation.screens.sensor_calibration import (
+    SensorCalibrationViewModel,
+)
 from ppe_client.presentation.screens.sensor_connection import (
     SensorConnectionViewModel,
 )
@@ -33,5 +36,6 @@ def create_container() -> SyncContainer:
             ChooseExerciseViewModel,
             SensorDiscoveryViewModel,
             SensorConnectionViewModel,
+            SensorCalibrationViewModel,
         ]
     )
