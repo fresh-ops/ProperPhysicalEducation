@@ -1,3 +1,3 @@
-from . import choose_exercise
+from . import choose_exercise, training
 
-__all__ = ["choose_exercise"]
+__all__ = ["choose_exercise", "training"]

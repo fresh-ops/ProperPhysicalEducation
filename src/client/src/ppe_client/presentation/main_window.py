@@ -3,8 +3,11 @@ from wireup.ioc.container.sync_container import ScopedSyncContainer
 
 from .routing import Router, Routes, ScreenFactory
 from .screens.choose_exercise import (
-    ChooseExercisePayload,
     choose_exercise_route_descriptor,
+)
+from .screens.training import (
+    TrainingPayload,
+    training_route_descriptor,
 )
 
 
@@ -36,8 +39,9 @@ class MainWindow(QtWidgets.QMainWindow):
             screen_factory,
             {
                 Routes.CHOOSE_EXERCISE: choose_exercise_route_descriptor,
+                Routes.TRAINING: training_route_descriptor,
             },
             self,
         )
 
-        self._router.navigate_by_name(Routes.CHOOSE_EXERCISE, ChooseExercisePayload())
+        self._router.navigate_by_name(Routes.TRAINING, TrainingPayload(exercise_id=0))
