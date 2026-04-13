@@ -1,49 +1,26 @@
+from typing import Dict, List
 from model.pose import Pose
-from analyzer.pose.skeleton_transformer.skeleton import Angle
 
 
-def calculate_deviations(
-    current_pose: Pose, reference_pose: Pose
-) -> dict[Angle, float]:
+def calculate_deviations(current_pose: Pose, poses: List[Pose]) -> Dict[Pose, List[float]]:
     """
-    Вычисляет отклонения между текущей позой и эталонной позой.
-    Args:
-        current_pose (Pose): текущая поза
-        reference_pose (Pose): эталонная поза
+    Вычисляет отклонения между текущей позой и эталонными позами.
+    
     Returns:
-        Dict[Angle, float]: словарь, где ключ - угол, значение - отклонение
+        Dict[Pose, List[float]]: словарь, где ключ - эталонная поза,
+                                значение - массив отклонений по каждому углу
+                                [left_shoulder, right_shoulder, left_elbow, 
+                                 right_elbow, left_knee, right_knee]
     """
-    return {
-        angle: abs(current_angle - reference_angle)
-        for angle, current_angle, reference_angle in zip(
-            Angle,
-            current_pose.get_angles_list(),
-            reference_pose.get_angles_list(),
-        )
-    }
-
-
-def calculate_deviations_with_threshold(
-    current_pose: Pose, reference_pose: Pose
-) -> dict[Angle, float]:
-    """
-    Вычисляет отклонения между текущей позой и эталонной позой с учетом порога допустимых отклонений.
-    Args:
-        current_pose (Pose): текущая поза
-        reference_pose (Pose): эталонная поза
-    Returns:
-        Dict[Angle, float]: словарь, где ключ - угол, значение - отклонение с учетом порога
-    """
-    deviations: dict[Angle, float] = {}
-
-    for angle, current_angle, (min_angle, max_angle) in zip(
-        Angle,
-        current_pose.get_angles_list(),
-        reference_pose.get_angle_ranges().values(),
-    ):
-        if current_angle < min_angle:
-            deviations[angle] = min_angle - current_angle
-        elif current_angle > max_angle:
-            deviations[angle] = current_angle - max_angle
-
+    deviations = {}
+    
+    for reference_pose in poses:
+        current_angles = current_pose.get_angles_list()
+        reference_angles = reference_pose.get_angles_list()
+        
+        deviations[reference_pose.name] = [
+            abs(curr_angle - ref_angle)
+            for curr_angle, ref_angle in zip(current_angles, reference_angles)
+        ]
+    
     return deviations
