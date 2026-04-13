@@ -1,12 +1,13 @@
 from PySide6 import QtCore, QtWidgets
 from wireup.ioc.container.sync_container import ScopedSyncContainer
 
+from ppe_client.presentation.screens.choose_exercise import ChooseExercisePayload
+
 from .routing import Router, Routes, ScreenFactory
 from .screens.choose_exercise import (
     choose_exercise_route_descriptor,
 )
 from .screens.training import (
-    TrainingPayload,
     training_route_descriptor,
 )
 
@@ -44,4 +45,4 @@ class MainWindow(QtWidgets.QMainWindow):
             self,
         )
 
-        self._router.navigate_by_name(Routes.TRAINING, TrainingPayload(exercise_id=0))
+        self._router.navigate_by_name(Routes.CHOOSE_EXERCISE, ChooseExercisePayload())
