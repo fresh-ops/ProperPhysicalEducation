@@ -66,13 +66,6 @@ class SensorCalibrationViewModel(ViewModel[SensorCalibrationPayload]):
                 self._descriptor, duration_s=5.0
             )
 
-            print(
-                f"Calibration data after calibrate: "
-                f"low={calibration_data.low_threshold}, "
-                f"mid={calibration_data.mid_threshold}, "
-                f"high={calibration_data.high_threshold}"
-            )
-
             self.calibration_complete.emit()
 
             payload = SensorConnectionPayload(descriptor=self._descriptor)

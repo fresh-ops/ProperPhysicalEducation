@@ -2,12 +2,12 @@ from typing import Protocol
 
 
 class SignalFilter(Protocol):
-    """Port: контракт для фильтрации сигнала датчика"""
+    """Port: a contract for filtering the sensor signal"""
 
     def filter(self, raw_value: float) -> float:
-        """Фильтрует сырое значение сигнала"""
+        """Filters the raw signal value"""
         ...
 
     def reset(self) -> None:
-        """Сбрасывает состояние фильтра"""
+        """Resets the filter status"""
         ...

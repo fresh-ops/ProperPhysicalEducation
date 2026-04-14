@@ -1,5 +1,5 @@
 class EMASignalFilter:
-    """Экспоненциальное скользящее среднее (EMA) для фильтрации EMG"""
+    """Exponential Moving Average (EMA) filter for EMG signal filtering."""
 
     def __init__(self, filter_coefficient: float = 0.3):
         self.filter_coefficient = filter_coefficient
