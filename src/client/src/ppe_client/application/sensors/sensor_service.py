@@ -1,36 +1,28 @@
-from typing import TYPE_CHECKING
-
-from wireup import injectable
-
-from ppe_client.adapters.sensors import BleakSensorConnector, BleakSensorEnumerator
 from ppe_client.domain import SensorDescriptor
 
-from .ports import CalibrationData, SensorSession
+from .ports import (
+    CalibrationData,
+    SensorCalibrator,
+    SensorConnector,
+    SensorEnumerator,
+    SensorSession,
+)
 
-if TYPE_CHECKING:
-    from ppe_client.adapters.sensors.bleak_sensor_calibrator import (
-        BleakSensorCalibrator,
-    )
 
-
-@injectable
 class SensorService:
     def __init__(
-        self, enumerator: BleakSensorEnumerator, connector: BleakSensorConnector
+        self,
+        enumerator: SensorEnumerator,
+        connector: SensorConnector,
+        calibrator: SensorCalibrator,
     ) -> None:
         self._enumerator = enumerator
         self._connector = connector
         self._connected_sensors: dict[str, SensorDescriptor] = {}
         self._calibration_data: dict[str, CalibrationData] = {}
-        self._calibrator: BleakSensorCalibrator | None = None
+        self._calibrator = calibrator
 
-    def _get_calibrator(self) -> "BleakSensorCalibrator":
-        if self._calibrator is None:
-            from ppe_client.adapters.sensors.bleak_sensor_calibrator import (
-                BleakSensorCalibrator,
-            )
-
-            self._calibrator = BleakSensorCalibrator(self)
+    def _get_calibrator(self) -> SensorCalibrator:
         return self._calibrator
 
     async def discover(self, timeout_s: float = 2.0) -> list[SensorDescriptor]:
@@ -61,7 +53,10 @@ class SensorService:
         self, descriptor: SensorDescriptor, duration_s: float = 5.0
     ) -> CalibrationData:
         calibrator = self._get_calibrator()
-        data = await calibrator.calibrate(descriptor, duration_s)
+        session = self.get_session(descriptor)
+        if not session:
+            raise ValueError("No session for provided sensor")
+        data = await calibrator.calibrate(session, duration_s)
         self._calibration_data[descriptor.identity] = data
         return data
 

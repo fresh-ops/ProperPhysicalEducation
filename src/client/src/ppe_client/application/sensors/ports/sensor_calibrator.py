@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 
-from ppe_client.domain import SensorDescriptor
+from .sensor_session import SensorSession
 
 
 class CalibrationData:
@@ -19,7 +19,7 @@ class CalibrationData:
 class SensorCalibrator(ABC):
     @abstractmethod
     async def calibrate(
-        self, descriptor: SensorDescriptor, duration_s: float = 5.0
+        self, session: SensorSession, duration_s: float = 5.0
     ) -> CalibrationData:
         pass
 

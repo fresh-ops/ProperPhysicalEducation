@@ -10,7 +10,7 @@ from ppe_client.domain import SensorDescriptor
 from .bleak_sensor_session import BleakSensorSession
 
 
-@injectable
+@injectable(as_type=SensorConnector)
 class BleakSensorConnector(SensorConnector):
     DEVICE_UUID = "0000503e-0000-1000-8000-00805f9b34fb"
 

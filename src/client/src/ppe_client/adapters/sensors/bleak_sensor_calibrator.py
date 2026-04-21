@@ -1,27 +1,23 @@
 import asyncio
 from typing import TYPE_CHECKING, Any
 
-from ppe_client.application.sensors.ports.sensor_calibrator import (
+from wireup import injectable
+
+from ppe_client.application.sensors.ports import (
     CalibrationData,
     SensorCalibrator,
+    SensorSession,
 )
-from ppe_client.domain import SensorDescriptor
 
 if TYPE_CHECKING:
-    from ppe_client.application.sensors.sensor_service import SensorService
+    pass
 
 
+@injectable(as_type=SensorCalibrator)
 class BleakSensorCalibrator(SensorCalibrator):
-    def __init__(self, sensor_service: "SensorService") -> None:
-        self._sensor_service = sensor_service
-
     async def calibrate(
-        self, descriptor: SensorDescriptor, duration_s: float = 5.0
+        self, session: SensorSession, duration_s: float = 5.0
     ) -> CalibrationData:
-        session = self._sensor_service.get_session(descriptor)
-        if not session:
-            raise ValueError("Sensor not connected")
-
         relaxed_values = await self._collect_data(session, duration_s)
         tensed_values = await self._collect_data(session, duration_s)
 

@@ -7,7 +7,7 @@ from ppe_client.application.sensors.ports import SensorEnumerator
 from ppe_client.domain import SensorDescriptor
 
 
-@injectable
+@injectable(as_type=SensorEnumerator)
 class BleakSensorEnumerator(SensorEnumerator):
     def __init__(self, target_name: str = "PPE Sensor") -> None:
         self._target_name = target_name
