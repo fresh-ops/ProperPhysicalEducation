@@ -13,7 +13,7 @@ class MockBleakSensorEnumerator:
     def __init__(self, target_name: str = "PPE Sensor"):
         self._target_name = target_name
 
-    async def discover(self, timeout_s: float = 2.0):
+    async def discover(self, timeout_s: float = 2.0) -> list[SensorDescriptor]:
         print(f"Mock discovery: looking for '{self._target_name}'")
         return [
             SensorDescriptor(name="PPE Sensor", address="AA:BB:CC:DD:EE:FF"),
@@ -21,7 +21,7 @@ class MockBleakSensorEnumerator:
         ]
 
 
-async def main():
+async def main() -> None:
     enumerator = MockBleakSensorEnumerator()
     devices = await enumerator.discover()
     print(f"\nFound {len(devices)} devices:")
