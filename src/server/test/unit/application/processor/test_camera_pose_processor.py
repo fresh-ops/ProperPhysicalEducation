@@ -1,7 +1,7 @@
 from types import SimpleNamespace
 from unittest.mock import Mock, patch
 
-from application.processor.camera_pose_processor import CameraPoseProcessor
+from application.processor.camera.camera_pose_processor import CameraPoseProcessor
 from application.processor.process_context import ProcessContext
 from domain.model.exercise_state import ExerciseState
 from domain.model.pose import Pose
@@ -118,7 +118,7 @@ def test_process_returns_violation_feedback_messages() -> None:
     context = ProcessContext(pose=input_pose)
 
     with patch(
-        "application.processor.camera_pose_processor.Feedback",
+        "application.processor.camera.camera_pose_processor.Feedback",
         side_effect=lambda *, type, message: SimpleNamespace(
             type=type, message=message
         ),
@@ -149,7 +149,7 @@ def test_process_appends_transition_feedback_when_pose_index_changes() -> None:
     context = ProcessContext(pose=input_pose)
 
     with patch(
-        "application.processor.camera_pose_processor.Feedback",
+        "application.processor.camera.camera_pose_processor.Feedback",
         side_effect=lambda *, type, message: SimpleNamespace(
             type=type, message=message
         ),

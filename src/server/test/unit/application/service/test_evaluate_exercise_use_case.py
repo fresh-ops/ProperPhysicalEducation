@@ -42,13 +42,17 @@ async def test_execute_processes_processors_in_order_and_persists_final_state() 
         [Feedback(type=FeedbackType.SYSTEM, message="second")],
         second_state,
     )
+    first_factory = Mock()
+    first_factory.create.return_value = first_processor
+    second_factory = Mock()
+    second_factory.create.return_value = second_processor
     context = Mock(spec=ProcessContext)
     context_mapper = Mock(spec=ProcessContextMapper)
     context_mapper.to_context.return_value = context
 
     use_case = EvaluateExerciseUseCase(
         session_repository=session_repository,
-        processors=[first_processor, second_processor],
+        processor_factories=[first_factory, second_factory],
         context_mapper=context_mapper,
     )
     request = ProcessRequestDto(landmarks=_landmarks_32())
@@ -88,7 +92,7 @@ async def test_execute_handles_empty_processor_list() -> None:
 
     use_case = EvaluateExerciseUseCase(
         session_repository=session_repository,
-        processors=[],
+        processor_factories=[],
         context_mapper=context_mapper,
     )
 
