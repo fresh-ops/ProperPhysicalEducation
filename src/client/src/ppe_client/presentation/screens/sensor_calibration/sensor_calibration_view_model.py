@@ -62,9 +62,7 @@ class SensorCalibrationViewModel(ViewModel[SensorCalibrationPayload]):
             self.stage_changed.emit("tensed")
             await self._timer_with_progress(5.0)
 
-            calibration_data = await self._sensor_service.calibrate(
-                self._descriptor, duration_s=5.0
-            )
+            await self._sensor_service.calibrate(self._descriptor, duration_s=5.0)
 
             self.calibration_complete.emit()
 
