@@ -6,7 +6,7 @@ from pydantic_core import ValidationError
 from wireup import Injected
 
 from application.dto.process import ProcessRequestDto
-from application.service.evaluate_exercise_use_case import EvaluateExerciseUseCase
+from application.usecase.evaluate_exercise_use_case import EvaluateExerciseUseCase
 from domain.model.session_id import SessionId
 
 from presentation.schemas.error import ErrorResponse

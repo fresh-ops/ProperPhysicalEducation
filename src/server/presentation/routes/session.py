@@ -2,7 +2,7 @@ from fastapi import APIRouter, HTTPException, status
 from wireup import Injected
 
 from application.dto.session import StartSessionRequestDto
-from application.service.start_session_use_case import StartSessionUseCase
+from application.usecase.start_session_use_case import StartSessionUseCase
 from domain.ports.errors import EntityNotFoundError
 
 from presentation.schemas.session import StartSessionRequest, StartSessionResponse

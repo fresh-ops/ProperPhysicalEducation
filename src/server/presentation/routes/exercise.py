@@ -1,7 +1,7 @@
 from fastapi import APIRouter, HTTPException, status
 from wireup import Injected
 
-from application.service.get_exercises_use_case import GetExercisesUseCase
+from application.usecase.get_exercises_use_case import GetExercisesUseCase
 from domain.ports.errors import EntityNotFoundError
 
 from presentation.schemas.exercises import ExerciseItem, ExercisesResponse

@@ -1,8 +1,8 @@
 from wireup import AsyncContainer, create_async_container, injectable
 
-from application.service.evaluate_exercise_use_case import EvaluateExerciseUseCase
-from application.service.get_exercises_use_case import GetExercisesUseCase
-from application.service.start_session_use_case import StartSessionUseCase
+from application.usecase.evaluate_exercise_use_case import EvaluateExerciseUseCase
+from application.usecase.get_exercises_use_case import GetExercisesUseCase
+from application.usecase.start_session_use_case import StartSessionUseCase
 from config import settings
 from composition.di import (
     application_di,

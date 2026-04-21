@@ -5,7 +5,7 @@ import pytest
 from application.dto.process import ProcessRequestDto
 from application.mapper.process_context_mapper import ProcessContextMapper
 from application.processor.process_context import ProcessContext
-from application.service.evaluate_exercise_use_case import EvaluateExerciseUseCase
+from application.usecase.evaluate_exercise_use_case import EvaluateExerciseUseCase
 from application.dto.feedback import FeedbackItemDto
 from domain.model.exercise_id import ExerciseId
 from domain.model.exercise_state import ExerciseState
