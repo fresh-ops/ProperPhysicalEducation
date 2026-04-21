@@ -2,16 +2,15 @@ from typing import TYPE_CHECKING
 
 from wireup import injectable
 
-from ppe_client.adapters.sensors.bleak_sensor_connector import BleakSensorConnector
-from ppe_client.adapters.sensors.bleak_sensor_enumerator import BleakSensorEnumerator
-from ppe_client.application.sensors.ports.sensor_calibrator import CalibrationData
+from ppe_client.adapters.sensors import BleakSensorConnector, BleakSensorEnumerator
 from ppe_client.domain import SensorDescriptor
+
+from .ports import CalibrationData, SensorSession
 
 if TYPE_CHECKING:
     from ppe_client.adapters.sensors.bleak_sensor_calibrator import (
         BleakSensorCalibrator,
     )
-    from ppe_client.application.sensors.ports.sensor_session import SensorSession
 
 
 @injectable
@@ -52,7 +51,7 @@ class SensorService:
     def is_connected(self, descriptor: SensorDescriptor) -> bool:
         return self._connector.is_connected(descriptor)
 
-    def get_session(self, descriptor: SensorDescriptor) -> "SensorSession | None":
+    def get_session(self, descriptor: SensorDescriptor) -> SensorSession | None:
         return self._connector.get_session(descriptor)
 
     def get_all_connected(self) -> list[SensorDescriptor]:
