@@ -22,8 +22,13 @@ class SensorService:
         self._calibration_data: dict[str, CalibrationData] = {}
         self._calibrator = calibrator
 
-    def _get_calibrator(self) -> SensorCalibrator:
+    def get_calibrator(self) -> SensorCalibrator:
         return self._calibrator
+
+    def store_calibration(
+        self, descriptor: SensorDescriptor, data: CalibrationData
+    ) -> None:
+        self._calibration_data[descriptor.identity] = data
 
     async def discover(self, timeout_s: float = 2.0) -> list[SensorDescriptor]:
         return await self._enumerator.discover(timeout_s)
@@ -52,7 +57,7 @@ class SensorService:
     async def calibrate(
         self, descriptor: SensorDescriptor, duration_s: float = 5.0
     ) -> CalibrationData:
-        calibrator = self._get_calibrator()
+        calibrator = self.get_calibrator()
         session = self.get_session(descriptor)
         if not session:
             raise ValueError("No session for provided sensor")
@@ -69,7 +74,7 @@ class SensorService:
         data = self.get_calibration_data(descriptor)
         if not data:
             return "unknown"
-        calibrator = self._get_calibrator()
+        calibrator = self.get_calibrator()
         return calibrator.get_zone(value, data)
 
     async def cleanup(self) -> None:

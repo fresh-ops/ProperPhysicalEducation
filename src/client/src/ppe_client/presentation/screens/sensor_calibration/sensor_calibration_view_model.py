@@ -4,6 +4,7 @@ from typing import override
 from PySide6 import QtCore
 from wireup import injectable
 
+from ppe_client.application.sensors.ports import CalibrationData, SensorSession
 from ppe_client.application.sensors.sensor_service import SensorService
 from ppe_client.domain import SensorDescriptor
 
@@ -56,16 +57,34 @@ class SensorCalibrationViewModel(ViewModel[SensorCalibrationPayload]):
             return
 
         try:
+            session = self._sensor_service.get_session(self._descriptor)
+            if session is None:
+                self.error_occurred.emit("Sensor session not available")
+                self._is_calibrating = False
+                return
+
             self.stage_changed.emit("relaxed")
-            await self._timer_with_progress(5.0)
+            relaxed_data = await self._collect_data_with_progress(session, 5.0)
+            print(f"Relaxed data points collected: {len(relaxed_data)}")
 
             self.stage_changed.emit("tensed")
-            await self._timer_with_progress(5.0)
+            tensed_data = await self._collect_data_with_progress(session, 5.0)
+            print(f"Tensed data points collected: {len(tensed_data)}")
 
-            await self._sensor_service.calibrate(self._descriptor, duration_s=5.0)
+            calibration_data = CalibrationData(relaxed_data, tensed_data)
+            calibrator = self._sensor_service.get_calibrator()
+            calibrator.calculate_thresholds(calibration_data)
+
+            print(
+                f"Thresholds calculated: "
+                f"low={calibration_data.low_threshold:.2f}, "
+                f"mid={calibration_data.mid_threshold:.2f}, "
+                f"high={calibration_data.high_threshold:.2f}"
+            )
+
+            self._sensor_service.store_calibration(self._descriptor, calibration_data)
 
             self.calibration_complete.emit()
-
             payload = SensorConnectionPayload(descriptor=self._descriptor)
             self.request_navigation("sensor_connection", payload)
 
@@ -75,14 +94,29 @@ class SensorCalibrationViewModel(ViewModel[SensorCalibrationPayload]):
         finally:
             self._is_calibrating = False
 
-    async def _timer_with_progress(self, duration_s: float) -> None:
-        start_time = asyncio.get_event_loop().time()
-        end_time = start_time + duration_s
+    async def _collect_data_with_progress(
+        self, session: SensorSession, duration_s: float
+    ) -> list[float]:
+        """Collects data in parallel with progress display"""
+        values: list[float] = []
 
-        while asyncio.get_event_loop().time() < end_time:
-            elapsed = asyncio.get_event_loop().time() - start_time
-            progress = int((elapsed / duration_s) * 100)
-            self.progress_changed.emit(min(progress, 100))
-            await asyncio.sleep(0.1)
+        def on_data(value: float) -> None:
+            values.append(value)
 
-        self.progress_changed.emit(100)
+        session.attach(on_data)
+
+        try:
+            start_time = asyncio.get_event_loop().time()
+            end_time = start_time + duration_s
+
+            while asyncio.get_event_loop().time() < end_time:
+                elapsed = asyncio.get_event_loop().time() - start_time
+                progress = int((elapsed / duration_s) * 100)
+                self.progress_changed.emit(min(progress, 100))
+                await asyncio.sleep(0.1)
+
+            self.progress_changed.emit(100)
+        finally:
+            session.detach(on_data)
+
+        return values
