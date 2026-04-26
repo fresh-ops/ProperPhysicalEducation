@@ -1,8 +1,6 @@
 import asyncio
-import os
 from collections import deque
 from collections.abc import Callable
-from random import random
 from typing import override
 
 from PySide6 import QtCore
@@ -65,26 +63,6 @@ class SensorConnectionViewModel(ViewModel[SensorConnectionPayload]):
 
     def _attach_callback(self) -> None:
         if self._descriptor is None:
-            return
-
-        if os.getenv("PPE_TEST_MODE") == "1":
-            from ppe_client.adapters.sensors.ema_signal_filter import (
-                EMASignalFilter,
-            )
-
-            descriptor = self._descriptor
-            signal_filter = EMASignalFilter()
-
-            async def generate_test_data() -> None:
-                base_value = 100.0 if "1" in descriptor.name else 200.0
-                while self._callback_registered:
-                    raw_value = base_value + random() * 50 - 25
-                    filtered_value = signal_filter.filter(raw_value)
-                    self._on_sensor_data(filtered_value)
-                    await asyncio.sleep(0.1)
-
-            self._callback_registered = True
-            self._test_task = asyncio.create_task(generate_test_data())
             return
 
         session = self._sensor_service.get_session(self._descriptor)

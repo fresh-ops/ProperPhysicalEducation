@@ -1,5 +1,3 @@
-import os
-
 from bleak import BleakScanner
 from wireup import injectable
 
@@ -13,18 +11,6 @@ class BleakSensorEnumerator(SensorEnumerator):
         self._target_name = target_name
 
     async def discover(self, timeout_s: float = 2.0) -> list[SensorDescriptor]:
-        if os.getenv("PPE_TEST_MODE") == "1":
-            return [
-                SensorDescriptor(
-                    name="PPE Sensor",
-                    address="AA:BB:CC:DD:EE:FF",
-                ),
-                SensorDescriptor(
-                    name="PPE Sensor",
-                    address="11:22:33:44:55:66",
-                ),
-            ]
-
         devices = await BleakScanner.discover(timeout=timeout_s)
 
         result: list[SensorDescriptor] = []
