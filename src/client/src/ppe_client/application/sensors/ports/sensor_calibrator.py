@@ -1,4 +1,7 @@
-from abc import ABC, abstractmethod
+# from abc import ABC, abstractmethod
+
+
+from typing import Protocol
 
 from .sensor_session import SensorSession
 
@@ -16,17 +19,11 @@ class CalibrationData:
         self.high_threshold = 0.0
 
 
-class SensorCalibrator(ABC):
-    @abstractmethod
+class SensorCalibrator(Protocol):
     async def calibrate(
         self, session: SensorSession, duration_s: float = 5.0
-    ) -> CalibrationData:
-        pass
+    ) -> CalibrationData: ...
 
-    @abstractmethod
-    def calculate_thresholds(self, data: CalibrationData) -> None:
-        pass
+    def calculate_thresholds(self, data: CalibrationData) -> None: ...
 
-    @abstractmethod
-    def get_zone(self, value: float, data: CalibrationData) -> str:
-        pass
+    def get_zone(self, value: float, data: CalibrationData) -> str: ...

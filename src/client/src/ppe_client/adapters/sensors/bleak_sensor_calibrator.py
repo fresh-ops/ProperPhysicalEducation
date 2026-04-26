@@ -1,5 +1,5 @@
 import asyncio
-from typing import TYPE_CHECKING, Any
+from typing import Any
 
 from wireup import injectable
 
@@ -9,12 +9,9 @@ from ppe_client.application.sensors.ports import (
     SensorSession,
 )
 
-if TYPE_CHECKING:
-    pass
-
 
 @injectable(as_type=SensorCalibrator)
-class BleakSensorCalibrator(SensorCalibrator):
+class BleakSensorCalibrator:
     async def calibrate(
         self, session: SensorSession, duration_s: float = 5.0
     ) -> CalibrationData:
