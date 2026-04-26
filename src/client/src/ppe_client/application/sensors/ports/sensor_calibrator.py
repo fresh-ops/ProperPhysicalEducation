@@ -1,22 +1,16 @@
-# from abc import ABC, abstractmethod
-
-
+from dataclasses import dataclass
 from typing import Protocol
 
 from .sensor_session import SensorSession
 
 
+@dataclass()
 class CalibrationData:
-    def __init__(
-        self,
-        relaxed_values: list[float],
-        tensed_values: list[float],
-    ) -> None:
-        self.relaxed_values = relaxed_values
-        self.tensed_values = tensed_values
-        self.low_threshold = 0.0
-        self.mid_threshold = 0.0
-        self.high_threshold = 0.0
+    relaxed_values: list[float]
+    tensed_values: list[float]
+    low_threshold: float = 0.0
+    mid_threshold: float = 0.0
+    high_threshold: float = 0.0
 
 
 class SensorCalibrator(Protocol):
