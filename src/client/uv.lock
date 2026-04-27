@@ -173,6 +173,7 @@ dependencies = [
     { name = "requests" },
     { name = "types-requests" },
     { name = "websockets" },
+    { name = "wireup" },
 ]
 
 [package.dev-dependencies]
@@ -196,6 +197,7 @@ requires-dist = [
     { name = "requests", specifier = ">=2.32.5" },
     { name = "types-requests", specifier = ">=2.32.4.20260107" },
     { name = "websockets", specifier = ">=16.0" },
+    { name = "wireup", specifier = ">=2.9.0" },
 ]
 
 [package.metadata.requires-dev]
@@ -1332,4 +1334,16 @@ wheels = [
     { url = "https://files.pythonhosted.org/packages/c2/b6/b9afed2afadddaf5ebb2afa801abf4b0868f42f8539bfe4b071b5266c9fe/websockets-16.0-cp314-cp314t-win32.whl", hash = "sha256:5a4b4cc550cb665dd8a47f868c8d04c8230f857363ad3c9caf7a0c3bf8c61ca6", size = 178085, upload-time = "2026-01-10T09:23:33.816Z" },
     { url = "https://files.pythonhosted.org/packages/9f/3e/28135a24e384493fa804216b79a6a6759a38cc4ff59118787b9fb693df93/websockets-16.0-cp314-cp314t-win_amd64.whl", hash = "sha256:b14dc141ed6d2dde437cddb216004bcac6a1df0935d79656387bd41632ba0bbd", size = 178531, upload-time = "2026-01-10T09:23:35.016Z" },
     { url = "https://files.pythonhosted.org/packages/6f/28/258ebab549c2bf3e64d2b0217b973467394a9cea8c42f70418ca2c5d0d2e/websockets-16.0-py3-none-any.whl", hash = "sha256:1637db62fad1dc833276dded54215f2c7fa46912301a24bd94d45d46a011ceec", size = 171598, upload-time = "2026-01-10T09:23:45.395Z" },
+]
+
+[[package]]
+name = "wireup"
+version = "2.9.0"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "typing-extensions" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/96/83/45068502e16557c2298c7a0452595c6e0aeaf293a62684dcf26f0bceb7aa/wireup-2.9.0.tar.gz", hash = "sha256:d26e320d0a2def0de8dee7aff610443f9ad02ef998ed7ddaa5c9137c17304ae4", size = 760527, upload-time = "2026-03-22T16:53:32.816Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/09/b6/7f41b3fe7fac2dae08934b8aaa146cab179f3517c5c45c2849074e94847b/wireup-2.9.0-py3-none-any.whl", hash = "sha256:d85e5711ee5f0fb4ac84a2a36bad83b5748372e89a99105d6aac1e2df4a4cfae", size = 57583, upload-time = "2026-03-22T16:53:31.07Z" },
 ]

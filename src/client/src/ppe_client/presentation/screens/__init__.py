@@ -1,6 +1,3 @@
-from . import cameras_screen, my_screen
+from . import choose_exercise, training
 
-__all__ = [
-    "cameras_screen",
-    "my_screen",
-]
+__all__ = ["choose_exercise", "training"]

@@ -20,14 +20,14 @@ class CameraCaptureViewModel(QtCore.QObject):
 
     _session_service: CameraSessionService
     _pose_service: PoseService
-    _camera: CameraDescriptor | None
+    _camera: CameraDescriptor
     _session: CameraSession | None
 
     def __init__(
         self,
         session_service: CameraSessionService,
         pose_service: PoseService,
-        camera: CameraDescriptor | None = None,
+        camera: CameraDescriptor,
         parent: QtCore.QObject | None = None,
     ) -> None:
         """Initialize capture dependencies and optional initial camera state.
@@ -35,7 +35,8 @@ class CameraCaptureViewModel(QtCore.QObject):
         Args:
             session_service (CameraSessionService): Shared capture
                 sessions coordinator.
-            camera_info (CameraDescriptor | None): Optional camera selected initially.
+            pose_service (PoseService): Pose detecting service.
+            camera_info (CameraDescriptor): Capturing camera.
             parent (QtCore.QObject | None): Optional parent QObject for Qt
                 ownership and signal lifecycle.
         """
@@ -67,17 +68,6 @@ class CameraCaptureViewModel(QtCore.QObject):
         if self._camera is not None:
             self._session_service.disconnect(self._camera)
         self._session = None
-
-    def update_camera(self, camera: CameraDescriptor) -> None:
-        """Replace current camera source and restart capture.
-
-        Args:
-            camera (CameraDescriptor): Camera metadata used to configure
-                the worker capture source.
-        """
-        self.stop_capture()
-        self._camera = camera
-        self.start_capture()
 
     @QtCore.Slot(object)
     def _on_frame_ready(self, frame: Frame) -> None:
