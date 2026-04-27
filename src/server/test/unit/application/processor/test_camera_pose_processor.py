@@ -88,7 +88,7 @@ def test_process_returns_no_feedback_when_pose_matched_and_no_violations() -> No
     )
 
     current_state = state_machine.state
-    context = ProcessContext(pose=input_pose)
+    context = ProcessContext(pose=input_pose, emgs=[])
     feedbacks, _ = processor.process(context, current_state)
 
     assert feedbacks == []
@@ -115,7 +115,7 @@ def test_process_returns_violation_feedback_messages() -> None:
     )
 
     current_state = state_machine.state
-    context = ProcessContext(pose=input_pose)
+    context = ProcessContext(pose=input_pose, emgs=[])
 
     with patch(
         "application.processor.camera.camera_pose_processor.Feedback",
@@ -146,7 +146,7 @@ def test_process_appends_transition_feedback_when_pose_index_changes() -> None:
     )
 
     current_state = state_machine.state
-    context = ProcessContext(pose=input_pose)
+    context = ProcessContext(pose=input_pose, emgs=[])
 
     with patch(
         "application.processor.camera.camera_pose_processor.Feedback",

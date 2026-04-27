@@ -22,7 +22,7 @@ class EmgSensorProcessor(SensorProcessor):
             for violation in violations:
                 feedbacks.append(
                     Feedback(
-                        type="emg",
+                        type="EMG",
                         message=f"EMG sensor {emg.sensor_id} is in zone {emg.zone}",
                     )
                 )

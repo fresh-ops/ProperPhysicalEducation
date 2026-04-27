@@ -2,8 +2,6 @@ from unittest.mock import AsyncMock, Mock
 
 import pytest
 
-from application.dto.process import ProcessRequestDto
-from application.mapper.process_context_mapper import ProcessContextMapper
 from application.processor.process_context import ProcessContext
 from application.usecase.evaluate_exercise_use_case import EvaluateExerciseUseCase
 from application.dto.feedback import FeedbackItemDto
@@ -13,6 +11,7 @@ from domain.model.feedback import Feedback, FeedbackType
 from domain.model.session import Session
 from domain.model.session_id import SessionId
 from domain.ports.session_repository import SessionRepository
+from domain.service.pose.skeleton_transformer import landmarks_to_pose
 
 
 def _landmarks_32() -> list[list[float]]:
@@ -46,25 +45,20 @@ async def test_execute_processes_processors_in_order_and_persists_final_state() 
     first_factory.create.return_value = first_processor
     second_factory = Mock()
     second_factory.create.return_value = second_processor
-    context = Mock(spec=ProcessContext)
-    context_mapper = Mock(spec=ProcessContextMapper)
-    context_mapper.to_context.return_value = context
 
     use_case = EvaluateExerciseUseCase(
         session_repository=session_repository,
         processor_factories=[first_factory, second_factory],
-        context_mapper=context_mapper,
     )
-    request = ProcessRequestDto(landmarks=_landmarks_32())
+    request = ProcessContext(pose=landmarks_to_pose(_landmarks_32()), emgs=[])
 
     response = await use_case.execute(session.session_id, request)
 
     session_repository.get.assert_awaited_once_with(session.session_id)
     first_call_args = first_processor.process.call_args.args
     second_call_args = second_processor.process.call_args.args
-    context_mapper.to_context.assert_called_once_with(request)
-    assert first_call_args[0] is context
-    assert second_call_args[0] is context
+    assert first_call_args[0] is request
+    assert second_call_args[0] is request
     assert first_call_args[1] == session.exercise_state
     assert second_call_args[1] == first_state
     session_repository.update.assert_awaited_once()
@@ -87,18 +81,15 @@ async def test_execute_handles_empty_processor_list() -> None:
     session_repository = Mock(spec=SessionRepository)
     session_repository.get = AsyncMock(return_value=session)
     session_repository.update = AsyncMock(return_value=session)
-    context_mapper = Mock(spec=ProcessContextMapper)
-    context_mapper.to_context.return_value = Mock(spec=ProcessContext)
 
     use_case = EvaluateExerciseUseCase(
         session_repository=session_repository,
         processor_factories=[],
-        context_mapper=context_mapper,
     )
 
     response = await use_case.execute(
         session.session_id,
-        ProcessRequestDto(landmarks=_landmarks_32()),
+        ProcessContext(pose=landmarks_to_pose(_landmarks_32()), emgs=[]),
     )
 
     session_repository.get.assert_awaited_once_with(session.session_id)
