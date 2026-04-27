@@ -5,7 +5,6 @@ from fastapi import APIRouter, WebSocket
 from pydantic_core import ValidationError
 from wireup import Injected
 
-from application.dto.process import ProcessRequestDto
 from application.usecase.evaluate_exercise_use_case import EvaluateExerciseUseCase
 from domain.model.session_id import SessionId
 
@@ -13,6 +12,8 @@ from presentation.schemas.error import ErrorResponse
 from presentation.schemas.feedback import FeedbackItem, FeedbackResponse
 from config import settings
 from presentation.schemas.process import ProcessRequest
+from presentation.mapper.process_request_mapper import map_to_context
+
 
 router = APIRouter(tags=["evaluate"])
 
@@ -43,7 +44,7 @@ async def analyze(
 
             feedback_response = await use_case.execute(
                 session_id=SessionId(session_id),
-                data=ProcessRequestDto(request.landmarks),
+                data=map_to_context(request),
             )
             feedback_items = [
                 FeedbackItem(message=feedback.message, type=feedback.type)

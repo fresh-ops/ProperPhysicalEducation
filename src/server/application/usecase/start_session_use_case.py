@@ -1,6 +1,6 @@
 import uuid
 
-from application.dto.session import StartSessionRequestDto, StartSessionResponseDto
+from application.dto.session import StartSessionResponseDto
 from domain.model.exercise_id import ExerciseId
 from domain.model.exercise_state import ExerciseState
 from domain.model.session import Session
@@ -19,15 +19,15 @@ class StartSessionUseCase:
         self.session_repository = session_repository
         self.exercise_repository = exercise_repository
 
-    async def execute(self, request: StartSessionRequestDto) -> StartSessionResponseDto:
+    async def execute(self, exercise_id: ExerciseId) -> StartSessionResponseDto:
         try:
-            self.exercise_repository.get_by_id(ExerciseId(request.exercise_id))
+            self.exercise_repository.get_by_id(exercise_id)
         except EntityNotFoundError:
-            raise EntityNotFoundError("exercise", request.exercise_id)
+            raise EntityNotFoundError("exercise", exercise_id.id)
         session_id = str(uuid.uuid4())
         session = Session(
             session_id=SessionId(session_id),
-            exercise_id=ExerciseId(request.exercise_id),
+            exercise_id=exercise_id,
             exercise_state=ExerciseState(),
         )
         await self.session_repository.create(session)
