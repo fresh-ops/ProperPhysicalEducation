@@ -1,9 +1,6 @@
 {
-    "id": 1,
     "name": "arms_down",
     "threshold": 10.0,
-    "left_hip_angle": 165.0,
-    "right_hip_angle": 165.0,
     "left_shoulder_angle": 0.0,
     "right_shoulder_angle": 0.0,
     "left_elbow_angle": 180.0,

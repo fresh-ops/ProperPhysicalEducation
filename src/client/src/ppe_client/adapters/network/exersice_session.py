@@ -30,6 +30,7 @@ class ExerciseSession:
 
     def __init__(self) -> None:
         self.websocket: ClientConnection | None = None
+        self._recv_lock = asyncio.Lock()
 
     def recieve(self, pose: Pose, camera: CameraDescriptor | None = None) -> None:
         try:
@@ -38,14 +39,16 @@ class ExerciseSession:
             loop = asyncio.get_event_loop()
         loop.create_task(self.receive_feedbacks(PoseConverter.to_list(pose)))  # noqa: RUF006
 
-    async def get_exercises(
-        self, callback: Callable[[list[ExerciseItem]], None]
-    ) -> None:
+    async def get_exercises(self) -> list[ExerciseItem]:
         async with httpx.AsyncClient() as client:
-            response = await client.get(self._EXERCISES_ENDPOINT)
+            try:
+                response = await client.get(self._EXERCISES_ENDPOINT)
+            except (httpx.ConnectTimeout, httpx.ConnectError):
+                return [ExerciseItem(id=0, name="lol")]
+
             response.raise_for_status()
             data = response.json()
-            callback(ExercisesResponse(**data).exercises)
+            return ExercisesResponse(**data).exercises
 
     async def start(
         self, exercise_id: int, callback: Callable[[FeedbackResponse], None]
@@ -74,7 +77,8 @@ class ExerciseSession:
         try:
             request = LandmarksRequest(landmarks=landmarks)
             await self.websocket.send(json.dumps(request.model_dump()))
-            response = await self.websocket.recv()
+            async with self._recv_lock:
+                response = await self.websocket.recv()
             data = json.loads(response)
             if "error" in data:
                 return ErrorResponse(**data)
