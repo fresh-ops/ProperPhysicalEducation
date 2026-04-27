@@ -21,16 +21,13 @@ class SelectCameraViewModel(QtCore.QObject):
     def __init__(
         self,
         camera_enumerator: CameraEnumerator,
-        parent: QtCore.QObject | None = None,
     ) -> None:
         """Initialize view model state and optionally set parent for Qt ownership.
 
         Args:
             camera_enumerator (CameraEnumerator): Port for retrieving camera data.
-            parent (QtCore.QObject | None): Optional parent QObject for ownership and
-                signal propagation.
         """
-        super().__init__(parent)
+        super().__init__()
         self._cameras_list = []
         self._camera_enumerator = camera_enumerator
 

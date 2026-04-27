@@ -1,3 +1,3 @@
-from . import select_camera_dialog
+from . import select_camera
 
-__all__ = ["select_camera_dialog"]
+__all__ = ["select_camera"]

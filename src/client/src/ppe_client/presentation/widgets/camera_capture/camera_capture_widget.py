@@ -2,57 +2,54 @@ from typing import override
 
 from PySide6 import QtCore, QtGui, QtWidgets
 
-from ppe_client.application.cameras import CameraSessionService
-from ppe_client.application.poses import PoseService
-from ppe_client.domain import CameraDescriptor
-
 from .camera_capture_view_model import CameraCaptureViewModel
 
 
-class CameraCaptureView(QtWidgets.QWidget):
+class CameraCaptureWidget(QtWidgets.QWidget):
     """Widget for displaying a live preview from the selected camera.
 
     UI rendering responsibilities are kept in this view, while camera capture
     lifecycle is delegated to ``CameraCaptureViewModel``.
     """
 
-    _vm: CameraCaptureViewModel
+    _view_model: CameraCaptureViewModel
+    _preview_label: QtWidgets.QLabel
 
     def __init__(
         self,
-        session: CameraSessionService,
-        pose_service: PoseService,
-        camera: CameraDescriptor | None = None,
+        view_model: CameraCaptureViewModel,
         parent: QtWidgets.QWidget | None = None,
     ) -> None:
         """Initialize preview UI and bind it to the camera capture view model.
 
         Args:
-            camera_service (CameraSessionService): Shared coordinator for camera
-                capture sessions lifecycle.
-            camera (CameraDescriptor | None): Optional camera used as initial
-                capture source. If not provided, the first available camera is used.
+            view_model (CameraCaptureViewModel): Controlling view model.
             parent (QtWidgets.QWidget | None): Optional parent widget for Qt
                 ownership.
         """
         super().__init__(parent)
 
-        self._vm = CameraCaptureViewModel(
-            session_service=session,
-            pose_service=pose_service,
-            camera=camera,
-            parent=self,
-        )
-        self._vm.frame_ready.connect(self._on_frame_ready)
-        self._vm.start_capture()
+        self._view_model = view_model
+        self.on_create()
 
-        layout = QtWidgets.QVBoxLayout(self)
+    def on_create(self) -> None:
+        """Set up layout and signals."""
+        self._view_model.frame_ready.connect(self._on_frame_ready)
+
         self._preview_label = QtWidgets.QLabel(
             parent=self, text="Select a camera to start capturing"
         )
         self._preview_label.setAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
-        layout.addWidget(self._preview_label)
-        self.setLayout(layout)
+
+        root = QtWidgets.QVBoxLayout(self)
+        root.addWidget(self._preview_label)
+        self.setLayout(root)
+
+        self.start_capture()
+
+    def on_destroy(self) -> None:
+        self.stop_capture()
+        self._view_model.frame_ready.disconnect(self._on_frame_ready)
 
     @QtCore.Slot(QtGui.QPixmap)
     def _on_frame_ready(self, pixmap: QtGui.QPixmap) -> None:
@@ -70,22 +67,13 @@ class CameraCaptureView(QtWidgets.QWidget):
         Args:
             event (QtGui.QCloseEvent): Qt close event propagated to base class.
         """
-        self.stop_capture()
+        self.on_destroy()
         super().closeEvent(event)
 
     def start_capture(self) -> None:
         """Ensure camera capture is running for this preview."""
-        self._vm.start_capture()
+        self._view_model.start_capture()
 
     def stop_capture(self) -> None:
         """Ensure camera capture is stopped for this preview."""
-        self._vm.stop_capture()
-
-    def update_camera(self, camera: CameraDescriptor) -> None:
-        """Switch preview to another camera.
-
-        Args:
-            camera (CameraDescriptor): Camera metadata for the new capture source.
-        """
-        self._vm.update_camera(camera)
-        self._preview_label.setText("Select a camera to start capturing")
+        self._view_model.stop_capture()

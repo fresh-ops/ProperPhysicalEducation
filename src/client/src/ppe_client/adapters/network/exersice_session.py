@@ -10,21 +10,27 @@ from ppe_client.application.poses import Pose
 from ppe_client.domain import CameraDescriptor
 
 from ..poses.pose_converter import PoseConverter
-from .schemas.error import ErrorResponse
-from .schemas.exercise import ExerciseRequest
-from .schemas.feedback import FeedbackResponse
-from .schemas.landmarks import LandmarksRequest
-from .schemas.session import SessionResponse
+from .schemas import (
+    ErrorResponse,
+    ExerciseItem,
+    ExerciseRequest,
+    ExercisesResponse,
+    FeedbackResponse,
+    LandmarksRequest,
+    SessionResponse,
+)
 
 
 class ExerciseSession:
-    _SERVER = "192.168.3.124"
+    _SERVER = "172.20.10.2"
     _START_EXCERCISE_ENDPOINT = f"http://{_SERVER}:8000/start"
     _ANALYZE_ENDPOINT = f"ws://{_SERVER}:8000/analyze/"
+    _EXERCISES_ENDPOINT = f"http://{_SERVER}:8000/exercises"
     _callback: Callable[[FeedbackResponse], None] | None = None
 
     def __init__(self) -> None:
         self.websocket: ClientConnection | None = None
+        self._recv_lock = asyncio.Lock()
 
     def recieve(self, pose: Pose, camera: CameraDescriptor | None = None) -> None:
         try:
@@ -32,6 +38,17 @@ class ExerciseSession:
         except RuntimeError:
             loop = asyncio.get_event_loop()
         loop.create_task(self.receive_feedbacks(PoseConverter.to_list(pose)))  # noqa: RUF006
+
+    async def get_exercises(self) -> list[ExerciseItem]:
+        async with httpx.AsyncClient() as client:
+            try:
+                response = await client.get(self._EXERCISES_ENDPOINT)
+            except (httpx.ConnectTimeout, httpx.ConnectError):
+                return [ExerciseItem(id=0, name="lol")]
+
+            response.raise_for_status()
+            data = response.json()
+            return ExercisesResponse(**data).exercises
 
     async def start(
         self, exercise_id: int, callback: Callable[[FeedbackResponse], None]
@@ -60,7 +77,8 @@ class ExerciseSession:
         try:
             request = LandmarksRequest(landmarks=landmarks)
             await self.websocket.send(json.dumps(request.model_dump()))
-            response = await self.websocket.recv()
+            async with self._recv_lock:
+                response = await self.websocket.recv()
             data = json.loads(response)
             if "error" in data:
                 return ErrorResponse(**data)

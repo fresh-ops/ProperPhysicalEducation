@@ -17,7 +17,6 @@ class PoseService:
     def __init__(
         self, detector_factory: PoseDetectorFactory, reciever: PoseReciever
     ) -> None:
-        self._detector = detector_factory.create()
         self._detector_factory = detector_factory
         self._detectors = {}
         self._reciever = reciever
