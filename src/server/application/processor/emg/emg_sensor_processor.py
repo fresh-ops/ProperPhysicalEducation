@@ -23,7 +23,7 @@ class EmgSensorProcessor(SensorProcessor):
                 feedbacks.append(
                     Feedback(
                         type="EMG",
-                        message=f"EMG sensor {emg.sensor_id} is in zone {emg.zone}",
+                        message=f"EMG sensor {emg.sensor_id} is in {emg.zone.value} zone",
                     )
                 )
         return feedbacks, state
