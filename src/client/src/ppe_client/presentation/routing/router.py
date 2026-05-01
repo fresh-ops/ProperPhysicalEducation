@@ -37,7 +37,6 @@ class Router(QtCore.QObject):
     def navigate_by_name(self, route_name: RouteName, payload: Payload) -> None:
         if route_name not in self._scheme:
             raise RouteNotFoundError(route_name)
-        print(f"Navigating to {route_name}")
         self.navigate_to(self._scheme[route_name], payload)
 
     @QtCore.Slot(object, object)

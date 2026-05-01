@@ -201,13 +201,15 @@ class SensorConnectionScreen(Screen[SensorConnectionViewModel]):
             self._disconnect_button.setVisible(False)
             self._exit_button.setVisible(True)
 
+    # TODO: move to viewmodel
     @QtCore.Slot()
     def _on_calibrate_clicked(self) -> None:
-        if self._view_model._descriptor is None:
+        descriptor = self._view_model.get_descriptor()
+        if descriptor is None:
             return
         from ..sensor_calibration import SensorCalibrationPayload
 
-        payload = SensorCalibrationPayload(descriptor=self._view_model._descriptor)
+        payload = SensorCalibrationPayload(descriptor=descriptor)
         self._view_model.request_navigation("sensor_calibration", payload)
 
     @QtCore.Slot()

@@ -22,14 +22,14 @@ class SensorConnectionViewModel(ViewModel[SensorConnectionPayload]):
     MAX_DATA_POINTS = 500
 
     _sensor_service: SensorService
-    _descriptor: SensorDescriptor | None
+    _sensor: Sensor | None
     _data_buffer: deque[float]
     _reader_task: asyncio.Task[None] | None
 
     def __init__(self, sensor_service: SensorService) -> None:
         super().__init__()
         self._sensor_service = sensor_service
-        self._descriptor = None
+        self._sensor = None
         self._data_buffer = deque(maxlen=self.MAX_DATA_POINTS)
         self._reader_task = None
 
@@ -39,35 +39,31 @@ class SensorConnectionViewModel(ViewModel[SensorConnectionPayload]):
             self.connection_status_changed.emit("error")
             return
 
-        self._descriptor = payload.descriptor
-        await self._connect()
+        await self._connect(payload.descriptor)
 
-    async def _connect(self) -> None:
-        if self._descriptor is None:
+    async def _connect(self, descriptor: SensorDescriptor) -> None:
+        if descriptor is None:
             return
 
+        self._sensor = await self._sensor_service.get_sensor(descriptor)
         try:
-            success = await self._sensor_service.connect(self._descriptor)
-            if success:
+            await self._sensor.connect()
+            if self._sensor.has_connections():
                 self.connection_status_changed.emit("connected")
-                self._start_reader_loop()
+                await self._start_reader_loop()
             else:
                 self.connection_status_changed.emit("error")
         except Exception:
             self.connection_status_changed.emit("error")
 
-    def _start_reader_loop(self) -> None:
-        if self._descriptor is None or (
+    async def _start_reader_loop(self) -> None:
+        if self._sensor is None or (
             self._reader_task is not None and not self._reader_task.done()
         ):
             return
 
-        sensor = self._sensor_service.get_sensor(self._descriptor)
-        if sensor is None:
-            return
-
         self._reader_task = asyncio.get_running_loop().create_task(
-            self._read_loop(sensor)
+            self._read_loop(self._sensor)
         )
 
     async def _read_loop(self, sensor: Sensor) -> None:
@@ -88,20 +84,25 @@ class SensorConnectionViewModel(ViewModel[SensorConnectionPayload]):
         return self._data_buffer
 
     def get_calibration_data(self) -> CalibrationData | None:
-        if self._descriptor is None:
+        if self._sensor is None:
             return None
-        return self._sensor_service.get_calibration_data(self._descriptor)
+        return self._sensor.get_calibration_data()
 
     def notify_calibration_updated(self) -> None:
         self.calibration_updated.emit()
 
+    def get_descriptor(self) -> SensorDescriptor | None:
+        if self._sensor is None:
+            return None
+        return self._sensor.descriptor()
+
     async def disconnect_sensor(self) -> None:
-        if self._descriptor is None:
+        if self._sensor is None:
             return
 
         if self._reader_task is not None:
             self._reader_task.cancel()
             self._reader_task = None
 
-        await self._sensor_service.disconnect(self._descriptor)
+        await self._sensor.disconnect()
         self.connection_status_changed.emit("disconnected")

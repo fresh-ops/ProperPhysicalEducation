@@ -6,7 +6,6 @@ from wireup import injectable
 
 from ppe_client.application.sensors import SensorService
 from ppe_client.application.sensors.ports import CalibrationData, Sensor
-from ppe_client.domain import SensorDescriptor
 
 from ...routing.core import ViewModel
 from ..sensor_connection import SensorConnectionPayload
@@ -21,14 +20,14 @@ class SensorCalibrationViewModel(ViewModel[SensorCalibrationPayload]):
     error_occurred = QtCore.Signal(str)
 
     _sensor_service: SensorService
-    _descriptor: SensorDescriptor | None
+    _sensor: Sensor | None
     _calibration_task: asyncio.Task[None] | None
     _is_calibrating: bool
 
     def __init__(self, sensor_service: SensorService) -> None:
         super().__init__()
         self._sensor_service = sensor_service
-        self._descriptor = None
+        self._sensor = None
         self._calibration_task = None
         self._is_calibrating = False
 
@@ -38,11 +37,11 @@ class SensorCalibrationViewModel(ViewModel[SensorCalibrationPayload]):
             self.error_occurred.emit("No sensor descriptor provided")
             return
 
-        self._descriptor = payload.descriptor
+        self._sensor = await self._sensor_service.get_sensor(payload.descriptor)
 
     @QtCore.Slot()
     def on_start_calibration_clicked(self) -> None:
-        if self._is_calibrating or self._descriptor is None:
+        if self._is_calibrating or self._sensor is None:
             return
 
         loop = asyncio.get_running_loop()
@@ -51,24 +50,18 @@ class SensorCalibrationViewModel(ViewModel[SensorCalibrationPayload]):
     async def _perform_calibration(self) -> None:
         self._is_calibrating = True
 
-        if self._descriptor is None:
-            self.error_occurred.emit("Sensor descriptor is not available")
+        if self._sensor is None:
+            self.error_occurred.emit("Sensor is not available")
             self._is_calibrating = False
             return
 
         try:
-            sensor = self._sensor_service.get_sensor(self._descriptor)
-            if sensor is None:
-                self.error_occurred.emit("Sensor not connected")
-                self._is_calibrating = False
-                return
-
             self.stage_changed.emit("relaxed")
-            relaxed_data = await self._collect_data_with_progress(sensor, 5.0)
+            relaxed_data = await self._collect_data_with_progress(self._sensor, 5.0)
             print(f"Relaxed data points collected: {len(relaxed_data)}")
 
             self.stage_changed.emit("tensed")
-            tensed_data = await self._collect_data_with_progress(sensor, 5.0)
+            tensed_data = await self._collect_data_with_progress(self._sensor, 5.0)
             print(f"Tensed data points collected: {len(tensed_data)}")
 
             calibration_data = CalibrationData(relaxed_data, tensed_data)
@@ -82,10 +75,10 @@ class SensorCalibrationViewModel(ViewModel[SensorCalibrationPayload]):
                 f"high={calibration_data.high_threshold:.2f}"
             )
 
-            self._sensor_service.store_calibration(self._descriptor, calibration_data)
+            self._sensor.apply_calibration(calibration_data)
 
             self.calibration_complete.emit()
-            payload = SensorConnectionPayload(descriptor=self._descriptor)
+            payload = SensorConnectionPayload(descriptor=self._sensor.descriptor())
             self.request_navigation("sensor_connection", payload)
 
         except Exception as e:
