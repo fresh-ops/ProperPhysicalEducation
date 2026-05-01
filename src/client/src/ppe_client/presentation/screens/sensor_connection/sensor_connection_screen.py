@@ -133,29 +133,17 @@ class SensorConnectionScreen(Screen[SensorConnectionViewModel]):
         if low == 0.0 and mid == 0.0 and high == 0.0:
             return
 
-        display_range = max_displayed - min_displayed
-        green_size = display_range * 0.15
-        yellow_size = display_range * 0.7
-        red_size = display_range * 0.15
-
-        green_start = min_displayed
-        green_end = green_start + green_size
-
-        yellow_start = green_end
-        yellow_end = yellow_start + yellow_size
-
-        red_start = yellow_end
-        red_end = red_start + red_size
+        red_end = max(high, max_displayed)
 
         green_region = LinearRegionItem(
-            [green_start, green_end], orientation="horizontal", movable=False
+            [min_displayed, low], orientation="horizontal", movable=False
         )
         green_region.setBrush(QColor(0, 255, 0, 50))
         green_region.setZValue(-1)
         self._plot_widget.addItem(green_region)
 
         yellow_region = LinearRegionItem(
-            [yellow_start, yellow_end],
+            [low, mid],
             orientation="horizontal",
             movable=False,
         )
@@ -164,7 +152,7 @@ class SensorConnectionScreen(Screen[SensorConnectionViewModel]):
         self._plot_widget.addItem(yellow_region)
 
         red_region = LinearRegionItem(
-            [red_start, red_end], orientation="horizontal", movable=False
+            [mid, red_end], orientation="horizontal", movable=False
         )
         red_region.setBrush(QColor(255, 0, 0, 50))
         red_region.setZValue(-1)
