@@ -60,18 +60,6 @@ class SensorService:
     def get_all_connected(self) -> list[SensorDescriptor]:
         return [sensor.descriptor() for sensor in self._connected_sensors.values()]
 
-    # TODO: remove calibration logic
-    async def calibrate(
-        self, descriptor: SensorDescriptor, duration_s: float = 5.0
-    ) -> CalibrationData:
-        calibrator = self.get_calibrator()
-        sensor = self.get_sensor(descriptor)
-        if not sensor:
-            raise ValueError("No sensor for provided descriptor")
-        data = await calibrator.calibrate(sensor, duration_s)
-        self._calibration_data[descriptor.identity] = data
-        return data
-
     # TODO: remove getters
     def get_calibration_data(
         self, descriptor: SensorDescriptor
