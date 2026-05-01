@@ -44,20 +44,6 @@ class Sensor(Protocol):
         """
         ...
 
-    async def calibrate(
-        self, duration_s: float = 5.0, apply: bool = True
-    ) -> CalibrationData:
-        """Run calibration sampling and optionally apply results.
-
-        Args:
-            duration_s: duration for sampling each stage
-            apply: if True, apply thresholds to this sensor
-
-        Returns:
-            CalibrationData: collected calibration information
-        """
-        ...
-
     def apply_calibration(self, data: CalibrationData) -> None:
         """Apply calibration thresholds/state to this sensor instance."""
         ...

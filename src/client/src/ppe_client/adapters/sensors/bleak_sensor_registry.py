@@ -5,7 +5,6 @@ from wireup import injectable
 
 from ppe_client.application.sensors.ports import (
     Sensor,
-    SensorCalibrator,
     SensorRegistry,
 )
 from ppe_client.domain import SensorDescriptor
@@ -21,10 +20,9 @@ class BleakSensorRegistry:
     _sensors: dict[str, Sensor]
     _lock: asyncio.Lock
 
-    def __init__(self, calibrator: SensorCalibrator | None = None) -> None:
+    def __init__(self) -> None:
         self._sensors = {}
         self._lock = asyncio.Lock()
-        self._calibrator = calibrator
 
     async def enumerate(self, timeout_s: float = 2.0) -> list[SensorDescriptor]:
         devices = await BleakScanner.discover(timeout=timeout_s)
@@ -52,7 +50,5 @@ class BleakSensorRegistry:
     async def get(self, descriptor: SensorDescriptor) -> Sensor:
         async with self._lock:
             if descriptor.identity not in self._sensors:
-                self._sensors[descriptor.identity] = BleakSensor(
-                    descriptor, calibrator=self._calibrator
-                )
+                self._sensors[descriptor.identity] = BleakSensor(descriptor)
             return self._sensors[descriptor.identity]
