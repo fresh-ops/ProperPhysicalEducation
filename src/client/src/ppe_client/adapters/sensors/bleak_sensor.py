@@ -2,7 +2,11 @@ import struct
 
 from bleak import BleakClient
 
-from ppe_client.application.sensors.ports import CalibrationData, SensorCalibrator
+from ppe_client.application.sensors.ports import (
+    CalibrationData,
+    SensorCalibrator,
+    ValueZone,
+)
 from ppe_client.domain import SensorDescriptor
 
 
@@ -50,11 +54,11 @@ class BleakSensor:
         raw_data = await self._client.read_gatt_char(self._CHARACTERISTIC_UUID)
         return float(struct.unpack("f", raw_data)[0])
 
-    async def read_with_zone(self) -> tuple[float, str]:
+    async def read_with_zone(self) -> tuple[float, ValueZone]:
         value = await self.read()
-        if not self._calibrator or not self._calibration_data:
-            return value, "unknown"
-        return value, self._calibrator.get_zone(value, self._calibration_data)
+        if not self._calibration_data:
+            return value, ValueZone.UNKNOWN
+        return value, self._calibration_data.zone_of(value)
 
     async def calibrate(
         self, duration_s: float = 5.0, apply: bool = True

@@ -15,8 +15,10 @@ class SensorService:
         calibrator: SensorCalibrator,
     ) -> None:
         self._registry = registry
-        self._connected_sensors: dict[str, Sensor] = {} # TODO: remove connected sensors
-        self._calibration_data: dict[str, CalibrationData] = {} # TODO: remove calibration data
+        # TODO: remove connected sensors
+        self._connected_sensors: dict[str, Sensor] = {}
+        # TODO: remove calibration data
+        self._calibration_data: dict[str, CalibrationData] = {}
         self._calibrator = calibrator
 
     def get_calibrator(self) -> SensorCalibrator:
@@ -75,13 +77,6 @@ class SensorService:
         self, descriptor: SensorDescriptor
     ) -> CalibrationData | None:
         return self._calibration_data.get(descriptor.identity)
-
-    def get_zone(self, descriptor: SensorDescriptor, value: float) -> str:
-        data = self.get_calibration_data(descriptor)
-        if not data:
-            return "unknown"
-        calibrator = self.get_calibrator()
-        return calibrator.get_zone(value, data)
 
     async def cleanup(self) -> None:
         for sensor in list(self._connected_sensors.values()):

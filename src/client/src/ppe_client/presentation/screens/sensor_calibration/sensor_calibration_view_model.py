@@ -4,8 +4,8 @@ from typing import override
 from PySide6 import QtCore
 from wireup import injectable
 
+from ppe_client.application.sensors import SensorService
 from ppe_client.application.sensors.ports import CalibrationData, Sensor
-from ppe_client.application.sensors.sensor_service import SensorService
 from ppe_client.domain import SensorDescriptor
 
 from ...routing.core import ViewModel

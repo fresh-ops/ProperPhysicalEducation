@@ -2,7 +2,7 @@ from typing import Protocol
 
 from ppe_client.domain import SensorDescriptor
 
-from .calibration_data import CalibrationData
+from .calibration_data import CalibrationData, ValueZone
 
 
 class Sensor(Protocol):
@@ -36,11 +36,11 @@ class Sensor(Protocol):
         """Reads a floating-point value of muscle tension"""
         ...
 
-    async def read_with_zone(self) -> tuple[float, str]:
-        """Read one value and return it together with a zone label.
+    async def read_with_zone(self) -> tuple[float, ValueZone]:
+        """Read one value and return it together with a tension zone.
 
         Returns:
-            tuple: (value, zone) where zone is 'green'|'yellow'|'red'|'unknown'
+            tuple: (value, zone)
         """
         ...
 

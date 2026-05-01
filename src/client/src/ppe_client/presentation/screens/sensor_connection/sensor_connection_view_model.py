@@ -87,11 +87,6 @@ class SensorConnectionViewModel(ViewModel[SensorConnectionPayload]):
     def get_data_buffer(self) -> deque[float]:
         return self._data_buffer
 
-    def get_zone(self, value: float) -> str:
-        if self._descriptor is None:
-            return "unknown"
-        return self._sensor_service.get_zone(self._descriptor, value)
-
     def get_calibration_data(self) -> CalibrationData | None:
         if self._descriptor is None:
             return None

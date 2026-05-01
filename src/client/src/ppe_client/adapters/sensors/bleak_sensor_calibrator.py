@@ -48,12 +48,3 @@ class BleakSensorCalibrator:
         data.mid_threshold = min_val + range_size * 0.85
 
         data.high_threshold = max_val
-
-    # TODO: move this method to CalibrationData
-    def get_zone(self, value: float, data: CalibrationData) -> str:
-        if value < data.low_threshold:
-            return "green"
-        elif value < data.mid_threshold:
-            return "yellow"
-        else:
-            return "red"
