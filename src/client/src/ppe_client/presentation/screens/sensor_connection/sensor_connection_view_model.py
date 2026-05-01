@@ -86,7 +86,7 @@ class SensorConnectionViewModel(ViewModel[SensorConnectionPayload]):
     def get_calibration_data(self) -> CalibrationData | None:
         if self._sensor is None:
             return None
-        return self._sensor.get_calibration_data()
+        return self._sensor.calibration_data
 
     def notify_calibration_updated(self) -> None:
         self.calibration_updated.emit()
@@ -94,7 +94,7 @@ class SensorConnectionViewModel(ViewModel[SensorConnectionPayload]):
     def get_descriptor(self) -> SensorDescriptor | None:
         if self._sensor is None:
             return None
-        return self._sensor.descriptor()
+        return self._sensor.descriptor
 
     async def disconnect_sensor(self) -> None:
         if self._sensor is None:

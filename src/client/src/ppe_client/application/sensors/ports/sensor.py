@@ -16,7 +16,7 @@ class Sensor(Protocol):
         """Terminate a connection with this sensor"""
         ...
 
-    # TODO: turn into property
+    @property
     def descriptor(self) -> SensorDescriptor:
         """Returns a binded descriptor
 
@@ -49,7 +49,7 @@ class Sensor(Protocol):
         """Apply calibration thresholds/state to this sensor instance."""
         ...
 
-    # TODO: transform to property
-    def get_calibration_data(self) -> CalibrationData | None:
+    @property
+    def calibration_data(self) -> CalibrationData | None:
         """Return applied calibration data, or None if not calibrated."""
         ...

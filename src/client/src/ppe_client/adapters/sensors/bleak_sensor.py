@@ -40,6 +40,7 @@ class BleakSensor:
         if self._connections_count == 0:
             await self._client.disconnect()
 
+    @property
     def descriptor(self) -> SensorDescriptor:
         return self._descriptor
 
@@ -59,5 +60,6 @@ class BleakSensor:
     def apply_calibration(self, data: CalibrationData) -> None:
         self._calibration_data = data
 
-    def get_calibration_data(self) -> CalibrationData | None:
+    @property
+    def calibration_data(self) -> CalibrationData | None:
         return self._calibration_data

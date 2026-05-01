@@ -78,7 +78,7 @@ class SensorCalibrationViewModel(ViewModel[SensorCalibrationPayload]):
             self._sensor.apply_calibration(calibration_data)
 
             self.calibration_complete.emit()
-            payload = SensorConnectionPayload(descriptor=self._sensor.descriptor())
+            payload = SensorConnectionPayload(descriptor=self._sensor.descriptor)
             self.request_navigation("sensor_connection", payload)
 
         except Exception as e:
