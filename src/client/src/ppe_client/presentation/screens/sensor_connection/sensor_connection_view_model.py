@@ -1,13 +1,12 @@
 import asyncio
 from collections import deque
-from collections.abc import Callable
 from typing import override
 
 from PySide6 import QtCore
 from wireup import injectable
 
-from ppe_client.application.sensors.ports.sensor_calibrator import CalibrationData
-from ppe_client.application.sensors.sensor_service import SensorService
+from ppe_client.application.sensors import SensorService
+from ppe_client.application.sensors.ports import CalibrationData, Sensor
 from ppe_client.domain import SensorDescriptor
 
 from ...routing.core import ViewModel
@@ -25,18 +24,14 @@ class SensorConnectionViewModel(ViewModel[SensorConnectionPayload]):
     _sensor_service: SensorService
     _descriptor: SensorDescriptor | None
     _data_buffer: deque[float]
-    _callback_registered: bool
-    _callback: Callable[[float], None] | None
-    _test_task: asyncio.Task[None] | None
+    _reader_task: asyncio.Task[None] | None
 
     def __init__(self, sensor_service: SensorService) -> None:
         super().__init__()
         self._sensor_service = sensor_service
         self._descriptor = None
         self._data_buffer = deque(maxlen=self.MAX_DATA_POINTS)
-        self._callback_registered = False
-        self._callback = None
-        self._test_task = None
+        self._reader_task = None
 
     @override
     async def on_enter(self, payload: SensorConnectionPayload | None = None) -> None:
@@ -55,25 +50,35 @@ class SensorConnectionViewModel(ViewModel[SensorConnectionPayload]):
             success = await self._sensor_service.connect(self._descriptor)
             if success:
                 self.connection_status_changed.emit("connected")
-                self._attach_callback()
+                self._start_reader_loop()
             else:
                 self.connection_status_changed.emit("error")
         except Exception:
             self.connection_status_changed.emit("error")
 
-    def _attach_callback(self) -> None:
-        if self._descriptor is None:
+    def _start_reader_loop(self) -> None:
+        if self._descriptor is None or (
+            self._reader_task is not None and not self._reader_task.done()
+        ):
             return
 
-        session = self._sensor_service.get_session(self._descriptor)
-        if session and not self._callback_registered:
+        sensor = self._sensor_service.get_sensor(self._descriptor)
+        if sensor is None:
+            return
 
-            def on_data(value: float) -> None:
-                self._on_sensor_data(value)
+        self._reader_task = asyncio.get_running_loop().create_task(
+            self._read_loop(sensor)
+        )
 
-            session.attach(on_data)
-            self._callback = on_data
-            self._callback_registered = True
+    async def _read_loop(self, sensor: Sensor) -> None:
+        try:
+            while True:
+                self._on_sensor_data(await sensor.read())
+                await asyncio.sleep(0.01)
+        except asyncio.CancelledError:
+            return
+        except Exception:
+            self.connection_status_changed.emit("error")
 
     def _on_sensor_data(self, value: float) -> None:
         self._data_buffer.append(value)
@@ -99,15 +104,9 @@ class SensorConnectionViewModel(ViewModel[SensorConnectionPayload]):
         if self._descriptor is None:
             return
 
-        self._callback_registered = False
-
-        if self._test_task is not None:
-            self._test_task.cancel()
-            self._test_task = None
-
-        session = self._sensor_service.get_session(self._descriptor)
-        if session and self._callback is not None:
-            session.detach(self._callback)
+        if self._reader_task is not None:
+            self._reader_task.cancel()
+            self._reader_task = None
 
         await self._sensor_service.disconnect(self._descriptor)
         self.connection_status_changed.emit("disconnected")

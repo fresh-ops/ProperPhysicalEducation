@@ -1,36 +1,34 @@
 import asyncio
-from typing import Any
 
 from wireup import injectable
 
 from ppe_client.application.sensors.ports import (
     CalibrationData,
+    Sensor,
     SensorCalibrator,
-    SensorSession,
 )
 
 
+# TODO: separate this class from Bleak
 @injectable(as_type=SensorCalibrator)
 class BleakSensorCalibrator:
     async def calibrate(
-        self, session: SensorSession, duration_s: float = 5.0
+        self, sensor: Sensor, duration_s: float = 5.0
     ) -> CalibrationData:
-        relaxed_values = await self._collect_data(session, duration_s)
-        tensed_values = await self._collect_data(session, duration_s)
+        relaxed_values = await self._collect_data(sensor, duration_s)
+        tensed_values = await self._collect_data(sensor, duration_s)
 
         data = CalibrationData(relaxed_values, tensed_values)
         self.calculate_thresholds(data)
         return data
 
-    async def _collect_data(self, session: Any, duration_s: float) -> list[float]:
+    async def _collect_data(self, sensor: Sensor, duration_s: float) -> list[float]:
         values: list[float] = []
 
-        def on_data(value: float) -> None:
-            values.append(value)
-
-        session.attach(on_data)
-        await asyncio.sleep(duration_s)
-        session.detach(on_data)
+        end_time = asyncio.get_running_loop().time() + duration_s
+        while asyncio.get_running_loop().time() < end_time:
+            values.append(await sensor.read())
+            await asyncio.sleep(0.01)
 
         return values
 
@@ -51,6 +49,7 @@ class BleakSensorCalibrator:
 
         data.high_threshold = max_val
 
+    # TODO: move this method to CalibrationData
     def get_zone(self, value: float, data: CalibrationData) -> str:
         if value < data.low_threshold:
             return "green"
