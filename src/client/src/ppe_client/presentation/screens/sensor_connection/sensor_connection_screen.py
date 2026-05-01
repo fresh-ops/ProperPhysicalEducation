@@ -5,8 +5,6 @@ from pyqtgraph import LinearRegionItem, PlotWidget
 from PySide6 import QtCore, QtWidgets
 from PySide6.QtGui import QColor
 
-from ppe_client.presentation.screens.sensor_discovery import SensorDiscoveryPayload
-
 from ...routing.core import Screen
 from .sensor_connection_view_model import SensorConnectionViewModel
 
@@ -43,16 +41,18 @@ class SensorConnectionScreen(Screen[SensorConnectionViewModel]):
         self._buttons_container = QtWidgets.QHBoxLayout()
 
         self._calibrate_button = QtWidgets.QPushButton("Calibrate")
-        self._calibrate_button.clicked.connect(self._on_calibrate_clicked)
+        self._calibrate_button.clicked.connect(
+            self._view_model.on_calibrate_button_clicked
+        )
         self._calibrate_button.setVisible(False)
         self._buttons_container.addWidget(self._calibrate_button)
 
         self._disconnect_button = QtWidgets.QPushButton("Disconnect")
-        self._disconnect_button.clicked.connect(self._on_disconnect_clicked)
+        self._disconnect_button.clicked.connect(self._view_model.on_exit_button_clicked)
         self._buttons_container.addWidget(self._disconnect_button)
 
         self._exit_button = QtWidgets.QPushButton("Exit to Sensors List")
-        self._exit_button.clicked.connect(self._on_exit_clicked)
+        self._exit_button.clicked.connect(self._view_model.on_exit_button_clicked)
         self._exit_button.setVisible(False)
         self._buttons_container.addWidget(self._exit_button)
 
@@ -76,6 +76,12 @@ class SensorConnectionScreen(Screen[SensorConnectionViewModel]):
         self._view_model.data_received.disconnect(self._on_data_received)
         self._view_model.connection_status_changed.disconnect(self._on_status_changed)
         self._view_model.calibration_updated.disconnect(self._on_calibration_updated)
+
+        self._calibrate_button.clicked.disconnect(
+            self._view_model.on_calibrate_button_clicked
+        )
+        self._exit_button.clicked.disconnect(self._view_model.on_exit_button_clicked)
+        self._disconnect_button.clicked.connect(self._view_model.on_exit_button_clicked)
 
     @QtCore.Slot(float)
     def _on_data_received(self, value: float) -> None:
@@ -200,31 +206,3 @@ class SensorConnectionScreen(Screen[SensorConnectionViewModel]):
             self._calibrate_button.setVisible(False)
             self._disconnect_button.setVisible(False)
             self._exit_button.setVisible(True)
-
-    # TODO: move to viewmodel
-    @QtCore.Slot()
-    def _on_calibrate_clicked(self) -> None:
-        descriptor = self._view_model.get_descriptor()
-        if descriptor is None:
-            return
-        from ..sensor_calibration import SensorCalibrationPayload
-
-        payload = SensorCalibrationPayload(descriptor=descriptor)
-        self._view_model.request_navigation("sensor_calibration", payload)
-
-    @QtCore.Slot()
-    def _on_disconnect_clicked(self) -> None:
-        loop = asyncio.get_running_loop()
-        self._task = loop.create_task(self._disconnect_and_navigate())
-
-    @QtCore.Slot()
-    def _on_exit_clicked(self) -> None:
-        self._view_model.request_navigation(
-            "sensor_discovery", SensorDiscoveryPayload()
-        )
-
-    async def _disconnect_and_navigate(self) -> None:
-        await self._view_model.disconnect_sensor()
-        self._view_model.request_navigation(
-            "sensor_discovery", SensorDiscoveryPayload()
-        )

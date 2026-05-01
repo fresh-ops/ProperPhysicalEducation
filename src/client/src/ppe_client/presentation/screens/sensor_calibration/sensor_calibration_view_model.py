@@ -56,6 +56,7 @@ class SensorCalibrationViewModel(ViewModel[SensorCalibrationPayload]):
             return
 
         try:
+            await self._sensor.connect()
             self.stage_changed.emit("relaxed")
             relaxed_data = await self._collect_data_with_progress(self._sensor, 5.0)
             print(f"Relaxed data points collected: {len(relaxed_data)}")
@@ -85,6 +86,7 @@ class SensorCalibrationViewModel(ViewModel[SensorCalibrationPayload]):
             print(f"Error during calibration: {e}")
             self.error_occurred.emit(f"Calibration failed: {e!s}")
         finally:
+            await self._sensor.disconnect()
             self._is_calibrating = False
 
     async def _collect_data_with_progress(

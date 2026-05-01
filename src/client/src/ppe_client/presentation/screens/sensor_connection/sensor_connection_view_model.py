@@ -3,11 +3,18 @@ from collections import deque
 from typing import override
 
 from PySide6 import QtCore
+from qasync import asyncSlot
 from wireup import injectable
 
 from ppe_client.application.sensors import SensorService
 from ppe_client.application.sensors.ports import CalibrationData, Sensor
 from ppe_client.domain import SensorDescriptor
+from ppe_client.presentation.screens.sensor_calibration import (
+    SensorCalibrationPayload,
+)
+from ppe_client.presentation.screens.sensor_discovery import (
+    SensorDiscoveryPayload,
+)
 
 from ...routing.core import ViewModel
 from .sensor_connection_payload import SensorConnectionPayload
@@ -106,3 +113,16 @@ class SensorConnectionViewModel(ViewModel[SensorConnectionPayload]):
 
         await self._sensor.disconnect()
         self.connection_status_changed.emit("disconnected")
+
+    @asyncSlot()  # type: ignore
+    async def on_calibrate_button_clicked(self) -> None:
+        if self._sensor is None:
+            return
+        payload = SensorCalibrationPayload(descriptor=self._sensor.descriptor)
+        self.request_navigation("sensor_calibration", payload)
+        await self.disconnect_sensor()
+
+    @asyncSlot()  # type: ignore
+    async def on_exit_button_clicked(self) -> None:
+        self.request_navigation("sensor_discovery", SensorDiscoveryPayload())
+        await self.disconnect_sensor()
