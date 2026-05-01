@@ -25,8 +25,7 @@ class Sensor(Protocol):
         """
         ...
 
-    # TODO: rename to is_connected
-    def has_connections(self) -> bool:
+    def is_connected(self) -> bool:
         """Checks for a connection to this sensor
 
         Returns:

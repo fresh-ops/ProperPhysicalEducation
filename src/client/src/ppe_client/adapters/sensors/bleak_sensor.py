@@ -43,7 +43,7 @@ class BleakSensor:
     def descriptor(self) -> SensorDescriptor:
         return self._descriptor
 
-    def has_connections(self) -> bool:
+    def is_connected(self) -> bool:
         return self._connections_count > 0
 
     async def read(self) -> float:

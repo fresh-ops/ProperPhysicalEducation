@@ -48,7 +48,7 @@ class SensorConnectionViewModel(ViewModel[SensorConnectionPayload]):
         self._sensor = await self._sensor_service.get_sensor(descriptor)
         try:
             await self._sensor.connect()
-            if self._sensor.has_connections():
+            if self._sensor.is_connected():
                 self.connection_status_changed.emit("connected")
                 await self._start_reader_loop()
             else:
