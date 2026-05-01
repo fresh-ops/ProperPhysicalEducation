@@ -2,7 +2,7 @@ from typing import Protocol
 
 from ppe_client.domain import SensorDescriptor
 
-from .calibration_data import CalibrationData, ValueZone
+from ..calibration.calibration_data import CalibrationData, ValueZone
 
 
 class Sensor(Protocol):

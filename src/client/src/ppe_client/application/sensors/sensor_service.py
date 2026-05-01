@@ -1,8 +1,8 @@
 from ppe_client.domain import SensorDescriptor
 
+from .calibration import SensorCalibrator
 from .ports import (
     Sensor,
-    SensorCalibrator,
     SensorRegistry,
 )
 

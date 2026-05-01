@@ -11,11 +11,9 @@ class ValueZone(Enum):
 
 @dataclass()
 class CalibrationData:
-    relaxed_values: list[float]
-    tensed_values: list[float]
-    low_threshold: float = 0.0
-    mid_threshold: float = 0.0
-    high_threshold: float = 0.0
+    low_threshold: float
+    mid_threshold: float
+    high_threshold: float
 
     def zone_of(self, value: float) -> ValueZone:
         if value < self.low_threshold:

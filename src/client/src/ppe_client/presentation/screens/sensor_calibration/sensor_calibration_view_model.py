@@ -5,7 +5,7 @@ from PySide6 import QtCore
 from wireup import injectable
 
 from ppe_client.application.sensors import SensorService
-from ppe_client.application.sensors.ports import CalibrationData, Sensor
+from ppe_client.application.sensors.ports import Sensor
 
 from ...routing.core import ViewModel
 from ..sensor_connection import SensorConnectionPayload
@@ -65,9 +65,8 @@ class SensorCalibrationViewModel(ViewModel[SensorCalibrationPayload]):
             tensed_data = await self._collect_data_with_progress(self._sensor, 5.0)
             print(f"Tensed data points collected: {len(tensed_data)}")
 
-            calibration_data = CalibrationData(relaxed_data, tensed_data)
             calibrator = self._sensor_service.get_calibrator()
-            calibrator.calculate_thresholds(calibration_data)
+            calibration_data = calibrator.calibrate(tensed_data, relaxed_data)
 
             print(
                 f"Thresholds calculated: "

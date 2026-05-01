@@ -7,7 +7,8 @@ from qasync import asyncSlot
 from wireup import injectable
 
 from ppe_client.application.sensors import SensorService
-from ppe_client.application.sensors.ports import CalibrationData, Sensor
+from ppe_client.application.sensors.calibration import CalibrationData
+from ppe_client.application.sensors.ports import Sensor
 from ppe_client.domain import SensorDescriptor
 from ppe_client.presentation.screens.sensor_calibration import (
     SensorCalibrationPayload,

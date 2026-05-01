@@ -3,7 +3,7 @@ import struct
 
 from bleak import BleakClient
 
-from ppe_client.application.sensors.ports import (
+from ppe_client.application.sensors.calibration import (
     CalibrationData,
     ValueZone,
 )
