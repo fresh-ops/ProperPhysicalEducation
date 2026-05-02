@@ -5,6 +5,8 @@ from wireup import injectable
 
 from ppe_client.adapters.network import ExerciseSession
 from ppe_client.adapters.network.schemas import ExerciseItem
+from ppe_client.presentation.routing.routes import Routes
+from ppe_client.presentation.screens.training.training_payload import TrainingPayload
 
 from ...routing.core import ViewModel
 from .choose_exercise_payload import ChooseExercisePayload
@@ -17,6 +19,7 @@ class ChooseExerciseViewModel(ViewModel[ChooseExercisePayload]):
 
     _exercise_session: ExerciseSession
     _exercises: list[ExerciseItem]
+    _selected_exersice: ExerciseItem
 
     def __init__(self, exersice_session: ExerciseSession) -> None:
         super().__init__()
@@ -32,5 +35,11 @@ class ChooseExerciseViewModel(ViewModel[ChooseExercisePayload]):
 
     @QtCore.Slot(int)
     def on_selected_exercise_change(self, exercise_index: int) -> None:
-        print(exercise_index)
+        self._selected_exersice = self._exercises[exercise_index]
         self.start_button_disabled_set.emit(False)
+
+    @QtCore.Slot()
+    def on_start_exercise_button_clicked(self) -> None:
+        self.request_navigation(
+            Routes.TRAINING, TrainingPayload(exercise_id=self._selected_exersice.id)
+        )

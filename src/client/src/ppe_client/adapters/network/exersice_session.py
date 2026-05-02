@@ -44,7 +44,7 @@ class ExerciseSession:
             try:
                 response = await client.get(self._EXERCISES_ENDPOINT)
             except (httpx.ConnectTimeout, httpx.ConnectError):
-                return []
+                return [ExerciseItem(id=0, name="lol")]
 
             response.raise_for_status()
             data = response.json()

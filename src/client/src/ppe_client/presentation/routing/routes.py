@@ -7,3 +7,4 @@ class Routes:
     SENSOR_DISCOVERY = "sensor_discovery"
     SENSOR_CONNECTION = "sensor_connection"
     SENSOR_CALIBRATION = "sensor_calibration"
+    TRAINING = "training"

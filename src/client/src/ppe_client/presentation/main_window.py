@@ -15,6 +15,9 @@ from .screens.sensor_discovery import (
     SensorDiscoveryPayload,
     sensor_discovery_route_descriptor,
 )
+from .screens.training import (
+    training_route_descriptor,
+)
 
 
 class MainWindow(QtWidgets.QMainWindow):
@@ -48,6 +51,7 @@ class MainWindow(QtWidgets.QMainWindow):
                 Routes.SENSOR_DISCOVERY: sensor_discovery_route_descriptor,
                 Routes.SENSOR_CONNECTION: sensor_connection_route_descriptor,
                 Routes.SENSOR_CALIBRATION: sensor_calibration_route_descriptor,
+                Routes.TRAINING: training_route_descriptor,
             },
             self,
         )

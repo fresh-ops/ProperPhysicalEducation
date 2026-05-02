@@ -20,6 +20,9 @@ class ChooseExerciseScreen(Screen[ChooseExerciseViewModel]):
         self._view_model.exercises_updated.connect(self.on_exercises_updated)
 
         self._start_exercise_button = QtWidgets.QPushButton("Start")
+        self._start_exercise_button.clicked.connect(
+            self._view_model.on_start_exercise_button_clicked
+        )
         self._view_model.start_button_disabled_set.connect(
             self.on_start_button_disabled_set
         )
@@ -40,6 +43,9 @@ class ChooseExerciseScreen(Screen[ChooseExerciseViewModel]):
     @override
     def on_destroy(self) -> None:
         self._view_model.exercises_updated.disconnect(self.on_exercises_updated)
+        self._start_exercise_button.clicked.disconnect(
+            self._view_model.on_start_exercise_button_clicked
+        )
         self._view_model.start_button_disabled_set.disconnect(
             self.on_start_button_disabled_set
         )
