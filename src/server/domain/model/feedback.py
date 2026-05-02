@@ -1,12 +1,14 @@
 from dataclasses import dataclass
+from enum import Enum
 
 
-class FeedbackType:
+class FeedbackType(Enum):
     SYSTEM = "SYSTEM"
     POSE = "POSE"
+    EMG = "EMG"
 
 
 @dataclass
 class Feedback:
-    type: str
+    type: FeedbackType
     message: str

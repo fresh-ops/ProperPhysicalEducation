@@ -2,6 +2,7 @@ from application.dto.feedback import FeedbackItemDto, FeedbackResponseDto
 from application.dto.process import ProcessRequestDto
 from application.mapper.process_context_mapper import ProcessContextMapper
 from application.processor.sensor_processor import SensorProcessorFactory
+from domain.model.feedback import Feedback
 from domain.model.session_id import SessionId
 from domain.ports.session_repository import SessionRepository
 
@@ -35,6 +36,6 @@ class EvaluateExerciseUseCase:
 
         return FeedbackResponseDto(
             feedbacks=[
-                FeedbackItemDto(type=f.type, message=f.message) for f in feedbacks
+                FeedbackItemDto(type=f.type.value, message=f.message) for f in feedbacks
             ]
         )
