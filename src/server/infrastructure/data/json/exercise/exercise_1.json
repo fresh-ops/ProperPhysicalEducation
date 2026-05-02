@@ -1,0 +1,97 @@
+{
+    "id": "exercise_1",
+
+    "name": "lateral_raises_exercise",
+
+    "poses": [
+        "pose_1",
+        "pose_2"
+    ],
+
+    "rules": [
+        {
+        "pose_id": "pose_1",
+        "feature": "LEFT_SHOULDER",
+        "operator": ">",
+        "value": 15.0,
+        "message": "Опустите левую руку полностью"
+        },
+        {
+        "pose_id": "pose_1",
+        "feature": "RIGHT_SHOULDER",
+        "operator": ">",
+        "value": 15.0,
+        "message": "Опустите правую руку полностью"
+        },
+        {
+        "pose_id": "pose_1",
+        "feature": "LEFT_ELBOW",
+        "operator": "<",
+        "value": 170.0,
+        "message": "Держите левую руку прямой"
+        },
+        {
+        "pose_id": "pose_1",
+        "feature": "RIGHT_ELBOW",
+        "operator": "<",
+        "value": 170.0,
+        "message": "Держите правую руку прямой"
+        },
+        {
+        "pose_id": "pose_1",
+        "feature": "LEFT_KNEE",
+        "operator": "<",
+        "value": 170.0,
+        "message": "Выпрямите левую ногу"
+        },
+        {
+        "pose_id": "pose_1",
+        "feature": "RIGHT_KNEE",
+        "operator": "<",
+        "value": 170.0,
+        "message": "Выпрямите правую ногу"
+        },
+        {
+        "pose_id": "pose_2",
+        "feature": "LEFT_SHOULDER",
+        "operator": "<",
+        "value": 75.0,
+        "message": "Поднимите левую руку выше"
+        },
+        {
+        "pose_id": "pose_2",
+        "feature": "RIGHT_SHOULDER",
+        "operator": "<",
+        "value": 75.0,
+        "message": "Поднимите правую руку выше"
+        },
+        {
+        "pose_id": "pose_2",
+        "feature": "LEFT_ELBOW",
+        "operator": "<",
+        "value": 160.0,
+        "message": "Не сгибайте левый локоть при подъёме"
+        },
+        {
+        "pose_id": "pose_2",
+        "feature": "RIGHT_ELBOW",
+        "operator": "<",
+        "value": 160.0,
+        "message": "Не сгибайте правый локоть при подъёме"
+        },
+        {
+        "pose_id": "pose_2",
+        "feature": "LEFT_KNEE",
+        "operator": "<",
+        "value": 170.0,
+        "message": "Не приседайте, держите ноги прямыми"
+        },
+        {
+        "pose_id": "pose_2",
+        "feature": "RIGHT_KNEE",
+        "operator": "<",
+        "value": 170.0,
+        "message": "Не приседайте, держите ноги прямыми"
+        }
+    ]
+}
