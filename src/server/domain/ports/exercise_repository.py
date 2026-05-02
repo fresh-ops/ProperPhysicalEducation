@@ -8,7 +8,7 @@ class ExerciseRepository(ABC):
     @abstractmethod
     def get_by_id(self, exercise_id: ExerciseId) -> Exercise:
         """
-        Абстрактный метод для получения упражнения по его идентификатору.
+        Метод для получения упражнения по его идентификатору.
 
         Args:
             exercise_id (ExerciseId): идентификатор упражнения
@@ -21,7 +21,7 @@ class ExerciseRepository(ABC):
     @abstractmethod
     def get_all(self) -> list[Exercise]:
         """
-        Абстрактный метод для получения всех упражнений.
+        Метод для получения всех упражнений.
 
         Returns:
             list[Exercise]: список всех упражнений

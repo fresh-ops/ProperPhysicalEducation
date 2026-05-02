@@ -8,7 +8,7 @@ class PoseRepository(ABC):
     @abstractmethod
     def get_by_id(self, pose_id: PoseId) -> Pose:
         """
-        Абстрактный метод для получения позы по ее идентификатору.
+        Метод для получения позы по ее идентификатору.
 
         Args:
             pose_id (PoseId): идентификатор позы
