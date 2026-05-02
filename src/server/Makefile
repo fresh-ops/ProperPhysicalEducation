@@ -11,6 +11,9 @@ help:
 	@echo "  make fix        - Auto-fix lint issues and format"
 	@echo "  make ci         - Alias for make check"
 	@echo "  make run        - Run the application"
+	@echo "  make docker-up   - Build and start Docker containers"
+	@echo "  make docker-down - Stop and remove Docker containers"
+	@echo "  make docker-logs - Follow logs of Docker containers"
 
 lint:
 	uv run ruff check .
@@ -42,4 +45,13 @@ fix:
 ci: check
 
 run:
-	uv run uvicorn composition.main:app --host 0.0.0.0 --port 8000      
+	uv run uvicorn composition.main:app --host 0.0.0.0 --port 8000
+
+docker-up:
+	docker compose up --build
+
+docker-down:
+	docker compose down
+
+docker-logs:
+	docker compose logs -f 
