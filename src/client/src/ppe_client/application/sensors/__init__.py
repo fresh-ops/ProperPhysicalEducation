@@ -1,4 +1,4 @@
-from . import ports
+from . import calibration, ports
 from .sensor_service import SensorService
 
-__all__ = ["SensorService", "ports"]
+__all__ = ["SensorService", "calibration", "ports"]
