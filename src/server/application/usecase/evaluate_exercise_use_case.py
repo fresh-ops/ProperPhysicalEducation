@@ -1,6 +1,7 @@
 from application.dto.feedback import FeedbackItemDto, FeedbackResponseDto
 from application.processor.process_context import ProcessContext
 from application.processor.sensor_processor import SensorProcessorFactory
+from domain.model.feedback import Feedback
 from domain.model.session_id import SessionId
 from domain.ports.session_repository import SessionRepository
 
@@ -18,7 +19,7 @@ class EvaluateExerciseUseCase:
         self, session_id: SessionId, data: ProcessContext
     ) -> FeedbackResponseDto:
         session = await self._session_repository.get(session_id)
-        feedbacks = []
+        feedbacks: list[Feedback] = []
         current_state = session.exercise_state
         for factory in self._processor_factories:
             processor = factory.create(session.exercise_id)
@@ -31,6 +32,6 @@ class EvaluateExerciseUseCase:
 
         return FeedbackResponseDto(
             feedbacks=[
-                FeedbackItemDto(type=f.type, message=f.message) for f in feedbacks
+                FeedbackItemDto(type=f.type.value, message=f.message) for f in feedbacks
             ]
         )

@@ -5,7 +5,7 @@ from application.processor.sensor_processor import SensorProcessor
 from domain.model.emg import EmgReading
 from domain.model.emg_rule import EmgRule
 from domain.model.exercise_state import ExerciseState
-from domain.model.feedback import Feedback
+from domain.model.feedback import Feedback, FeedbackType
 from domain.service.rule.rule_validator import RuleValidator
 
 
@@ -22,7 +22,7 @@ class EmgSensorProcessor(SensorProcessor):
             for violation in violations:
                 feedbacks.append(
                     Feedback(
-                        type="EMG",
+                        type=FeedbackType.EMG,
                         message=f"EMG sensor {emg.sensor_id} is in {emg.zone.value} zone",
                     )
                 )

@@ -66,8 +66,8 @@ async def test_execute_processes_processors_in_order_and_persists_final_state() 
     updated_session = session_repository.update.await_args.args[0]
     assert updated_session.exercise_state == second_state
     assert response.feedbacks == [
-        FeedbackItemDto(type=FeedbackType.POSE, message="first"),
-        FeedbackItemDto(type=FeedbackType.SYSTEM, message="second"),
+        FeedbackItemDto(type=FeedbackType.POSE.value, message="first"),
+        FeedbackItemDto(type=FeedbackType.SYSTEM.value, message="second"),
     ]
 
 
