@@ -13,6 +13,7 @@ from ...routing import Routes
 from ...routing.core import ViewModel
 from ..sensor_calibration import SensorCalibrationPayload
 from ..sensor_discovery import SensorDiscoveryPayload
+from ...stores import SensorStore
 from .sensor_connection_payload import SensorConnectionPayload
 
 
@@ -24,12 +25,14 @@ class SensorConnectionViewModel(ViewModel[SensorConnectionPayload]):
     calibration_updated = QtCore.Signal(object)
 
     _sensor_service: SensorService
+    _sensor_store: SensorStore
     _sensor: Sensor | None
     _reading_task: asyncio.Task[None] | None
 
-    def __init__(self, sensor_service: SensorService) -> None:
+    def __init__(self, sensor_service: SensorService, sensor_store: SensorStore) -> None:
         super().__init__()
         self._sensor_service = sensor_service
+        self._sensor_store = sensor_store
         self._sensor = None
         self._reading_task = None
 
@@ -67,6 +70,7 @@ class SensorConnectionViewModel(ViewModel[SensorConnectionPayload]):
         if self._sensor is None:
             return
         self.request_navigation(Routes.SENSOR_DISCOVERY, SensorDiscoveryPayload())
+        await self._sensor_store.add(self._sensor.descriptor)
         await self._disconnect()
 
     async def _connect(self, descriptor: SensorDescriptor) -> None:

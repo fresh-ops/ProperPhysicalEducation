@@ -44,6 +44,8 @@ def make_exercise_session() -> ExerciseSession:
 
 injectables = [
     make_exercise_session,
+    make_pose_service,
+    BleakSensorRegistry,
     injectable(ExerciseSession, as_type=PoseReciever),
     injectable(OpenCVCameraEnumerator, as_type=CameraEnumerator),
     injectable(SessionTerminator),
@@ -52,9 +54,7 @@ injectables = [
     injectable(CameraSessionService),
     injectable(MediaPipePoseDetectorFactory, as_type=PoseDetectorFactory),
     injectable(PoseRestorer),
-    make_pose_service,
     injectable(MeanSensorCalibrator, as_type=SensorCalibrator),
-    BleakSensorRegistry,
     injectable(SensorService),
     # ViewModels
     presentation,
