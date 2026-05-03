@@ -1,16 +1,18 @@
-import asyncio
-from typing import Any, override
+from collections import deque
+from typing import override
 
 from pyqtgraph import LinearRegionItem, PlotWidget
-from PySide6 import QtCore, QtWidgets
-from PySide6.QtGui import QColor
+from PySide6 import QtCore, QtGui, QtWidgets
+
+from ppe_client.application.sensors.calibration.calibration_data import CalibrationData
 
 from ...routing.core import Screen
 from .sensor_connection_view_model import SensorConnectionViewModel
 
 
 class SensorConnectionScreen(Screen[SensorConnectionViewModel]):
-    _task: asyncio.Task[Any] | None = None
+    _data_buffer: deque[float]
+    _calibration: CalibrationData | None
 
     @override
     def on_create(self) -> None:
@@ -47,18 +49,21 @@ class SensorConnectionScreen(Screen[SensorConnectionViewModel]):
         self._calibrate_button.setVisible(False)
         self._buttons_container.addWidget(self._calibrate_button)
 
+        self._add_button = QtWidgets.QPushButton("Add Sensor")
+        self._add_button.clicked.connect(self._view_model.on_add_sensor_button_clicked)
+        self._add_button.setVisible(False)
+        self._buttons_container.addWidget(self._add_button)
+
         self._disconnect_button = QtWidgets.QPushButton("Disconnect")
-        self._disconnect_button.clicked.connect(self._view_model.on_exit_button_clicked)
+        self._disconnect_button.clicked.connect(
+            self._view_model.on_disconnect_button_clicked
+        )
+        self._disconnect_button.setVisible(False)
         self._buttons_container.addWidget(self._disconnect_button)
 
         self._exit_button = QtWidgets.QPushButton("Exit to Sensors List")
         self._exit_button.clicked.connect(self._view_model.on_exit_button_clicked)
-        self._exit_button.setVisible(False)
         self._buttons_container.addWidget(self._exit_button)
-
-        self._view_model.data_received.connect(self._on_data_received)
-        self._view_model.connection_status_changed.connect(self._on_status_changed)
-        self._view_model.calibration_updated.connect(self._on_calibration_updated)
 
         root = QtWidgets.QVBoxLayout()
         root.addWidget(self._title_label)
@@ -69,128 +74,101 @@ class SensorConnectionScreen(Screen[SensorConnectionViewModel]):
 
         self.setLayout(root)
 
-        self._view_model.notify_calibration_updated()
+        self._data_buffer = deque(maxlen=100)
+        self._calibration = None
+        self._view_model.connection_error.connect(self._on_connection_error)
+        self._view_model.connection_established.connect(self._on_connection_established)
+        self._view_model.data_recieved.connect(self._on_data_recieved)
+        self._view_model.calibration_updated.connect(self._on_calibration_updated)
 
     @override
     def on_destroy(self) -> None:
-        self._view_model.data_received.disconnect(self._on_data_received)
-        self._view_model.connection_status_changed.disconnect(self._on_status_changed)
-        self._view_model.calibration_updated.disconnect(self._on_calibration_updated)
-
+        self._disconnect_button.clicked.disconnect(
+            self._view_model.on_disconnect_button_clicked
+        )
+        self._exit_button.clicked.disconnect(self._view_model.on_exit_button_clicked)
+        self._add_button.clicked.disconnect(
+            self._view_model.on_add_sensor_button_clicked
+        )
         self._calibrate_button.clicked.disconnect(
             self._view_model.on_calibrate_button_clicked
         )
-        self._exit_button.clicked.disconnect(self._view_model.on_exit_button_clicked)
-        self._disconnect_button.clicked.connect(self._view_model.on_exit_button_clicked)
+
+        self._view_model.connection_error.disconnect(self._on_connection_error)
+        self._view_model.connection_established.disconnect(
+            self._on_connection_established
+        )
+        self._view_model.data_recieved.disconnect(self._on_data_recieved)
+        self._view_model.calibration_updated.disconnect(self._on_calibration_updated)
+
+    @QtCore.Slot()
+    def _on_connection_error(self) -> None:
+        self._status_label.setText("Connection Error")
+        self._status_label.setStyleSheet("color: #f44336; font-weight: bold;")
+        self._add_button.setVisible(False)
+        self._calibrate_button.setVisible(False)
+        self._disconnect_button.setVisible(False)
+        self._exit_button.setVisible(True)
+
+    @QtCore.Slot()
+    def _on_connection_established(self) -> None:
+        self._status_label.setText("Connected")
+        self._status_label.setStyleSheet("color: #4caf50; font-weight: bold;")
+        self._add_button.setVisible(self._calibration is not None)
+        self._calibrate_button.setVisible(self._calibration is None)
+        self._disconnect_button.setVisible(True)
+        self._exit_button.setVisible(False)
 
     @QtCore.Slot(float)
-    def _on_data_received(self, value: float) -> None:
-        data_buffer = self._view_model.get_data_buffer()
+    def _on_data_recieved(self, data: float) -> None:
+        self._data_buffer.append(data)
+        x_coords = [0.01 * i for i, _ in enumerate(self._data_buffer)]
 
-        window_size = 100
-        if len(data_buffer) > window_size:
-            displayed_data = list(data_buffer)[-window_size:]
-        else:
-            displayed_data = list(data_buffer)
+        self._plot_curve.setData(x_coords, self._data_buffer, pen="k")
+        self._current_value_label.setText(f"Current value: {data:.4f}")
+        self._update_zones()
 
-        x_data = [i * 0.01 for i in range(len(displayed_data))]
-        y_data = displayed_data
+    @QtCore.Slot(object)
+    def _on_calibration_updated(self, calibration: CalibrationData) -> None:
+        self._calibration = calibration
+        self._add_button.setVisible(True)
+        self._calibrate_button.setVisible(False)
 
-        self._plot_curve.setData(x_data, y_data, pen="k")
-
-        if y_data:
-            min_val = min(y_data)
-            max_val = max(y_data)
-            margin = (max_val - min_val) * 0.1 if max_val > min_val else 10
-            self._plot_widget.setYRange(min_val - margin, max_val + margin, padding=0)
-
-        calibration_data = self._view_model.get_calibration_data()
-        if calibration_data is not None and y_data:
-            min_displayed = min(y_data)
-            max_displayed = max(y_data)
-            self._update_background_zones(
-                calibration_data.low_threshold,
-                calibration_data.mid_threshold,
-                calibration_data.high_threshold,
-                min_displayed,
-                max_displayed,
-            )
-
-        self._current_value_label.setText(f"Current value: {value:.4f}")
-
-    def _update_background_zones(
-        self,
-        low: float,
-        mid: float,
-        high: float,
-        min_displayed: float,
-        max_displayed: float,
-    ) -> None:
+    def _update_zones(self) -> None:
+        if self._calibration is None:
+            return
         for item in list(self._plot_widget.items()):
             if isinstance(item, LinearRegionItem):
                 self._plot_widget.removeItem(item)
 
-        if low == 0.0 and mid == 0.0 and high == 0.0:
-            return
+        max_displayed = max(self._data_buffer)
+        min_displayed = min(self._data_buffer)
 
-        red_end = max(high, max_displayed)
+        red_end = max(max_displayed, self._calibration.high_threshold)
 
         green_region = LinearRegionItem(
-            [min_displayed, low], orientation="horizontal", movable=False
+            [min_displayed, self._calibration.low_threshold],
+            orientation="horizontal",
+            movable=False,
         )
-        green_region.setBrush(QColor(0, 255, 0, 50))
+        green_region.setBrush(QtGui.QColor(0, 255, 0, 50))
         green_region.setZValue(-1)
         self._plot_widget.addItem(green_region)
 
         yellow_region = LinearRegionItem(
-            [low, mid],
+            [self._calibration.low_threshold, self._calibration.mid_threshold],
             orientation="horizontal",
             movable=False,
         )
-        yellow_region.setBrush(QColor(255, 255, 0, 50))
+        yellow_region.setBrush(QtGui.QColor(255, 255, 0, 50))
         yellow_region.setZValue(-1)
         self._plot_widget.addItem(yellow_region)
 
         red_region = LinearRegionItem(
-            [mid, red_end], orientation="horizontal", movable=False
+            [self._calibration.mid_threshold, red_end],
+            orientation="horizontal",
+            movable=False,
         )
-        red_region.setBrush(QColor(255, 0, 0, 50))
+        red_region.setBrush(QtGui.QColor(255, 0, 0, 50))
         red_region.setZValue(-1)
         self._plot_widget.addItem(red_region)
-
-    @QtCore.Slot()
-    def _on_calibration_updated(self) -> None:
-        calibration_data = self._view_model.get_calibration_data()
-        if calibration_data is not None:
-            data_buffer = self._view_model.get_data_buffer()
-            if data_buffer:
-                min_displayed = min(data_buffer)
-                max_displayed = max(data_buffer)
-                self._update_background_zones(
-                    calibration_data.low_threshold,
-                    calibration_data.mid_threshold,
-                    calibration_data.high_threshold,
-                    min_displayed,
-                    max_displayed,
-                )
-
-    @QtCore.Slot(str)
-    def _on_status_changed(self, status: str) -> None:
-        if status == "connected":
-            self._status_label.setText("✓ Connected")
-            self._status_label.setStyleSheet("color: #4caf50; font-weight: bold;")
-            self._calibrate_button.setVisible(True)
-            self._disconnect_button.setVisible(True)
-            self._exit_button.setVisible(False)
-        elif status == "disconnected":
-            self._status_label.setText("✗ Disconnected")
-            self._status_label.setStyleSheet("color: #f44336; font-weight: bold;")
-            self._calibrate_button.setVisible(False)
-            self._disconnect_button.setVisible(False)
-            self._exit_button.setVisible(True)
-        else:
-            self._status_label.setText("✗ Connection Error")
-            self._status_label.setStyleSheet("color: #f44336; font-weight: bold;")
-            self._calibrate_button.setVisible(False)
-            self._disconnect_button.setVisible(False)
-            self._exit_button.setVisible(True)
