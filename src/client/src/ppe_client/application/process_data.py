@@ -1,19 +1,13 @@
 from dataclasses import dataclass
-from enum import Enum
 
 from ppe_client.application.poses.pose import Pose
-
-
-class Zone(Enum):
-    GREEN = "green"
-    YELLOW = "yellow"
-    RED = "red"
+from ppe_client.application.sensors.calibration.calibration_data import ValueZone
 
 
 @dataclass(frozen=True, slots=True)
 class EmgReading:
     sensor_name: str
-    zone: Zone
+    zone: ValueZone
 
 
 @dataclass(frozen=True, slots=True)
