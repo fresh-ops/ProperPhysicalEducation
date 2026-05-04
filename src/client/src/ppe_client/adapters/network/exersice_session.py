@@ -10,6 +10,7 @@ from ppe_client.application.poses import Pose
 from ppe_client.domain import CameraDescriptor
 
 from ..poses.pose_converter import PoseConverter
+from .network_settings import NetworkSettings
 from .schemas import (
     ErrorResponse,
     ExerciseItem,
@@ -22,15 +23,11 @@ from .schemas import (
 
 
 class ExerciseSession:
-    _SERVER = "172.20.10.2"
-    _START_EXCERCISE_ENDPOINT = f"http://{_SERVER}:8000/start"
-    _ANALYZE_ENDPOINT = f"ws://{_SERVER}:8000/analyze/"
-    _EXERCISES_ENDPOINT = f"http://{_SERVER}:8000/exercises"
-    _callback: Callable[[FeedbackResponse], None] | None = None
-
-    def __init__(self) -> None:
+    def __init__(self, settings: NetworkSettings | None = None) -> None:
+        self.settings = settings or NetworkSettings()
         self.websocket: ClientConnection | None = None
         self._recv_lock = asyncio.Lock()
+        self._callback: Callable[[FeedbackResponse], None] | None = None
 
     def recieve(self, pose: Pose, camera: CameraDescriptor | None = None) -> None:
         try:
@@ -43,7 +40,7 @@ class ExerciseSession:
         self, callback: Callable[[list[ExerciseItem]], None]
     ) -> None:
         async with httpx.AsyncClient() as client:
-            response = await client.get(self._EXERCISES_ENDPOINT)
+            response = await client.get(self.settings.exercises_url)
             response.raise_for_status()
             data = response.json()
             callback(ExercisesResponse(**data).exercises)
@@ -54,7 +51,7 @@ class ExerciseSession:
         self._callback = callback
         async with httpx.AsyncClient() as client:
             response = await client.post(
-                f"{self._START_EXCERCISE_ENDPOINT}",
+                self.settings.start_url,
                 json=ExerciseRequest(id=exercise_id).model_dump(),
             )
             response.raise_for_status()
@@ -63,9 +60,7 @@ class ExerciseSession:
             await self.__connect(session_id)
 
     async def __connect(self, session_id: str) -> None:
-        self.websocket = await websockets.connect(
-            f"{self._ANALYZE_ENDPOINT}{session_id}"
-        )
+        self.websocket = await websockets.connect(self.settings.analyze_url(session_id))
 
     async def receive_feedbacks(
         self, landmarks: list[list[float]]
