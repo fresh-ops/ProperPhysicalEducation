@@ -5,4 +5,4 @@ from ...routing import Payload
 
 @dataclass
 class CamerasPayload(Payload):
-    exercise_id: int
+    exercise_id: str

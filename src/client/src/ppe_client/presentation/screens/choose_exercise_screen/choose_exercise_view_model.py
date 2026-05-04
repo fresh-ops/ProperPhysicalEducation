@@ -19,7 +19,7 @@ class ChooseExerciseViewModel(QtCore.QObject):
         super().__init__(parent=parent)
         self._exercise_session = exercise_session
         self._exercises = []
-        self._selected_exercise = ExerciseItem(id=0, name="")
+        self._selected_exercise = ExerciseItem(exercise_id="0", name="")
 
     def update_exercises(self) -> None:
         loop = asyncio.get_running_loop()
@@ -33,8 +33,8 @@ class ChooseExerciseViewModel(QtCore.QObject):
         names = [e.name for e in self._exercises]
         self.exercises_updated.emit(names)
 
-    def get_selected_exercise_id(self) -> int:
-        return self._selected_exercise.id
+    def get_selected_exercise_id(self) -> str:
+        return self._selected_exercise.exercise_id
 
     def select_exercise(self, index: int) -> None:
         self._selected_exercise = self._exercises[index]

@@ -14,11 +14,11 @@ from .network_settings import NetworkSettings
 from .schemas import (
     ErrorResponse,
     ExerciseItem,
-    ExerciseRequest,
     ExercisesResponse,
     FeedbackResponse,
-    LandmarksRequest,
-    SessionResponse,
+    ProcessRequest,
+    StartSessionRequest,
+    StartSessionResponse,
 )
 
 
@@ -46,17 +46,17 @@ class ExerciseSession:
             callback(ExercisesResponse(**data).exercises)
 
     async def start(
-        self, exercise_id: int, callback: Callable[[FeedbackResponse], None]
+        self, exercise_id: str, callback: Callable[[FeedbackResponse], None]
     ) -> None:
         self._callback = callback
         async with httpx.AsyncClient() as client:
             response = await client.post(
                 self.settings.start_url,
-                json=ExerciseRequest(id=exercise_id).model_dump(),
+                json=StartSessionRequest(exercise_id=exercise_id).model_dump(),
             )
             response.raise_for_status()
             data = response.json()
-            session_id = SessionResponse(**data).session_id
+            session_id = StartSessionResponse(**data).session_id
             await self.__connect(session_id)
 
     async def __connect(self, session_id: str) -> None:
@@ -68,7 +68,7 @@ class ExerciseSession:
         if not self.websocket:
             raise RuntimeError("WebSocket connection not established")
         try:
-            request = LandmarksRequest(landmarks=landmarks)
+            request = ProcessRequest(landmarks=landmarks)
             await self.websocket.send(json.dumps(request.model_dump()))
             async with self._recv_lock:
                 response = await self.websocket.recv()
