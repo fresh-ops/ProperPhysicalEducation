@@ -92,10 +92,10 @@ class PoseRestorer(QtCore.QObject):
     _synchronizer: _PoseSynchronizer
     _reciever: PoseReciever
 
-    def __init__(self, reciever: PoseReciever) -> None:
+    def __init__(self) -> None:
         super().__init__()
         self._synchronizer = _PoseSynchronizer(self._on_synchronized, parent=self)
-        self._reciever = reciever
+        # self._reciever = reciever
 
     def recieve(self, pose: Pose, camera: CameraDescriptor | None = None) -> None:
         if not camera:
@@ -106,7 +106,7 @@ class PoseRestorer(QtCore.QObject):
         if not poses:
             return
 
-        self._reciever.recieve(self._restore(poses), None)
+        # self._reciever.recieve(self._restore(poses), None)
 
     def _restore(self, poses: list[Pose]) -> Pose:
         leading = self._choose_leading(poses)

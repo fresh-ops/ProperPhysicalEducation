@@ -9,7 +9,7 @@ from ppe_client.adapters.cameras.open_cv import (
     OpenCVCameraEnumerator,
     OpenCVCameraSessionFactory,
 )
-from ppe_client.adapters.network import ExerciseSession
+from ppe_client.adapters.network import ExerciseSession, NetworkSettings
 from ppe_client.adapters.poses import MediaPipePoseDetectorFactory
 from ppe_client.adapters.poses.restoration import PoseRestorer
 from ppe_client.adapters.sensors import (
@@ -22,7 +22,7 @@ from ppe_client.application.cameras.ports import (
     CameraSessionStorage,
 )
 from ppe_client.application.poses import PoseService
-from ppe_client.application.poses.ports import PoseDetectorFactory, PoseReciever
+from ppe_client.application.poses.ports import PoseDetectorFactory
 from ppe_client.application.sensors.calibration import (
     MeanSensorCalibrator,
     SensorCalibrator,
@@ -37,16 +37,11 @@ def make_pose_service(
     return PoseService(detector_factory, restorer)
 
 
-@injectable
-def make_exercise_session() -> ExerciseSession:
-    return ExerciseSession()
-
-
 injectables = [
-    make_exercise_session,
     make_pose_service,
     BleakSensorRegistry,
-    injectable(ExerciseSession, as_type=PoseReciever),
+    injectable(NetworkSettings),
+    injectable(ExerciseSession),
     injectable(OpenCVCameraEnumerator, as_type=CameraEnumerator),
     injectable(SessionTerminator),
     injectable(RefCountedCameraSessionStorage, as_type=CameraSessionStorage),
