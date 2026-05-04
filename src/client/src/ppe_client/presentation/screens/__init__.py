@@ -1,7 +1,15 @@
-from . import cameras_screen, choose_exercise_screen, my_screen
+from . import (
+    choose_exercise,
+    sensor_calibration,
+    sensor_connection,
+    sensor_discovery,
+    training,
+)
 
 __all__ = [
-    "cameras_screen",
-    "choose_exercise_screen",
-    "my_screen",
+    "choose_exercise",
+    "sensor_calibration",
+    "sensor_connection",
+    "sensor_discovery",
+    "training",
 ]

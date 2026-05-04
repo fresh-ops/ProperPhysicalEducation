@@ -1,85 +1,59 @@
-from typing import override
+from PySide6 import QtCore, QtWidgets
+from wireup.ioc.container.sync_container import ScopedSyncContainer
 
-from PySide6 import QtCore, QtGui, QtWidgets
-
-from ppe_client.adapters.cameras import (
-    RefCountedCameraSessionStorage,
-    SessionTerminator,
+from .routing import Router, Routes, ScreenFactory
+from .screens.choose_exercise import (
+    choose_exercise_route_descriptor,
 )
-from ppe_client.adapters.cameras.open_cv import (
-    OpenCVCameraEnumerator,
-    OpenCVCameraSessionFactory,
+from .screens.sensor_calibration import (
+    sensor_calibration_route_descriptor,
 )
-from ppe_client.adapters.network import ExerciseSession
-from ppe_client.adapters.poses import MediaPipePoseDetectorFactory
-from ppe_client.adapters.poses.restoration import PoseRestorer
-from ppe_client.application.cameras import CameraSessionService
-from ppe_client.application.poses import PoseService
-
-from .routing import Route
-from .routing.router import Router
-from .screens.cameras_screen import CamerasPayload, CamerasScreen
-from .screens.choose_exercise_screen import ChooseExercisePayload, ChooseExerciseScreen
+from .screens.sensor_connection import (
+    sensor_connection_route_descriptor,
+)
+from .screens.sensor_discovery import (
+    SensorDiscoveryPayload,
+    sensor_discovery_route_descriptor,
+)
+from .screens.training import (
+    training_route_descriptor,
+)
 
 
 class MainWindow(QtWidgets.QMainWindow):
-    _stack_widget: QtWidgets.QStackedWidget
-    _router: Router
+    """
+    Main application window for PPE client.
+    """
 
-    def __init__(self, parent: QtWidgets.QWidget | None = None) -> None:
+    _container: ScopedSyncContainer
+
+    def __init__(
+        self, container: ScopedSyncContainer, parent: QtWidgets.QWidget | None = None
+    ) -> None:
         super().__init__(parent)
         self.setWindowTitle("PPE")
-
-        self._stack_widget = QtWidgets.QStackedWidget()
-
-        container = QtWidgets.QWidget()
-
-        layout = QtWidgets.QVBoxLayout(container)
-        layout.addWidget(self._stack_widget)
-
-        self.setCentralWidget(container)
         self.resize(800, 600)
-        QtCore.QTimer.singleShot(0, self._setup_services)
+        self._container = container
+        QtCore.QTimer.singleShot(0, self._setup_ui)
 
-    def _initialize_routing(self) -> None:
+    @QtCore.Slot()
+    def _setup_ui(self) -> None:
+        """Initializes the UI."""
+        self._stacked_widget = QtWidgets.QStackedWidget()
+        self.setCentralWidget(self._stacked_widget)
+
+        screen_factory = ScreenFactory(self._container)
         self._router = Router(
-            stacked_widget=self._stack_widget,
-            scheme={
-                Route.HOME: (
-                    lambda: ChooseExerciseScreen(self._exercise_session),
-                    ChooseExercisePayload,
-                ),
-                Route.CAMERAS: (
-                    lambda **kwargs: CamerasScreen(
-                        camera_enumerator=self._camera_enumerator,
-                        pose_service=self._pose_service,
-                        session_service=self._camera_session_service,
-                        exercise_session=self._exercise_session,
-                        **kwargs,
-                    ),
-                    CamerasPayload,
-                ),
+            self._stacked_widget,
+            screen_factory,
+            {
+                Routes.CHOOSE_EXERCISE: choose_exercise_route_descriptor,
+                Routes.SENSOR_DISCOVERY: sensor_discovery_route_descriptor,
+                Routes.SENSOR_CONNECTION: sensor_connection_route_descriptor,
+                Routes.SENSOR_CALIBRATION: sensor_calibration_route_descriptor,
+                Routes.TRAINING: training_route_descriptor,
             },
-            parent=self,
+            self,
         )
 
-        self._router.navigate_to(Route.HOME, ChooseExercisePayload())
-
-    def _setup_services(self) -> None:
-        self._camera_enumerator = OpenCVCameraEnumerator()
-        self._session_terminator = SessionTerminator()
-        self._camera_session_service = CameraSessionService(
-            RefCountedCameraSessionStorage(self._session_terminator),
-            OpenCVCameraSessionFactory(),
-        )
-        self._detector_factory = MediaPipePoseDetectorFactory()
-        self._exercise_session = ExerciseSession()
-        self._pose_service = PoseService(
-            self._detector_factory, PoseRestorer(self._exercise_session, parent=self)
-        )
-        self._initialize_routing()
-
-    @override
-    def closeEvent(self, event: QtGui.QCloseEvent) -> None:
-        """Stop all capture sessions before window closes."""
-        super().closeEvent(event)
+        self._router.navigate_by_name(Routes.SENSOR_DISCOVERY, SensorDiscoveryPayload())

@@ -1,101 +1,93 @@
+import asyncio
 from typing import Any
 
 from PySide6 import QtCore, QtWidgets
 
-from .errors import DuplicateRouteError, InvalidPayloadError, RouteNotFoundError
-from .payload import Payload
-from .route import Route
-from .screen import Screen
-from .transition import Transition
+from .core import Payload, RouteDescriptor, RouteName, Screen, ViewModel
+from .errors import InvalidPayloadError, RouteNotFoundError
+from .screen_factory import ScreenFactory
 
 
 class Router(QtCore.QObject):
-    _stacked_widget: QtWidgets.QStackedWidget
+    """
+    Application routing system.
+    """
 
-    _routes: dict[Route, Transition]
-    _payload_types: dict[Route, type[Payload]]
-
-    _widgets: dict[Route, Screen[Any]]
-    _current_route: Route | None
+    _stack: QtWidgets.QStackedWidget
+    _screen_factory: ScreenFactory
+    _scheme: dict[RouteName, RouteDescriptor[Any]]
+    _view_models: dict[type[ViewModel[Any]], ViewModel[Any]]
+    _enter_task: asyncio.Task[None] | None = None
 
     def __init__(
         self,
-        stacked_widget: QtWidgets.QStackedWidget,
-        scheme: dict[Route, tuple[Transition, type[Payload]]],
+        stack: QtWidgets.QStackedWidget,
+        screen_factory: ScreenFactory,
+        scheme: dict[RouteName, RouteDescriptor[Any]],
         parent: QtCore.QObject | None = None,
     ) -> None:
         super().__init__(parent)
-        self._stacked_widget = stacked_widget
-        self._routes = {route: factory for route, (factory, _) in scheme.items()}
-        self._payload_types = {
-            route: payload_type for route, (_, payload_type) in scheme.items()
-        }
-        self._widgets = {}
-        self._current_route = None
 
-    def add_route(
-        self,
-        route: Route,
-        transition: Transition,
-        payload_type: type[Payload],
-    ) -> None:
-        if route in self._routes:
-            raise DuplicateRouteError(route)
-        self._routes[route] = transition
-        self._payload_types[route] = payload_type
-
-    def navigate_to(self, route: Route, payload: Payload | None = None) -> None:
-        if route not in self._routes:
-            raise RouteNotFoundError(route)
-
-        self._validate_payload_type(route, payload)
-
-        if route in self._widgets and not self._widgets[route].is_reentrant():
-            self._invalidate_widget_at(route)
-
-        widget = self._get_widget_for(route)
-        previous_widget = self._stacked_widget.currentWidget()
-
-        self._current_route = route
-        self._stacked_widget.setCurrentWidget(self._widgets[route])
-        widget.on_enter(payload)
-        if previous_widget and isinstance(previous_widget, Screen):
-            previous_widget.on_leave()
-
-    def _validate_payload_type(self, route: Route, payload: Payload | None) -> None:
-        expected_payload_type = self._payload_types.get(route)
-        if (
-            expected_payload_type is not None
-            and payload is not None
-            and not isinstance(payload, expected_payload_type)
-        ):
-            raise InvalidPayloadError(route, expected_payload_type, type(payload))
-
-    def _get_widget_for(self, route: Route) -> Screen[Any]:
-        if route in self._widgets:
-            return self._widgets[route]
-        return self._create_widget_for(route)
-
-    def _bind_navigation(self, widget: Screen[Any]) -> None:
-        widget.navigation_requested.connect(self._on_navigation_requested)
+        self._stack = stack
+        self._screen_factory = screen_factory
+        self._scheme = scheme
+        self._view_models = {}
 
     @QtCore.Slot(object, object)
-    def _on_navigation_requested(
-        self,
-        route: Route,
-        payload: Payload | None = None,
+    def navigate_by_name(self, route_name: RouteName, payload: Payload) -> None:
+        if route_name not in self._scheme:
+            raise RouteNotFoundError(route_name)
+        self.navigate_to(self._scheme[route_name], payload)
+
+    @QtCore.Slot(object, object)
+    def navigate_to[P: Payload](self, route: RouteDescriptor[P], payload: P) -> None:
+        """
+        Navigate to the specified route.
+        """
+        self._validate_payload(route.payload, payload)
+
+        if route.view_model in self._view_models:
+            view_model = self._view_models[route.view_model]
+        else:
+            view_model = self._screen_factory._container.get(route.view_model)
+            self._view_models[route.view_model] = view_model
+
+        screen = route.screen(view_model=view_model)
+        self._bind_navigation(view_model)
+
+        loop = asyncio.get_running_loop()
+        self._enter_task = loop.create_task(view_model.on_enter(payload=payload))
+        screen.setParent(self._stack)
+
+        previous_widget = self._stack.currentWidget()
+        if isinstance(previous_widget, Screen):
+            self._unbind_navigation(previous_widget._view_model)
+            previous_widget._view_model.setParent(None)
+
+        self._stack.addWidget(screen)
+        self._stack.setCurrentWidget(screen)
+        if previous_widget is not None:
+            self._stack.removeWidget(previous_widget)
+            previous_widget.close()
+            previous_widget.deleteLater()
+
+    def _validate_payload[P: Payload, Q: Payload](
+        self, expected_type: type[P], payload: Q
     ) -> None:
-        self.navigate_to(route, payload)
+        """
+        Validate the payload type.
+        """
+        if not isinstance(payload, expected_type):
+            raise InvalidPayloadError(expected_type, type(payload))
 
-    def _invalidate_widget_at(self, route: Route) -> None:
-        widget = self._widgets.pop(route)
-        widget.navigation_requested.disconnect(self._on_navigation_requested)
-        self._stacked_widget.removeWidget(widget)
-        widget.deleteLater()
+    def _bind_navigation[P: Payload](self, view_model: ViewModel[P]) -> None:
+        """
+        Bind the navigation request handler.
+        """
+        view_model.navigation_requested.connect(self.navigate_by_name)
 
-    def _create_widget_for(self, route: Route) -> Screen[Any]:
-        widget = self._routes[route]()
-        self._widgets[route] = widget
-        self._stacked_widget.addWidget(widget)
-        self._bind_navigation(widget)
-        return widget
+    def _unbind_navigation[P: Payload](self, view_model: ViewModel[P]) -> None:
+        """
+        Unbind the navigation request handler.
+        """
+        view_model.navigation_requested.disconnect(self.navigate_by_name)
