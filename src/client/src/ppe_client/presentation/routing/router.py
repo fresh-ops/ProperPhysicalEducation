@@ -75,6 +75,13 @@ class Router(QtCore.QObject):
             previous_widget.close()
             previous_widget.deleteLater()
 
+    async def shutdown(self) -> None:
+        previous_widget = self._stack.currentWidget()
+        if isinstance(previous_widget, Screen):
+            self._unbind_navigation(previous_widget._view_model)
+            await previous_widget._view_model.on_destroy()
+            previous_widget._view_model.setParent(None)
+
     def _validate_payload[P: Payload, Q: Payload](
         self, expected_type: type[P], payload: Q
     ) -> None:

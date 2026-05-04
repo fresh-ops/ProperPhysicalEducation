@@ -1,4 +1,8 @@
-from PySide6 import QtCore, QtWidgets
+import asyncio
+from typing import override
+
+from PySide6 import QtCore, QtGui, QtWidgets
+from qasync import QApplication
 from wireup.ioc.container.sync_container import ScopedSyncContainer
 
 from ppe_client.presentation.screens.choose_exercise.choose_exercise_payload import (
@@ -60,3 +64,18 @@ class MainWindow(QtWidgets.QMainWindow):
         )
 
         self._router.navigate_by_name(Routes.CHOOSE_EXERCISE, ChooseExercisePayload())
+
+    @override
+    def closeEvent(self, event: QtGui.QCloseEvent) -> None:
+        event.ignore()
+        asyncio.create_task(self.shutdown())
+
+    async def shutdown(self) -> None:
+        print("Shutdown")
+        await self._router.shutdown()
+        print("Quiting")
+        app = QApplication.instance()
+        if app is not None:
+            app.exit(0)
+        else:
+            print("App is None")
