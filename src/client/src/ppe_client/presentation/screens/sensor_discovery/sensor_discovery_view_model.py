@@ -7,7 +7,9 @@ from wireup import injectable
 from ppe_client.application.sensors.sensor_service import SensorService
 from ppe_client.domain import SensorDescriptor
 
+from ...routing import Routes
 from ...routing.core import ViewModel
+from ..choose_exercise import ChooseExercisePayload
 from ..sensor_connection import SensorConnectionPayload
 from .sensor_discovery_payload import SensorDiscoveryPayload
 
@@ -79,3 +81,7 @@ class SensorDiscoveryViewModel(ViewModel[SensorDiscoveryPayload]):
             selected_sensor = self._discovered_sensors[index - 1]
             payload = SensorConnectionPayload(descriptor=selected_sensor)
             self.request_navigation("sensor_connection", payload)
+
+    @QtCore.Slot()
+    def on_done_button_clicked(self) -> None:
+        self.request_navigation(Routes.CHOOSE_EXERCISE, ChooseExercisePayload())
