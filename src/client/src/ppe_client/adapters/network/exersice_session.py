@@ -13,7 +13,6 @@ from ppe_client.domain import CameraDescriptor
 
 from .network_settings import NetworkSettings
 from .schemas import (
-    ErrorResponse,
     ExerciseItem,
     ExercisesResponse,
     FeedbackResponse,
@@ -64,26 +63,22 @@ class ExerciseSession:
     async def __connect(self, session_id: str) -> None:
         self.websocket = await websockets.connect(self.settings.analyze_url(session_id))
 
-    async def receive_feedbacks(
-        self, data: ProcessData
-    ) -> list[Feedback] | ErrorResponse:
+    async def receive_feedbacks(self, data: ProcessData) -> list[Feedback]:
         if not self.websocket:
             raise RuntimeError("WebSocket connection not established")
-        try:
-            request = map_to_schema(data)
+
+        request = map_to_schema(data)
+
+        async with self._recv_lock:
             await self.websocket.send(json.dumps(request.model_dump()))
-            async with self._recv_lock:
-                response = await self.websocket.recv()
-            payload = json.loads(response)
-            if "error" in payload:
-                return ErrorResponse(**payload)
-            else:
-                feedbacks = map_to_list(FeedbackResponse(**payload))
-                if self._callback is not None:
-                    self._callback(feedbacks)
-                return feedbacks
-        except Exception:
-            raise
+            response = await self.websocket.recv()
+
+        payload = json.loads(response)
+
+        if "error" in payload:
+            raise RuntimeError(payload["error"])
+
+        return map_to_list(FeedbackResponse(**payload))
 
     async def close(self) -> None:
         if self.websocket:
