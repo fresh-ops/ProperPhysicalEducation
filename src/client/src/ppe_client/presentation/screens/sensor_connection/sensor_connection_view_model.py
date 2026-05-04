@@ -1,11 +1,11 @@
-import asyncio
 from typing import override
 
 from PySide6 import QtCore
 from qasync import asyncSlot
 from wireup import injectable
 
-from ppe_client.application.sensors import SensorService
+from ppe_client.application.sensors import SensorReader, SensorService
+from ppe_client.application.sensors.calibration import ValueZone
 from ppe_client.application.sensors.ports import Sensor
 from ppe_client.domain import SensorDescriptor
 
@@ -27,7 +27,7 @@ class SensorConnectionViewModel(ViewModel[SensorConnectionPayload]):
     _sensor_service: SensorService
     _sensor_store: SensorStore
     _sensor: Sensor | None
-    _reading_task: asyncio.Task[None] | None
+    _reader: SensorReader | None
 
     def __init__(
         self, sensor_service: SensorService, sensor_store: SensorStore
@@ -36,7 +36,7 @@ class SensorConnectionViewModel(ViewModel[SensorConnectionPayload]):
         self._sensor_service = sensor_service
         self._sensor_store = sensor_store
         self._sensor = None
-        self._reading_task = None
+        self._reader = None
 
     @override
     async def on_enter(self, payload: SensorConnectionPayload | None = None) -> None:
@@ -81,31 +81,23 @@ class SensorConnectionViewModel(ViewModel[SensorConnectionPayload]):
         try:
             await self._sensor.connect()
             self.connection_established.emit()
-            await self._start_reading()
+            self._reader = SensorReader(
+                self._sensor, self._on_data_recieved, self._on_reading_error
+            )
+            await self._reader.start()
         except Exception:
             self.connection_error.emit()
 
     async def _disconnect(self) -> None:
-        if self._reading_task is not None and not self._reading_task.done():
-            self._reading_task.cancel()
+        if self._reader is not None:
+            await self._reader.stop()
         if self._sensor is not None:
             await self._sensor.disconnect()
 
-    async def _start_reading(self) -> None:
-        if self._reading_task is not None and not self._reading_task.done():
-            return
+    def _on_data_recieved(
+        self, data: float, zone: ValueZone, timestamp_ms: float
+    ) -> None:
+        self.data_recieved.emit(data)
 
-        loop = asyncio.get_running_loop()
-        self._reading_task = loop.create_task(
-            self._reading_loop(), name="Sensor reading task"
-        )
-
-    async def _reading_loop(self) -> None:
-        try:
-            while self._sensor is not None:
-                data = await self._sensor.read()
-                self.data_recieved.emit(data)
-        except asyncio.CancelledError:
-            return
-        except Exception:
-            self.connection_error.emit()
+    def _on_reading_error(self, e: Exception) -> None:
+        self.connection_error.emit()
