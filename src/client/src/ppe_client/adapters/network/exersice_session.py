@@ -6,6 +6,8 @@ import httpx
 import websockets
 from websockets.asyncio.client import ClientConnection
 
+from ppe_client.adapters.network.mappers import map_to_list
+from ppe_client.application.feedback import Feedback
 from ppe_client.application.poses import Pose
 from ppe_client.domain import CameraDescriptor
 
@@ -27,7 +29,7 @@ class ExerciseSession:
         self.settings = settings or NetworkSettings()
         self.websocket: ClientConnection | None = None
         self._recv_lock = asyncio.Lock()
-        self._callback: Callable[[FeedbackResponse], None] | None = None
+        self._callback: Callable[[list[Feedback]], None] | None = None
 
     def recieve(self, pose: Pose, camera: CameraDescriptor | None = None) -> None:
         try:
@@ -46,7 +48,7 @@ class ExerciseSession:
             callback(ExercisesResponse(**data).exercises)
 
     async def start(
-        self, exercise_id: str, callback: Callable[[FeedbackResponse], None]
+        self, exercise_id: str, callback: Callable[[list[Feedback]], None]
     ) -> None:
         self._callback = callback
         async with httpx.AsyncClient() as client:
@@ -64,11 +66,11 @@ class ExerciseSession:
 
     async def receive_feedbacks(
         self, landmarks: list[list[float]]
-    ) -> FeedbackResponse | ErrorResponse:
+    ) -> list[Feedback] | ErrorResponse:
         if not self.websocket:
             raise RuntimeError("WebSocket connection not established")
         try:
-            request = ProcessRequest(landmarks=landmarks)
+            request = ProcessRequest(landmarks=landmarks, emgs=[])
             await self.websocket.send(json.dumps(request.model_dump()))
             async with self._recv_lock:
                 response = await self.websocket.recv()
@@ -76,10 +78,10 @@ class ExerciseSession:
             if "error" in data:
                 return ErrorResponse(**data)
             else:
-                feedback = FeedbackResponse(**data)
+                feedbacks = map_to_list(FeedbackResponse(**data))
                 if self._callback is not None:
-                    self._callback(feedback)
-                return feedback
+                    self._callback(feedbacks)
+                return feedbacks
         except Exception:
             raise
 

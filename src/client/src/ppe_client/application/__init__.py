@@ -1,3 +1,3 @@
-from . import cameras, poses
+from . import cameras, feedback, poses
 
-__all__ = ["cameras", "poses"]
+__all__ = ["cameras", "feedback", "poses"]

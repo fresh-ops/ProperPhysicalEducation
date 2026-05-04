@@ -3,7 +3,7 @@ import asyncio
 from PySide6 import QtCore
 
 from ppe_client.adapters.network import ExerciseSession
-from ppe_client.adapters.network.schemas import FeedbackResponse
+from ppe_client.application.feedback import Feedback
 from ppe_client.domain import CameraDescriptor, CameraIdentity
 
 from .cameras_payload import CamerasPayload
@@ -57,7 +57,7 @@ class CamerasViewModel(QtCore.QObject):
     def get_cameras(self) -> list[CameraDescriptor]:
         return list(self._cameras_by_key.values())
 
-    def _show_feedback(self, feedback: FeedbackResponse) -> None:
-        if feedback.feedbacks:
-            message = "; ".join([f.message for f in feedback.feedbacks])
+    def _show_feedback(self, feedbacks: list[Feedback]) -> None:
+        if feedbacks:
+            message = "; ".join([feedback.message for feedback in feedbacks])
             self.feedback_ready.emit(message)
