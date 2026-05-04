@@ -1,16 +1,17 @@
 from .error import ErrorResponse
-from .exercise import ExerciseItem, ExerciseRequest, ExercisesResponse
+from .exercises import ExerciseItem, ExercisesResponse
 from .feedback import FeedbackItem, FeedbackResponse
-from .landmarks import LandmarksRequest
-from .session import SessionResponse
+from .process import EmgSensor, ProcessRequest
+from .session import StartSessionRequest, StartSessionResponse
 
 __all__ = [
+    "EmgSensor",
     "ErrorResponse",
     "ExerciseItem",
-    "ExerciseRequest",
     "ExercisesResponse",
     "FeedbackItem",
     "FeedbackResponse",
-    "LandmarksRequest",
-    "SessionResponse",
+    "ProcessRequest",
+    "StartSessionRequest",
+    "StartSessionResponse",
 ]

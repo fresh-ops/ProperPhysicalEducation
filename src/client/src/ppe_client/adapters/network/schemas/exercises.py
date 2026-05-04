@@ -1,12 +1,8 @@
 from pydantic import BaseModel
 
 
-class ExerciseRequest(BaseModel):
-    id: int
-
-
 class ExerciseItem(BaseModel):
-    id: int
+    exercise_id: str
     name: str
 
 

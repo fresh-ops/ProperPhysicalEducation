@@ -41,5 +41,6 @@ class ChooseExerciseViewModel(ViewModel[ChooseExercisePayload]):
     @QtCore.Slot()
     def on_start_exercise_button_clicked(self) -> None:
         self.request_navigation(
-            Routes.TRAINING, TrainingPayload(exercise_id=self._selected_exersice.id)
+            Routes.TRAINING,
+            TrainingPayload(exercise_id=self._selected_exersice.exercise_id),
         )
