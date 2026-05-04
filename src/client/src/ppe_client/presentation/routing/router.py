@@ -18,6 +18,7 @@ class Router(QtCore.QObject):
     _scheme: dict[RouteName, RouteDescriptor[Any]]
     _view_models: dict[type[ViewModel[Any]], ViewModel[Any]]
     _enter_task: asyncio.Task[None] | None = None
+    _destroy_task: asyncio.Task[None] | None = None
 
     def __init__(
         self,
@@ -62,6 +63,9 @@ class Router(QtCore.QObject):
         previous_widget = self._stack.currentWidget()
         if isinstance(previous_widget, Screen):
             self._unbind_navigation(previous_widget._view_model)
+            self._destroy_task = loop.create_task(
+                previous_widget._view_model.on_destroy()
+            )
             previous_widget._view_model.setParent(None)
 
         self._stack.addWidget(screen)
