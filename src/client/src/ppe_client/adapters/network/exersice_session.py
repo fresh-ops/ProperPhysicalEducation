@@ -6,19 +6,17 @@ import httpx
 import websockets
 from websockets.asyncio.client import ClientConnection
 
-from ppe_client.adapters.network.mappers import map_to_list
+from ppe_client.adapters.network.mappers import map_to_list, map_to_schema
 from ppe_client.application.feedback import Feedback
-from ppe_client.application.poses import Pose
+from ppe_client.application.process_data import ProcessData
 from ppe_client.domain import CameraDescriptor
 
-from ..poses.pose_converter import PoseConverter
 from .network_settings import NetworkSettings
 from .schemas import (
     ErrorResponse,
     ExerciseItem,
     ExercisesResponse,
     FeedbackResponse,
-    ProcessRequest,
     StartSessionRequest,
     StartSessionResponse,
 )
@@ -31,12 +29,14 @@ class ExerciseSession:
         self._recv_lock = asyncio.Lock()
         self._callback: Callable[[list[Feedback]], None] | None = None
 
-    def recieve(self, pose: Pose, camera: CameraDescriptor | None = None) -> None:
+    def recieve(
+        self, data: ProcessData, camera: CameraDescriptor | None = None
+    ) -> None:
         try:
             loop = asyncio.get_running_loop()
         except RuntimeError:
             loop = asyncio.get_event_loop()
-        loop.create_task(self.receive_feedbacks(PoseConverter.to_list(pose)))  # noqa: RUF006
+        loop.create_task(self.receive_feedbacks(data))  # noqa: RUF006
 
     async def get_exercises(
         self, callback: Callable[[list[ExerciseItem]], None]
@@ -65,20 +65,20 @@ class ExerciseSession:
         self.websocket = await websockets.connect(self.settings.analyze_url(session_id))
 
     async def receive_feedbacks(
-        self, landmarks: list[list[float]]
+        self, data: ProcessData
     ) -> list[Feedback] | ErrorResponse:
         if not self.websocket:
             raise RuntimeError("WebSocket connection not established")
         try:
-            request = ProcessRequest(landmarks=landmarks, emgs=[])
+            request = map_to_schema(data)
             await self.websocket.send(json.dumps(request.model_dump()))
             async with self._recv_lock:
                 response = await self.websocket.recv()
-            data = json.loads(response)
-            if "error" in data:
-                return ErrorResponse(**data)
+            payload = json.loads(response)
+            if "error" in payload:
+                return ErrorResponse(**payload)
             else:
-                feedbacks = map_to_list(FeedbackResponse(**data))
+                feedbacks = map_to_list(FeedbackResponse(**payload))
                 if self._callback is not None:
                     self._callback(feedbacks)
                 return feedbacks
