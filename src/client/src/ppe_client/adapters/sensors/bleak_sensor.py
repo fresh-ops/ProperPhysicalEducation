@@ -9,6 +9,8 @@ from ppe_client.application.sensors.calibration import (
 )
 from ppe_client.domain import SensorDescriptor
 
+from .amplitude_db_signal_filter import AmplitudeDbSignalFilter
+
 
 class BleakSensor:
     """An adapter for the BleakClient"""
@@ -30,6 +32,7 @@ class BleakSensor:
         self._connections_count = 0
         self._calibration_data = None
         self._lock = asyncio.Lock()
+        self._signal_filter = AmplitudeDbSignalFilter()
 
     async def connect(self) -> None:
         async with self._lock:
@@ -55,7 +58,8 @@ class BleakSensor:
     async def read(self) -> float:
         async with self._lock:
             raw_data = await self._client.read_gatt_char(self._CHARACTERISTIC_UUID)
-        return float(struct.unpack("f", raw_data)[0])
+        value = float(struct.unpack("f", raw_data)[0])
+        return self._signal_filter.filter(value)
 
     async def read_with_zone(self) -> tuple[float, ValueZone]:
         value = await self.read()
