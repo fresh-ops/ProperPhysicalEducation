@@ -22,8 +22,8 @@ from .schemas import (
 
 
 class ExerciseSession:
-    def __init__(self, settings: NetworkSettings | None = None) -> None:
-        self.settings = settings or NetworkSettings()
+    def __init__(self, settings: NetworkSettings) -> None:
+        self.settings = settings
         self.websocket: ClientConnection | None = None
         self._recv_lock = asyncio.Lock()
         self._callback: Callable[[list[Feedback]], None] | None = None
