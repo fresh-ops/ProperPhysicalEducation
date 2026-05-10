@@ -5,8 +5,8 @@ from qasync import asyncSlot
 from wireup import injectable
 
 from ppe_client.application.sensors import SensorReader, SensorService
-from ppe_client.application.sensors.calibration import ValueZone
 from ppe_client.application.sensors.ports import Sensor
+from ppe_client.application.sensors.sensor_value import SensorValue
 from ppe_client.domain import SensorDescriptor
 
 from ...routing import Routes
@@ -94,10 +94,8 @@ class SensorConnectionViewModel(ViewModel[SensorConnectionPayload]):
         if self._sensor is not None:
             await self._sensor.disconnect()
 
-    def _on_data_recieved(
-        self, data: float, zone: ValueZone, timestamp_ms: float
-    ) -> None:
-        self.data_recieved.emit(data)
+    def _on_data_recieved(self, value: SensorValue) -> None:
+        self.data_recieved.emit(value.data)
 
     def _on_reading_error(self, e: Exception) -> None:
         self.connection_error.emit()

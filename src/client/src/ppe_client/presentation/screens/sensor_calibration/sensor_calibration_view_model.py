@@ -98,7 +98,8 @@ class SensorCalibrationViewModel(ViewModel[SensorCalibrationPayload]):
         end_time = start_time + duration_s
 
         while asyncio.get_running_loop().time() < end_time:
-            values.append(await sensor.read())
+            value = await sensor.read()
+            values.append(value.data)
             elapsed = asyncio.get_running_loop().time() - start_time
             progress = int((elapsed / duration_s) * 100)
             self.progress_changed.emit(min(progress, 100))

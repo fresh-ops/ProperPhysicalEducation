@@ -1,5 +1,6 @@
 import asyncio
 import struct
+import time
 
 from bleak import BleakClient
 
@@ -7,6 +8,7 @@ from ppe_client.application.sensors.calibration import (
     CalibrationData,
     ValueZone,
 )
+from ppe_client.application.sensors.sensor_value import SensorValue
 from ppe_client.domain import SensorDescriptor
 
 from .amplitude_db_signal_filter import AmplitudeDbSignalFilter
@@ -55,17 +57,16 @@ class BleakSensor:
     def is_connected(self) -> bool:
         return self._connections_count > 0
 
-    async def read(self) -> float:
+    async def read(self) -> SensorValue:
         async with self._lock:
             raw_data = await self._client.read_gatt_char(self._CHARACTERISTIC_UUID)
-        value = float(struct.unpack("f", raw_data)[0])
-        return self._signal_filter.filter(value)
-
-    async def read_with_zone(self) -> tuple[float, ValueZone]:
-        value = await self.read()
-        if not self._calibration_data:
-            return value, ValueZone.UNKNOWN
-        return value, self._calibration_data.zone_of(value)
+        data = float(struct.unpack("f", raw_data)[0])
+        filtered_data = self._signal_filter.filter(data)
+        zone = ValueZone.UNKNOWN
+        if self._calibration_data is not None:
+            zone = self._calibration_data.zone_of(data)
+        timestamp_ms = time.time_ns() // 1_000_000
+        return SensorValue(data=filtered_data, zone=zone, timestamp_ms=timestamp_ms)
 
     def apply_calibration(self, data: CalibrationData) -> None:
         self._calibration_data = data

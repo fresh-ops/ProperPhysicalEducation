@@ -1,14 +1,13 @@
 import asyncio
-import time
 from collections.abc import Awaitable, Callable
 
-from .calibration import ValueZone
 from .ports import Sensor
+from .sensor_value import SensorValue
 
 
 class SensorReader:
     _sensor: Sensor
-    _on_data: Callable[[float, ValueZone, float], None | Awaitable[None]]
+    _on_data: Callable[[SensorValue], None | Awaitable[None]]
     _on_error: Callable[[Exception], None | Awaitable[None]]
     _lock: asyncio.Lock
     _task: asyncio.Task[None] | None
@@ -16,7 +15,7 @@ class SensorReader:
     def __init__(
         self,
         sensor: Sensor,
-        on_data: Callable[[float, ValueZone, float], None | Awaitable[None]],
+        on_data: Callable[[SensorValue], None | Awaitable[None]],
         on_error: Callable[[Exception], None | Awaitable[None]],
     ) -> None:
         self._sensor = sensor
@@ -49,9 +48,8 @@ class SensorReader:
     async def _loop(self) -> None:
         try:
             while True:
-                data, zone = await self._sensor.read_with_zone()
-                timestamp_ms = time.time_ns() / 1_000_000
-                result = self._on_data(data, zone, timestamp_ms)
+                value = await self._sensor.read()
+                result = self._on_data(value)
                 if asyncio.iscoroutine(result):
                     await result
         except asyncio.CancelledError:
