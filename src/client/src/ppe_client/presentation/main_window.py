@@ -68,7 +68,7 @@ class MainWindow(QtWidgets.QMainWindow):
     @override
     def closeEvent(self, event: QtGui.QCloseEvent) -> None:
         event.ignore()
-        asyncio.create_task(self.shutdown())
+        asyncio.create_task(self.shutdown())  # noqa: RUF006
 
     async def shutdown(self) -> None:
         print("Shutdown")
