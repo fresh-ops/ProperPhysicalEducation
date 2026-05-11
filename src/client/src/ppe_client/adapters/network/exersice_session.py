@@ -9,7 +9,6 @@ from websockets.asyncio.client import ClientConnection
 from ppe_client.adapters.network.mappers import map_to_list, map_to_schema
 from ppe_client.application.feedback import Feedback
 from ppe_client.application.process_data import ProcessData
-from ppe_client.domain import CameraDescriptor
 
 from .network_settings import NetworkSettings
 from .schemas import (
@@ -52,7 +51,9 @@ class ExerciseSession:
     async def __connect(self, session_id: str) -> None:
         self.websocket = await websockets.connect(self.settings.analyze_url(session_id))
 
-    async def receive_feedbacks(self, queue: asyncio.Queue[ProcessData]) -> list[Feedback]:
+    async def receive_feedbacks(
+        self, queue: asyncio.Queue[ProcessData]
+    ) -> list[Feedback]:
         if not self.websocket:
             raise RuntimeError("WebSocket connection not established")
 

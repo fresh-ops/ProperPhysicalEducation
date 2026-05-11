@@ -3,10 +3,11 @@ import contextlib
 from asyncio import Queue
 from collections import deque
 
+from ppe_client.domain import SensorDescriptor
+
 from .poses import Pose
 from .process_data import EmgReading, ProcessData
 from .sensors import SensorValue
-from ppe_client.domain import SensorDescriptor
 
 
 class ProcessSynchronizer:
