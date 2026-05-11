@@ -28,15 +28,6 @@ class ExerciseSession:
         self._recv_lock = asyncio.Lock()
         self._callback: Callable[[list[Feedback]], None] | None = None
 
-    def recieve(
-        self, data: ProcessData, camera: CameraDescriptor | None = None
-    ) -> None:
-        try:
-            loop = asyncio.get_running_loop()
-        except RuntimeError:
-            loop = asyncio.get_event_loop()
-        loop.create_task(self.receive_feedbacks(data))  # noqa: RUF006
-
     async def get_exercises(self) -> list[ExerciseItem]:
         async with httpx.AsyncClient() as client:
             response = await client.get(self.settings.exercises_url)
@@ -61,10 +52,11 @@ class ExerciseSession:
     async def __connect(self, session_id: str) -> None:
         self.websocket = await websockets.connect(self.settings.analyze_url(session_id))
 
-    async def receive_feedbacks(self, data: ProcessData) -> list[Feedback]:
+    async def receive_feedbacks(self, queue: asyncio.Queue[ProcessData]) -> list[Feedback]:
         if not self.websocket:
             raise RuntimeError("WebSocket connection not established")
 
+        data = await queue.get()
         request = map_to_schema(data)
 
         async with self._recv_lock:
