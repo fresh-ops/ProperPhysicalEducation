@@ -34,7 +34,7 @@ class BleakSensor:
         self._connections_count = 0
         self._calibration_data = None
         self._lock = asyncio.Lock()
-        self._signal_filter = AmplitudeDbSignalFilter()
+        self._signal_filter = EMASignalFilter()
 
     async def connect(self) -> None:
         async with self._lock:
