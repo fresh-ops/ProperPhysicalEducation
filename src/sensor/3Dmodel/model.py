@@ -13,15 +13,15 @@ with BuildPart() as box:
 
     with BuildSketch(box.faces().sort_by(Axis.Y)[0]) as type_c_holes:
         with Locations((-5, -10)):
-            Rectangle(5, 10)
+            Rectangle(3, 10)
         with Locations((-5, 10)):
-            Rectangle(5, 10)
+            Rectangle(3, 10)
     extrude(amount=-wall, mode=Mode.SUBTRACT)
     
 
     with BuildSketch(box.faces().sort_by(Axis.X)[-1]):
         with Locations((-4, 6)):
-            Rectangle(10,4)
+            Rectangle(9,3)
     extrude(amount=-wall, mode=Mode.SUBTRACT)
 
     with BuildSketch(box.faces().sort_by(Axis.X)[-1]):
