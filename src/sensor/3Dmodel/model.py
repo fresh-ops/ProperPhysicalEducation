@@ -26,7 +26,7 @@ with BuildPart() as box:
 
     with BuildSketch(box.faces().sort_by(Axis.X)[-1]):
         with Locations((-4, -6)):
-            Circle(radius = 4)
+            Circle(radius = 2)
     extrude(amount=-wall, mode=Mode.SUBTRACT)
 
 with BuildPart() as lid:
@@ -41,8 +41,6 @@ with BuildPart() as lid:
         Rectangle(length - wall*2 - gap, width - wall*2 - gap)
     extrude(amount=wall)
     
-    
-
     with BuildSketch(lid.faces().sort_by(Axis.Z)[-1]):
         Rectangle(length - wall*4, width - wall*4)
     extrude(amount=-wall, mode=Mode.SUBTRACT)
