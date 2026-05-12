@@ -11,7 +11,7 @@ from ppe_client.application.sensors.calibration import (
 from ppe_client.application.sensors.sensor_value import SensorValue
 from ppe_client.domain import SensorDescriptor
 
-from .amplitude_db_signal_filter import AmplitudeDbSignalFilter
+from .ema_signal_filter import EMASignalFilter
 
 
 class BleakSensor:
