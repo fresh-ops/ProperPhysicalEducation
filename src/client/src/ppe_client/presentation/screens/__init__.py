@@ -1,3 +1,15 @@
-from . import choose_exercise, training
+from . import (
+    choose_exercise,
+    sensor_calibration,
+    sensor_connection,
+    sensor_discovery,
+    training,
+)
 
-__all__ = ["choose_exercise", "training"]
+__all__ = [
+    "choose_exercise",
+    "sensor_calibration",
+    "sensor_connection",
+    "sensor_discovery",
+    "training",
+]

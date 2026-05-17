@@ -20,13 +20,22 @@ class ChooseExerciseScreen(Screen[ChooseExerciseViewModel]):
         self._view_model.exercises_updated.connect(self.on_exercises_updated)
 
         self._start_exercise_button = QtWidgets.QPushButton("Start")
+        self._start_exercise_button.setStyleSheet("background: #35baf6")
         self._start_exercise_button.clicked.connect(
             self._view_model.on_start_exercise_button_clicked
         )
         self._view_model.start_button_disabled_set.connect(
             self.on_start_button_disabled_set
         )
-        # self._start_exercise_button.clicked.connect(self._on_start_button_clicked)
+
+        self._connect_sensors_button = QtWidgets.QPushButton("Connect Sensors")
+        self._connect_sensors_button.clicked.connect(
+            self._view_model.on_connect_sensors_button_clicked
+        )
+
+        self._buttons_control = QtWidgets.QHBoxLayout()
+        self._buttons_control.addWidget(self._connect_sensors_button)
+        self._buttons_control.addWidget(self._start_exercise_button)
 
         root = QtWidgets.QVBoxLayout()
         root.setContentsMargins(QtCore.QMargins(48, 0, 48, 0))
@@ -35,7 +44,7 @@ class ChooseExerciseScreen(Screen[ChooseExerciseViewModel]):
         root.addWidget(self._label)
         root.addStretch(1)
         root.addWidget(self._exercise_options)
-        root.addWidget(self._start_exercise_button)
+        root.addLayout(self._buttons_control)
         root.addStretch(5)
 
         self.setLayout(root)
@@ -45,6 +54,9 @@ class ChooseExerciseScreen(Screen[ChooseExerciseViewModel]):
         self._view_model.exercises_updated.disconnect(self.on_exercises_updated)
         self._start_exercise_button.clicked.disconnect(
             self._view_model.on_start_exercise_button_clicked
+        )
+        self._connect_sensors_button.clicked.disconnect(
+            self._view_model.on_connect_sensors_button_clicked
         )
         self._view_model.start_button_disabled_set.disconnect(
             self.on_start_button_disabled_set

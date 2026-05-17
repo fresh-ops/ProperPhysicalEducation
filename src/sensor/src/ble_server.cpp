@@ -1,11 +1,11 @@
 #include "ble_server.h"
+#include <Arduino.h>
 
 #include <BLE2902.h>
 #include <BLEDevice.h>
 #include <BLEServer.h>
 
 #include "ble_config.h"
-#include "ble_utils.h"
 
 namespace {
 class ServerCallbacks : public BLEServerCallbacks {
@@ -33,9 +33,8 @@ void init_ble_server(BLEState &state) {
 	server->setCallbacks(new ServerCallbacks(state));
 
 	BLEService *service = server->createService(BLEUUID(SERVICE_UUID_16));
-	uint16_t char_uuid = derive_characteristic_uuid();
 	state.timestamp_char = service->createCharacteristic(
-		BLEUUID(char_uuid),
+		BLEUUID(CHAR_UUID_16),
 		BLECharacteristic::PROPERTY_READ | BLECharacteristic::PROPERTY_NOTIFY
 	);
 	state.timestamp_char->addDescriptor(new BLE2902());

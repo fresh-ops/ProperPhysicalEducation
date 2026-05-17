@@ -9,6 +9,7 @@ from ppe_client.presentation.routing.routes import Routes
 from ppe_client.presentation.screens.training.training_payload import TrainingPayload
 
 from ...routing.core import ViewModel
+from ..sensor_discovery import SensorDiscoveryPayload
 from .choose_exercise_payload import ChooseExercisePayload
 
 
@@ -41,5 +42,10 @@ class ChooseExerciseViewModel(ViewModel[ChooseExercisePayload]):
     @QtCore.Slot()
     def on_start_exercise_button_clicked(self) -> None:
         self.request_navigation(
-            Routes.TRAINING, TrainingPayload(exercise_id=self._selected_exersice.id)
+            Routes.TRAINING,
+            TrainingPayload(exercise_id=self._selected_exersice.exercise_id),
         )
+
+    @QtCore.Slot()
+    def on_connect_sensors_button_clicked(self) -> None:
+        self.request_navigation(Routes.SENSOR_DISCOVERY, SensorDiscoveryPayload())

@@ -6,89 +6,70 @@ import httpx
 import websockets
 from websockets.asyncio.client import ClientConnection
 
-from ppe_client.application.poses import Pose
-from ppe_client.domain import CameraDescriptor
+from ppe_client.adapters.network.mappers import map_to_list, map_to_schema
+from ppe_client.application.feedback import Feedback
+from ppe_client.application.process_data import ProcessData
 
-from ..poses.pose_converter import PoseConverter
+from .network_settings import NetworkSettings
 from .schemas import (
-    ErrorResponse,
     ExerciseItem,
-    ExerciseRequest,
     ExercisesResponse,
     FeedbackResponse,
-    LandmarksRequest,
-    SessionResponse,
+    StartSessionRequest,
+    StartSessionResponse,
 )
 
 
 class ExerciseSession:
-    _SERVER = "172.20.10.2"
-    _START_EXCERCISE_ENDPOINT = f"http://{_SERVER}:8000/start"
-    _ANALYZE_ENDPOINT = f"ws://{_SERVER}:8000/analyze/"
-    _EXERCISES_ENDPOINT = f"http://{_SERVER}:8000/exercises"
-    _callback: Callable[[FeedbackResponse], None] | None = None
-
-    def __init__(self) -> None:
+    def __init__(self, settings: NetworkSettings) -> None:
+        self.settings = settings
         self.websocket: ClientConnection | None = None
         self._recv_lock = asyncio.Lock()
-
-    def recieve(self, pose: Pose, camera: CameraDescriptor | None = None) -> None:
-        try:
-            loop = asyncio.get_running_loop()
-        except RuntimeError:
-            loop = asyncio.get_event_loop()
-        loop.create_task(self.receive_feedbacks(PoseConverter.to_list(pose)))  # noqa: RUF006
+        self._callback: Callable[[list[Feedback]], None] | None = None
 
     async def get_exercises(self) -> list[ExerciseItem]:
         async with httpx.AsyncClient() as client:
-            try:
-                response = await client.get(self._EXERCISES_ENDPOINT)
-            except (httpx.ConnectTimeout, httpx.ConnectError):
-                return [ExerciseItem(id=0, name="lol")]
-
+            response = await client.get(self.settings.exercises_url)
             response.raise_for_status()
             data = response.json()
             return ExercisesResponse(**data).exercises
 
     async def start(
-        self, exercise_id: int, callback: Callable[[FeedbackResponse], None]
+        self, exercise_id: str, callback: Callable[[list[Feedback]], None]
     ) -> None:
         self._callback = callback
         async with httpx.AsyncClient() as client:
             response = await client.post(
-                f"{self._START_EXCERCISE_ENDPOINT}",
-                json=ExerciseRequest(id=exercise_id).model_dump(),
+                self.settings.start_url,
+                json=StartSessionRequest(exercise_id=exercise_id).model_dump(),
             )
             response.raise_for_status()
             data = response.json()
-            session_id = SessionResponse(**data).session_id
+            session_id = StartSessionResponse(**data).session_id
             await self.__connect(session_id)
 
     async def __connect(self, session_id: str) -> None:
-        self.websocket = await websockets.connect(
-            f"{self._ANALYZE_ENDPOINT}{session_id}"
-        )
+        self.websocket = await websockets.connect(self.settings.analyze_url(session_id))
 
     async def receive_feedbacks(
-        self, landmarks: list[list[float]]
-    ) -> FeedbackResponse | ErrorResponse:
+        self, queue: asyncio.Queue[ProcessData]
+    ) -> list[Feedback]:
         if not self.websocket:
             raise RuntimeError("WebSocket connection not established")
-        try:
-            request = LandmarksRequest(landmarks=landmarks)
+
+        data = await queue.get()
+        request = map_to_schema(data)
+
+        async with self._recv_lock:
             await self.websocket.send(json.dumps(request.model_dump()))
-            async with self._recv_lock:
-                response = await self.websocket.recv()
-            data = json.loads(response)
-            if "error" in data:
-                return ErrorResponse(**data)
-            else:
-                feedback = FeedbackResponse(**data)
-                if self._callback is not None:
-                    self._callback(feedback)
-                return feedback
-        except Exception:
-            raise
+            response = await self.websocket.recv()
+
+        payload = json.loads(response)
+
+        if "error" in payload:
+            raise RuntimeError(payload["error"])
+
+        return map_to_list(FeedbackResponse(**payload))
 
     async def close(self) -> None:
         if self.websocket:

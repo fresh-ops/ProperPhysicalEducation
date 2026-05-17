@@ -1,6 +1,7 @@
+import time
 from collections.abc import Callable
 
-from cv2 import CAP_PROP_POS_MSEC, VideoCapture
+from cv2 import VideoCapture
 from cv2.typing import MatLike
 from PySide6 import QtCore
 
@@ -110,7 +111,7 @@ class _CaptureWorker(QtCore.QObject):
                 if not success:
                     continue
 
-                timestamp_ms = self._capture.get(CAP_PROP_POS_MSEC)
+                timestamp_ms = time.time_ns() // 1_000_000
                 self.frame_ready.emit(cv_image, timestamp_ms)
         finally:
             self._capture.release()

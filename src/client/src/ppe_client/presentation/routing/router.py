@@ -16,6 +16,9 @@ class Router(QtCore.QObject):
     _stack: QtWidgets.QStackedWidget
     _screen_factory: ScreenFactory
     _scheme: dict[RouteName, RouteDescriptor[Any]]
+    _view_models: dict[type[ViewModel[Any]], ViewModel[Any]]
+    _enter_task: asyncio.Task[None] | None = None
+    _destroy_task: asyncio.Task[None] | None = None
 
     def __init__(
         self,
@@ -29,6 +32,7 @@ class Router(QtCore.QObject):
         self._stack = stack
         self._screen_factory = screen_factory
         self._scheme = scheme
+        self._view_models = {}
 
     @QtCore.Slot(object, object)
     def navigate_by_name(self, route_name: RouteName, payload: Payload) -> None:
@@ -42,16 +46,27 @@ class Router(QtCore.QObject):
         Navigate to the specified route.
         """
         self._validate_payload(route.payload, payload)
-        screen, view_model = self._screen_factory.create(route)
+
+        if route.view_model in self._view_models:
+            view_model = self._view_models[route.view_model]
+        else:
+            view_model = self._screen_factory._container.get(route.view_model)
+            self._view_models[route.view_model] = view_model
+
+        screen = route.screen(view_model=view_model)
         self._bind_navigation(view_model)
 
         loop = asyncio.get_running_loop()
-        loop.create_task(view_model.on_enter(payload=payload))  # noqa: RUF006
+        self._enter_task = loop.create_task(view_model.on_enter(payload=payload))
         screen.setParent(self._stack)
 
         previous_widget = self._stack.currentWidget()
         if isinstance(previous_widget, Screen):
             self._unbind_navigation(previous_widget._view_model)
+            self._destroy_task = loop.create_task(
+                previous_widget._view_model.on_destroy()
+            )
+            previous_widget._view_model.setParent(None)
 
         self._stack.addWidget(screen)
         self._stack.setCurrentWidget(screen)
@@ -59,6 +74,13 @@ class Router(QtCore.QObject):
             self._stack.removeWidget(previous_widget)
             previous_widget.close()
             previous_widget.deleteLater()
+
+    async def shutdown(self) -> None:
+        previous_widget = self._stack.currentWidget()
+        if isinstance(previous_widget, Screen):
+            self._unbind_navigation(previous_widget._view_model)
+            await previous_widget._view_model.on_destroy()
+            previous_widget._view_model.setParent(None)
 
     def _validate_payload[P: Payload, Q: Payload](
         self, expected_type: type[P], payload: Q

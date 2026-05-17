@@ -21,6 +21,11 @@ class ViewModel[P: Payload](QtCore.QObject):
         """
         pass
 
+    async def on_destroy(self) -> None:
+        """
+        Lifecycle method called once the router destroys this view model.
+        """
+
     def request_navigation(self, route: "RouteName", payload: Payload) -> None:
         """
         Request navigation to the specified route.
